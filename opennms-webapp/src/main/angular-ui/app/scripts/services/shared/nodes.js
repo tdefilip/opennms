@@ -56,7 +56,7 @@
           var results = x2js.xml_str2json(data);
           var nodes = [];
           if (results && results.nodes && results.nodes.node) {
-            nodes = results.nodes.node;
+            nodes.push(results.nodes.node);
           }
           deferred.resolve(nodes);
         }).error(function(data, status, headers, config) {
