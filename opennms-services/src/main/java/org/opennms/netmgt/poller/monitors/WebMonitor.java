@@ -1,8 +1,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2009-2012 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2012 The OpenNMS Group, Inc.
+ * Copyright (C) 2009-2014 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2014 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -55,19 +55,23 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.core.utils.ParameterMap;
-import org.opennms.netmgt.model.PollStatus;
 import org.opennms.netmgt.poller.Distributable;
 import org.opennms.netmgt.poller.MonitoredService;
+import org.opennms.netmgt.poller.PollStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Distributable
 /**
  * <p>WebMonitor class.</p>
  *
- * @author ranger
+ * @author <A HREF="mailto:ranger@opennms.org">Benjamin Reed</A>
+ * @author <A HREF="mailto:cliles@capario.com">Chris Liles</A>
+ * @author <A HREF="http://www.opennms.org/">OpenNMS</A>
  * @version $Id: $
  */
 public class WebMonitor extends AbstractServiceMonitor {
-
+    private static final Logger LOG = LoggerFactory.getLogger(WebMonitor.class);
     static Integer DEFAULT_TIMEOUT = 3000;
     static Integer DEFAULT_PORT = 80;
     static String DEFAULT_USER_AGENT = "OpenNMS WebMonitor";
@@ -91,6 +95,11 @@ public class WebMonitor extends AbstractServiceMonitor {
             ub.setHost(hostAddress);
             ub.setPort(ParameterMap.getKeyedInteger(map, "port", DEFAULT_PORT));
             ub.setPath(ParameterMap.getKeyedString(map, "path", DEFAULT_PATH));
+
+            String queryString = ParameterMap.getKeyedString(map,"queryString",null);
+            if (queryString != null)
+                ub.setQuery(queryString);
+
             HttpGet getMethod = new HttpGet(ub.build());
             httpClient.getParams().setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, ParameterMap.getKeyedInteger(map, "timeout", DEFAULT_TIMEOUT));
             httpClient.getParams().setIntParameter(CoreConnectionPNames.SO_TIMEOUT, ParameterMap.getKeyedInteger(map, "timeout", DEFAULT_TIMEOUT));
@@ -126,6 +135,7 @@ public class WebMonitor extends AbstractServiceMonitor {
                      */
                     HttpRequestInterceptor preemptiveAuth = new HttpRequestInterceptor() {
 
+                        @Override
                         public void process(final HttpRequest request, final HttpContext context) throws IOException {
 
                             AuthState authState = (AuthState)context.getAttribute(ClientContext.TARGET_AUTH_STATE);
@@ -149,14 +159,14 @@ public class WebMonitor extends AbstractServiceMonitor {
                 }
             }
 
-            log().debug("httpClient request with the following parameters: " + httpClient);
-            log().debug("getMethod parameters: " + getMethod);
+            LOG.debug("httpClient request with the following parameters: {}", httpClient);
+            LOG.debug("getMethod parameters: {}", getMethod);
             HttpResponse response = httpClient.execute(getMethod);
             int statusCode = response.getStatusLine().getStatusCode();
             String statusText = response.getStatusLine().getReasonPhrase();
             String expectedText = ParameterMap.getKeyedString(map,"response-text",null);
 
-            log().debug("returned results are:");
+            LOG.debug("returned results are:");
 
             if(!inRange(ParameterMap.getKeyedString(map, "response-range", DEFAULT_HTTP_STATUS_RANGE),statusCode)){
                 pollStatus = PollStatus.unavailable(statusText);
@@ -183,9 +193,9 @@ public class WebMonitor extends AbstractServiceMonitor {
             }
 
         } catch (IOException e) {
-            log().info(e.getMessage());
+            LOG.info(e.getMessage());
         } catch (URISyntaxException e) {
-            log().info(e.getMessage());
+            LOG.info(e.getMessage());
         } finally {
             if (httpClient != null) {
                 httpClient.getConnectionManager().shutdown();
@@ -195,7 +205,7 @@ public class WebMonitor extends AbstractServiceMonitor {
     }
 
     private boolean inRange(String range,Integer val){
-        String boundries[] = range.split("-");
+        String[] boundries = range.split("-");
         if(val < new Integer(boundries[0]) || val > new Integer(boundries[1]))
             return false;
         else

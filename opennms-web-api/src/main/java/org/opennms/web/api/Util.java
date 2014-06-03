@@ -36,12 +36,14 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -77,7 +79,7 @@ public abstract class Util extends Object {
      * <p>
      * If this guess is wrong, you can override it by setting the property
      * <code>opennms.web.base-url</code> in opennms.properties
-     * (for embedded Jetty) or WEB-INF/configuration.properties (for Tomcat).
+     * (for embedded Jetty).
      * </p>
      *
      * @param request
@@ -296,10 +298,7 @@ public abstract class Util extends Object {
 
         final StringBuffer buffer = new StringBuffer();
 
-        final ArrayList<String> ignoreList = new ArrayList<String>();
-        for (int i = 0; i < ignores.length; i++) {
-            ignoreList.add(ignores[i]);
-        }
+        final List<String> ignoreList = Arrays.asList(ignores);
 
         @SuppressWarnings("unchecked")
         final Enumeration<String> names = request.getParameterNames();
@@ -320,9 +319,10 @@ public abstract class Util extends Object {
             }
         }
 
-        for (final String name : additions.keySet()) {
+        for (final Entry<String,Object> entry : additions.entrySet()) {
+            final String name = entry.getKey();
             // handle both a String value or a String[] value
-        	final Object tmp = additions.get(name);
+        	final Object tmp = entry.getValue();
         	final String[] values = (tmp instanceof String[]) ? ((String[]) tmp) : (new String[] { (String) tmp });
 
             if ((ignoreType == IgnoreType.REQUEST_ONLY || !ignoreList.contains(name)) && values != null) {
@@ -424,10 +424,7 @@ public abstract class Util extends Object {
 
         final StringBuffer buffer = new StringBuffer();
 
-        final ArrayList<String> ignoreList = new ArrayList<String>();
-        for (int i = 0; i < ignores.length; i++) {
-            ignoreList.add(ignores[i]);
-        }
+        final List<String> ignoreList = Arrays.asList(ignores);
 
         @SuppressWarnings("unchecked")
         final Enumeration<String> names = request.getParameterNames();
@@ -446,10 +443,11 @@ public abstract class Util extends Object {
             }
         }
 
-        for (final String name : additions.keySet()) {
+        for (final Entry<String,Object> entry : additions.entrySet()) {
+            final String name = entry.getKey();
             // handle both a String value or a String[] value
-        	final Object tmp = additions.get(name);
-        	final String[] values;
+            final Object tmp = entry.getValue();
+            final String[] values;
             if (tmp instanceof String[]) {
                 values = (String[]) tmp;
             } else if (tmp instanceof String) {
@@ -488,7 +486,7 @@ public abstract class Util extends Object {
      * @param names an array of {@link java.lang.String} objects.
      * @return a {@link java.util.Map} object.
      */
-    public static SortedMap<String, String> getOrderedMap(final String names[][]) {
+    public static SortedMap<String, String> getOrderedMap(final String[][] names) {
     	final TreeMap<String, String> orderedMap = new TreeMap<String, String>();
 
         for (int i = 0; i < names.length; i++) {

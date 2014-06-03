@@ -44,17 +44,18 @@ public class FilterTest {
     ServiceCollector svcCollector = new ServiceCollector(null);
 
     public void setup() {
-        c.addLog("2010-03-13 02:21:30,000 DEBUG [CollectdScheduler-400 Pool-fiber51] Collectd: collector.collect: begin:0/1.1.1.1/SNMP");
-        c.addLog("2010-03-13 02:21:40,000 DEBUG [CollectdScheduler-400 Pool-fiber51] Collectd: collector.collect: end:0/1.1.1.1/SNMP");
-        c.addLog("2010-03-13 02:22:20,976 DEBUG [CollectdScheduler-400 Pool-fiber51] Collectd: collector.collect: begin:0/2.2.2.2/SNMP");
-        c.addLog("2010-03-13 02:22:50,976 DEBUG [CollectdScheduler-400 Pool-fiber51] Collectd: collector.collect: end:0/2.2.2.2/SNMP");
-        c.addLog("2010-03-13 02:23:30,000 DEBUG [CollectdScheduler-400 Pool-fiber51] Collectd: collector.collect: begin:0/3.3.3.3/SNMP");
-        c.addLog("2010-03-13 02:23:50,000 DEBUG [CollectdScheduler-400 Pool-fiber51] Collectd: collector.collect: end:0/3.3.3.3/SNMP");
+        c.addLog("2010-03-13 02:21:30,000 DEBUG [CollectdScheduler-400 Pool-fiber51] Collectd: collector.collect: begin:example1/0/1.1.1.1/SNMP");
+        c.addLog("2010-03-13 02:21:40,000 DEBUG [CollectdScheduler-400 Pool-fiber51] Collectd: collector.collect: end:example1/0/1.1.1.1/SNMP");
+        c.addLog("2010-03-13 02:22:20,976 DEBUG [CollectdScheduler-400 Pool-fiber51] Collectd: collector.collect: begin:example1/0/2.2.2.2/SNMP");
+        c.addLog("2010-03-13 02:22:50,976 DEBUG [CollectdScheduler-400 Pool-fiber51] Collectd: collector.collect: end:example1/0/2.2.2.2/SNMP");
+        c.addLog("2010-03-13 02:23:30,000 DEBUG [CollectdScheduler-400 Pool-fiber51] Collectd: collector.collect: begin:example1/0/3.3.3.3/SNMP");
+        c.addLog("2010-03-13 02:23:50,000 DEBUG [CollectdScheduler-400 Pool-fiber51] Collectd: collector.collect: end:example1/0/3.3.3.3/SNMP");
     }
 
     @Test
     public void testCreatePredicate() {
         Predicate<Integer> predicate = new Predicate<Integer>() {
+            @Override
             public boolean apply(Integer i) {
                 if(i == 1){
                     return true;
@@ -90,6 +91,7 @@ public class FilterTest {
     public void testFilterEvenNumbersOut() {
         List<Integer> list = Arrays.asList(new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
         Collection<Integer> oddNumbers = filter(list, new Predicate<Integer>() {
+            @Override
             public boolean apply(Integer i) {
                 if (i % 2 != 0) {
                     return true;
@@ -105,7 +107,7 @@ public class FilterTest {
     public void testFilterServiceCollectorsByServiceID () {
         setup();
         
-        final String serviceID = "0/3.3.3.3/SNMP";
+        final String serviceID = "example1/0/3.3.3.3/SNMP";
         
         Collection<ServiceCollector> filtered = filter(c.getServiceCollectors(), and(eq(serviceID(), serviceID), lessThan(collectionCount(), 2)));
         assertEquals(1, filtered.size());
@@ -116,9 +118,9 @@ public class FilterTest {
     @Test
     public void testCompoundFilters() {
         setup();
-        final String serviceID1 = "0/1.1.1.1/SNMP";
-        final String serviceID2 = "0/2.2.2.2/SNMP";
-        final String serviceID3 = "0/3.3.3.3/SNMP";
+        final String serviceID1 = "example1/0/1.1.1.1/SNMP";
+        final String serviceID2 = "example1/0/2.2.2.2/SNMP";
+        final String serviceID3 = "example1/0/3.3.3.3/SNMP";
         
         Collection<ServiceCollector> compoundOrFilter = filter(c.getServiceCollectors(), or(byServiceID(serviceID2), byServiceID(serviceID3)));
         assertEquals(2, compoundOrFilter.size());
@@ -138,6 +140,7 @@ public class FilterTest {
     public void testFilterOddNumbersOut() {
         List<Integer> list = Arrays.asList(new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
         Collection<Integer> evenNumbers = filter(list, new Predicate<Integer>() {
+            @Override
             public boolean apply(Integer i) {
                 if (i % 2 == 0) {
                     return true;

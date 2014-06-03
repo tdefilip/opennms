@@ -73,6 +73,7 @@ public class ServiceFilter extends EqualsFilter<Integer> {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String toString() {
         return ("<AlarmFactory.ServiceFilter: " + this.getDescription() + ">");
     }
@@ -87,7 +88,10 @@ public class ServiceFilter extends EqualsFilter<Integer> {
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean equals(Object obj) {
+        if (obj == null) return false;
+        if (!(obj instanceof ServiceFilter)) return false;
         return (this.toString().equals(obj.toString()));
     }
 }

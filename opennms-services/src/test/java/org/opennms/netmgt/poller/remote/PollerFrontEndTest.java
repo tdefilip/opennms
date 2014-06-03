@@ -45,9 +45,9 @@ import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IArgumentMatcher;
 import org.opennms.netmgt.config.DefaultServiceMonitorLocator;
-import org.opennms.netmgt.model.PollStatus;
 import org.opennms.netmgt.model.OnmsLocationMonitor.MonitorStatus;
 import org.opennms.netmgt.poller.DistributionContext;
+import org.opennms.netmgt.poller.PollStatus;
 import org.opennms.netmgt.poller.ServiceMonitorLocator;
 import org.opennms.netmgt.poller.monitors.HttpMonitor;
 import org.opennms.netmgt.poller.remote.support.DefaultPollerFrontEnd;
@@ -63,10 +63,12 @@ public class PollerFrontEndTest extends TestCase {
             m_expected = value;
         }
 
+        @Override
         public void appendTo(StringBuffer buffer) {
             buffer.append(m_expected);
         }
 
+        @Override
         public boolean matches(Object argument) {
             ServicePollStateChangedEvent actual = (ServicePollStateChangedEvent) argument;
             if (m_expected == null) {
@@ -87,6 +89,7 @@ public class PollerFrontEndTest extends TestCase {
             m_expected = value;
         }
 
+        @Override
         public void appendTo(StringBuffer buffer) {
             buffer.append(m_expected);
             buffer.append(" property=");
@@ -98,6 +101,7 @@ public class PollerFrontEndTest extends TestCase {
 
         }
 
+        @Override
         public boolean matches(Object argument) {
             PropertyChangeEvent actual = (PropertyChangeEvent) argument;
             if (m_expected == actual) return true;

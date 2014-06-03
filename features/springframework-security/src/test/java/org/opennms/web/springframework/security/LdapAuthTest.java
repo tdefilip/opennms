@@ -44,7 +44,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.opennms.core.utils.BeanUtils;
+import org.opennms.core.spring.BeanUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -69,6 +69,7 @@ public class LdapAuthTest implements InitializingBean {
      */
     private static class AccesAnticipator implements FilterChain {
         private boolean m_called = false;
+        @Override
         public void doFilter(ServletRequest arg0, ServletResponse arg1) throws IOException, ServletException {
             m_called = true;
         }

@@ -33,7 +33,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
- * </p>
+ * <p>
  * This interface defines a queue that uses <em>F</em> irst <em>I</em>n,
  * <em>F</em> irst <em>O</em> ut semantics when adding and removing objects.
  * Each object that is added to the queue is effectively placed at the end of
@@ -65,13 +65,10 @@ public class FifoQueueImpl<T> implements FifoQueue<T> {
      *
      * @param element
      *            The object to append to the queue.
-     * @exception org.opennms.core.queue.FifoQueueException
-     *                Thrown if a queue error occurs.
-     * @exception java.lang.InterruptedException
-     *                Thrown if the thread is interrupted.
      * @throws org.opennms.core.queue.FifoQueueException if any.
      * @throws java.lang.InterruptedException if any.
      */
+    @Override
     public void add(T element) throws InterruptedException {
         m_delegate.put(element);
     }
@@ -80,13 +77,13 @@ public class FifoQueueImpl<T> implements FifoQueue<T> {
      * {@inheritDoc}
      *
      * Inserts a new element into the queue. If the queue has reached an
-     * implementation limit and the <code>
-     * timeout</code> expires, then a false
+     * implementation limit and the <code>timeout</code> expires, then a false
      * value is returned to the caller.
      * 
      * @throws java.lang.InterruptedException
      *                Thrown if the thread is interrupted.
      */
+    @Override
     public boolean add(T element, long timeout) throws InterruptedException {
         return m_delegate.offer(element, timeout, TimeUnit.MILLISECONDS);
     }
@@ -94,14 +91,11 @@ public class FifoQueueImpl<T> implements FifoQueue<T> {
     /**
      * Removes the oldest element from the queue.
      *
-     * @exception org.opennms.core.queue.FifoQueueException
-     *                Thrown if a queue error occurs.
-     * @exception java.lang.InterruptedException
-     *                Thrown if the thread is interrupted.
      * @return The oldest object in the queue.
      * @throws org.opennms.core.queue.FifoQueueException if any.
      * @throws java.lang.InterruptedException if any.
      */
+    @Override
     public T remove() throws InterruptedException {
         return m_delegate.take();
     }
@@ -117,6 +111,7 @@ public class FifoQueueImpl<T> implements FifoQueue<T> {
      * @exception java.lang.InterruptedException
      *                Thrown if the thread is interrupted.
      */
+    @Override
     public T remove(long timeout) throws InterruptedException {
         return m_delegate.poll(timeout, TimeUnit.MILLISECONDS);
     }
@@ -126,6 +121,7 @@ public class FifoQueueImpl<T> implements FifoQueue<T> {
      *
      * @return The number of elements in the queue.
      */
+    @Override
     public int size() {
         return m_delegate.size();
     }
@@ -135,6 +131,7 @@ public class FifoQueueImpl<T> implements FifoQueue<T> {
      *
      * @return True if the queue is empty.
      */
+    @Override
     public boolean isEmpty() {
         return m_delegate.isEmpty();
     }

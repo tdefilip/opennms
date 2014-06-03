@@ -34,8 +34,8 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.TestCase;
-
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.opennms.core.db.DataSourceFactory;
 import org.opennms.core.test.ConfigurationTestUtils;
@@ -43,10 +43,10 @@ import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.test.db.MockDatabase;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.config.DefaultEventConfDao;
-import org.opennms.netmgt.config.EventExpander;
 import org.opennms.netmgt.config.SnmpPeerFactory;
 import org.opennms.netmgt.eventd.BroadcastEventProcessor;
 import org.opennms.netmgt.eventd.DefaultEventHandlerImpl;
+import org.opennms.netmgt.eventd.EventExpander;
 import org.opennms.netmgt.eventd.EventIpcManagerDefaultImpl;
 import org.opennms.netmgt.eventd.EventIpcManagerFactory;
 import org.opennms.netmgt.eventd.Eventd;
@@ -66,11 +66,11 @@ import org.opennms.netmgt.snmp.SnmpUtils;
 import org.opennms.test.mock.MockUtil;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 
-public class OpenNMSTestCase extends TestCase {
+public class OpenNMSTestCase {
     protected static MockDatabase m_db;
     protected static MockNetwork m_network;
     protected static Eventd m_eventd;
@@ -135,8 +135,8 @@ public class OpenNMSTestCase extends TestCase {
         m_version = version;
     }
 
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         MockUtil.println("------------ Begin Test "+this+" --------------------------");
         MockLogAppender.setupLogging();
         
@@ -240,10 +240,9 @@ public class OpenNMSTestCase extends TestCase {
         m_network.createStandardNetwork();
     }
     
-    @Override
+    @After
     public void runTest() throws Throwable {
         try {
-            super.runTest();
             if (!m_allowWarnings) {
                 MockLogAppender.assertNoWarningsOrGreater();
             }
@@ -252,12 +251,11 @@ public class OpenNMSTestCase extends TestCase {
         }
     }
 
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         if(m_runSupers) {
             if (isStartEventd()) m_eventd.stop();
         }
-
-        super.tearDown();
     }
 
     protected void setStartEventd(boolean startEventd) {
@@ -286,10 +284,11 @@ public class OpenNMSTestCase extends TestCase {
         m_eventProxy = eventProxy;
     }
 
-    public SimpleJdbcTemplate getJdbcTemplate() {
+    public JdbcTemplate getJdbcTemplate() {
         return m_db.getJdbcTemplate();
     }
 
+    @Override
     public String toString() {
         return super.toString() + " - " + getSnmpImplementation() + " " + myVersion();
     }

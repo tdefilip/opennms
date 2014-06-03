@@ -3,14 +3,14 @@
   <parent>
     <groupId>org.opennms</groupId>
     <artifactId>opennms</artifactId>
-    <version>1.12.8-SNAPSHOT</version>
+    <version>1.13.3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>org.opennms.features</artifactId>
   <packaging>pom</packaging>
   <name>OpenNMS Features</name>
   <modules>
-    <module>acl</module>
+    <module>collection</module>
     <module>instrumentationLogReader</module>
     <module>jdbc-collector</module>
     <module>juniper-tca-collector</module>
@@ -27,8 +27,14 @@
     <module>ticketing</module>
     <module>geocoder</module>
     <module>name-cutter</module>
-    <module>opennms-jmx-tools</module>
 
+   <!-- OpenNMS OSGI Core -->
+   <module>opennms-osgi-core</module>
+
+    <!-- Jmx config generator -->
+    <module>jmx-config-generator</module>
+    <module>jmx-config-generator-webui</module>   
+ 
     <!-- SNMP MIB Parser and Event/Collection Configuration -->
     <module>vaadin-snmp-events-and-metrics</module>
 
@@ -64,5 +70,8 @@
 
     <!-- OpenNMS Vaadin Themes -->
     <module>themes</module>
+
+      <module>vaadin-dashboard</module>
+      <module>vaadin-dashlets</module>
   </modules>
 </project>

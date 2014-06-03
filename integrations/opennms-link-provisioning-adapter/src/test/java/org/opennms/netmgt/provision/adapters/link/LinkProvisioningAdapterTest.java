@@ -41,9 +41,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
-import org.opennms.core.utils.BeanUtils;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.test.JUnitConfigurationEnvironment;
@@ -66,7 +66,8 @@ import org.springframework.test.context.ContextConfiguration;
         "classpath:/META-INF/opennms/mockEventIpcManager.xml",
         "classpath*:/META-INF/opennms/provisiond-extensions.xml",
         "classpath*:/META-INF/opennms/component-dao.xml",
-        "classpath:testConfigContext.xml"
+        "classpath:testConfigContext.xml",
+        "classpath:/META-INF/opennms/applicationContext-minimal-conf.xml"
 })
 @JUnitConfigurationEnvironment
 @JUnitTemporaryDatabase

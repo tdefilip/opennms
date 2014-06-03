@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.opennms</groupId>
     <artifactId>opennms</artifactId>
-    <version>1.12.8-SNAPSHOT</version>
+    <version>1.13.3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>org.opennms.core</artifactId>
@@ -24,6 +24,9 @@
   <modules>
     <module>api</module>
     <module>build</module>
+    <module>castor-properties</module>
+    <module>camel</module>
+    <module>config</module>
     <module>criteria</module>
     <module>daemon</module>
     <module>db</module>
@@ -31,10 +34,12 @@
     <module>doc</module>
     <module>icmp-jna</module>
     <module>lib</module>
+    <module>logging-api</module>
     <module>runtime</module>
     <module>schema</module>
     <module>snmp</module>
     <module>soa</module>
+    <module>spring</module>
     <module>tasks</module>
     <module>test-api</module>
     <module>upgrade</module>

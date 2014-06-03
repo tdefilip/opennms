@@ -42,8 +42,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.MockLogAppender;
-import org.opennms.core.utils.BeanUtils;
 import org.opennms.netmgt.provision.server.SimpleServer;
 
 import org.springframework.beans.factory.InitializingBean;
@@ -220,7 +220,7 @@ public class WebDetectorTest implements InitializingBean {
             @Override
             public void init() throws Exception {
                 super.init();
-                setServerSocket(new ServerSocket(9000, 0, InetAddress.getLocalHost()));
+                setServerSocket(new ServerSocket(0, 0, InetAddress.getLocalHost()));
                 addResponseHandler(contains("GET"), shutdownServer(httpResponse));
             }
         };

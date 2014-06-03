@@ -37,13 +37,10 @@ import java.net.URLStreamHandler;
 
 /**
  * <p>GenericURLStreamHandler class.</p>
- * <p/>
  * Customized URL stream handler creates dynamically created URL connections from customized URL protocols.
  *
  * @author <a href="mailto:christian.pape@informatik.hs-fulda.de">Christian Pape</a>
  * @author <a href="mailto:ronny@opennms.org">Ronny Trommer</a>
- * @version $Id: $
- * @since 1.8.1
  */
 public class GenericURLStreamHandler extends URLStreamHandler {
     private Class<? extends URLConnection> urlConnectionClass;
@@ -51,11 +48,10 @@ public class GenericURLStreamHandler extends URLStreamHandler {
 
     /**
      * <p>GenericURLStreamHandler</p>
-     * <p/>
      * Create URL stream handler with given class and customized default port.
      *
-     * @param urlConnectionClass full qualified classname as {@java.lang.String} object.
-     * @param defaultPort        default port as {@java.lang.int} object.
+     * @param urlConnectionClass full qualified classname as {@link java.lang.String} object.
+     * @param defaultPort        default port as {@link java.lang.Integer} object.
      */
     public GenericURLStreamHandler(Class<? extends URLConnection> urlConnectionClass, int defaultPort) {
         this.urlConnectionClass = urlConnectionClass;
@@ -64,10 +60,9 @@ public class GenericURLStreamHandler extends URLStreamHandler {
 
     /**
      * <p>GenericURLStreamHandler</p>
-     * <p/>
      * Create URL stream handler with given class and default port -1.
      *
-     * @param urlConnectionClass full qualified classname as {@java.lang.String} object.
+     * @param urlConnectionClass full qualified classname as {@link java.lang.String} object.
      */
     public GenericURLStreamHandler(Class<? extends URLConnection> urlConnectionClass) {
         this(urlConnectionClass, -1);
@@ -90,8 +85,7 @@ public class GenericURLStreamHandler extends URLStreamHandler {
         try {
             Constructor<? extends URLConnection> constructor = urlConnectionClass
                     .getConstructor(new Class[]{URL.class});
-            urlConnection = (URLConnection) constructor
-                    .newInstance(new Object[]{u});
+            urlConnection = constructor.newInstance(u);
         } catch (SecurityException e) {
             e.printStackTrace();
         } catch (NoSuchMethodException e) {
@@ -109,11 +103,4 @@ public class GenericURLStreamHandler extends URLStreamHandler {
         return urlConnection;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void parseURL(URL u, String spec, int start, int limit) {
-        super.parseURL(u, spec, start, limit);
-    }
 }

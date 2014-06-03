@@ -51,9 +51,6 @@ public class InboundMessageNotification implements OnmsInboundMessageNotificatio
     private static Logger log = LoggerFactory.getLogger(InboundMessageNotification.class);
     
 	private Collection<OnmsInboundMessageNotification> m_listenerList;
-    // private SmsService m_smsService;
-	@SuppressWarnings("unused")
-	private ApplicationContext m_applicationContext;
 
 	/**
 	 * <p>Constructor for InboundMessageNotification.</p>
@@ -81,6 +78,7 @@ public class InboundMessageNotification implements OnmsInboundMessageNotificatio
 	}
 
 	/** {@inheritDoc} */
+    @Override
 	public void process(AGateway gateway, MessageTypes msgType, InboundMessage msg) {
 	    
 	    deleteMessage(gateway, msg);
@@ -97,7 +95,7 @@ public class InboundMessageNotification implements OnmsInboundMessageNotificatio
         try {
             listener.process(gateway, msgType, msg);
         } catch (Throwable e) {
-            log.error("Unexpected exception processing InboundMessage "+ msg + " listener: " + listener, e);
+            log.error("Unexpected exception processing InboundMessage {} listener: {}", msg, listener, e);
         }
     }
 
@@ -105,7 +103,7 @@ public class InboundMessageNotification implements OnmsInboundMessageNotificatio
         try {
             gateway.deleteMessage(msg);
         } catch (Throwable e) {
-            log.error("Unable to delete message " + msg, e);
+            log.error("Unable to delete message {}", msg, e);
         }
     }
 	
@@ -120,12 +118,14 @@ public class InboundMessageNotification implements OnmsInboundMessageNotificatio
 
 	/**
 	 * <p>setApplicationContext</p>
+	 * 
+	 * @deprecated Appears to be unused
 	 *
 	 * @param applicationContext a {@link org.springframework.context.ApplicationContext} object.
 	 * @throws org.springframework.beans.BeansException if any.
 	 */
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-		m_applicationContext = applicationContext;
+		// Unused?
 	}
 
 }

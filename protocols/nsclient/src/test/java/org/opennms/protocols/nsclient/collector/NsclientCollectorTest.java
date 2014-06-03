@@ -38,19 +38,18 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.opennms.core.test.MockPlatformTransactionManager;
-import org.opennms.netmgt.collectd.AbstractCollectionSetVisitor;
-import org.opennms.netmgt.collectd.CollectionAgent;
 import org.opennms.netmgt.collectd.DefaultCollectionAgent;
-import org.opennms.netmgt.collectd.ServiceCollector;
-import org.opennms.netmgt.config.collector.CollectionAttribute;
-import org.opennms.netmgt.config.collector.CollectionSet;
-import org.opennms.netmgt.dao.IpInterfaceDao;
+import org.opennms.netmgt.collection.api.CollectionAgent;
+import org.opennms.netmgt.collection.api.CollectionAttribute;
+import org.opennms.netmgt.collection.api.CollectionSet;
+import org.opennms.netmgt.collection.api.ServiceCollector;
+import org.opennms.netmgt.collection.support.AbstractCollectionSetVisitor;
+import org.opennms.netmgt.dao.api.IpInterfaceDao;
 import org.opennms.netmgt.model.NetworkBuilder;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.PrimaryType;
 import org.opennms.netmgt.model.events.EventProxy;
 import org.opennms.protocols.nsclient.AbstractNsclientTest;
-import org.opennms.protocols.nsclient.collector.NSClientCollector;
 import org.opennms.protocols.nsclient.config.NSClientDataCollectionConfigFactory;
 import org.opennms.protocols.nsclient.config.NSClientPeerFactory;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -71,7 +70,7 @@ public class NsclientCollectorTest extends AbstractNsclientTest {
 
     private CollectionAgent m_collectionAgent;
 
-    private class CountResourcesVisitor extends AbstractCollectionSetVisitor {
+    private static final class CountResourcesVisitor extends AbstractCollectionSetVisitor {
 
         private int count = 0;
 
@@ -87,6 +86,7 @@ public class NsclientCollectorTest extends AbstractNsclientTest {
     }
 
     @Before
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         startServer("None&8&", "10");
@@ -115,6 +115,7 @@ public class NsclientCollectorTest extends AbstractNsclientTest {
     }
 
     @After
+    @Override
     public void tearDown() throws Exception {
         stopServer();
         EasyMock.verify(m_ipInterfaceDao, m_eventProxy);

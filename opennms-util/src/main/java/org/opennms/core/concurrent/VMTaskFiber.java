@@ -28,12 +28,13 @@
 
 package org.opennms.core.concurrent;
 
+import org.opennms.core.fiber.Fiber;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
-
-import org.opennms.core.fiber.Fiber;
+import java.util.Arrays;
 
 /**
  * <p>VMTaskFiber class.</p>
@@ -76,11 +77,6 @@ public class VMTaskFiber implements Fiber, Runnable {
      * The class loader used to resolve classes for the thread group.
      */
     private ClassLoader m_classLoader;
-
-    /**
-     * The entry class.
-     */
-    private Class<?> m_entryClass;
 
     /**
      * The entry method.
@@ -126,7 +122,7 @@ public class VMTaskFiber implements Fiber, Runnable {
                 //
                 boolean isOK = true;
                 for (int x = 0; isOK && x < args.length; x++) {
-                    if (args[x].getName().equals(MAIN_PARAMETER_TYPES[x]) == false)
+                    if (!args[x].getName().equals(MAIN_PARAMETER_TYPES[x]))
                         isOK = false;
                 }
 
@@ -166,14 +162,14 @@ public class VMTaskFiber implements Fiber, Runnable {
 
     {
         m_taskName = taskName;
-        m_mainArgs = entryArguments;
+        m_mainArgs = Arrays.copyOf(entryArguments, entryArguments.length);
 
         m_thrGroup = new ThreadGroup(THREADGROUP_NAME_PREFIX + m_taskName);
         m_thrGroup.setDaemon(false);
 
-        m_classLoader = new URLClassLoader(searchPaths);
+        m_classLoader = new URLClassLoader(Arrays.copyOf(searchPaths, searchPaths.length));
 
-        m_entryClass = m_classLoader.loadClass(entryClassName);
+        Class<?> m_entryClass = m_classLoader.loadClass(entryClassName);
         m_entryMethod = findMain(m_entryClass);
         if (m_entryMethod == null)
             throw new NoSuchMethodException("main() method not found for class " + entryClassName);
@@ -186,6 +182,7 @@ public class VMTaskFiber implements Fiber, Runnable {
      * called after the internal thread starts up, and returns when the entry
      * method's thread exits.
      */
+    @Override
     public void run() {
         Object[] passedArgs = new Object[1];
         passedArgs[0] = m_mainArgs;
@@ -212,6 +209,7 @@ public class VMTaskFiber implements Fiber, Runnable {
     /**
      * Starts the current fiber running.
      */
+    @Override
     public synchronized void start() {
         m_fiberStatus = STARTING;
         Thread t = new Thread(m_thrGroup, this, m_taskName + "-main");
@@ -226,6 +224,7 @@ public class VMTaskFiber implements Fiber, Runnable {
      * <code>STOP_PENDING</code>. When the main thread exits then the service
      * is considered stopped!
      */
+    @Override
     public synchronized void stop() {
         if (m_fiberStatus != STOPPED)
             m_fiberStatus = STOP_PENDING;
@@ -237,6 +236,7 @@ public class VMTaskFiber implements Fiber, Runnable {
      *
      * @return The current status of the fiber.
      */
+    @Override
     public synchronized int getStatus() {
         return m_fiberStatus;
     }
@@ -246,6 +246,7 @@ public class VMTaskFiber implements Fiber, Runnable {
      *
      * @return The VM Task's name.
      */
+    @Override
     public String getName() {
         return m_taskName;
     }

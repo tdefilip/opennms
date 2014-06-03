@@ -42,7 +42,11 @@ import org.opennms.netmgt.poller.ServiceMonitorLocator;
 
 public class DefaultServiceMonitorLocator implements ServiceMonitorLocator, Serializable {
 
-    private static final long serialVersionUID = 4852206182208816721L;
+    /**
+     * DO NOT CHANGE!
+     * This class is serialized by remote poller communications.
+     */
+    private static final long serialVersionUID = 1L;
 
     String m_serviceName;
     Class<? extends ServiceMonitor> m_serviceClass;
@@ -67,6 +71,7 @@ public class DefaultServiceMonitorLocator implements ServiceMonitorLocator, Seri
      *
      * @return a {@link org.opennms.netmgt.poller.ServiceMonitor} object.
      */
+    @Override
     public ServiceMonitor getServiceMonitor() {
         try {
             ServiceMonitor mon = m_serviceClass.newInstance();
@@ -86,6 +91,7 @@ public class DefaultServiceMonitorLocator implements ServiceMonitorLocator, Seri
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String getServiceName() {
         return m_serviceName;
     }
@@ -95,6 +101,7 @@ public class DefaultServiceMonitorLocator implements ServiceMonitorLocator, Seri
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String getServiceLocatorKey() {
         return m_serviceClass.getName();
     }

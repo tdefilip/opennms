@@ -38,15 +38,17 @@ import net.sf.jasperreports.engine.query.JRQueryExecuterFactory;
 public class JRobinQueryExecutorFactory implements JRQueryExecuterFactory {
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     public JRQueryExecuter createQueryExecuter(JRDataset dataset, Map parameters)throws JRException {
         return new JRobinQueryExecutor(dataset, parameters);
     }
 
+    @Override
     public Object[] getBuiltinParameters() {
         return null;
     }
 
+    @Override
     public boolean supportsQueryParameterType(String parameterType) {
         return true;
     }

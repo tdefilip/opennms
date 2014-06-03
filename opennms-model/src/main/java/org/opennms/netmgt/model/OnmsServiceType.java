@@ -39,6 +39,7 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.springframework.core.style.ToStringCreator;
 
 
@@ -50,6 +51,7 @@ import org.springframework.core.style.ToStringCreator;
 @XmlRootElement(name = "serviceType")
 @Entity
 @Table(name="service")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class OnmsServiceType implements Serializable {
 
     private static final long serialVersionUID = -459218937667452586L;
@@ -82,7 +84,7 @@ public class OnmsServiceType implements Serializable {
      */
     @Id
     @XmlAttribute(name="id")
-    @Column(name="serviceId", nullable=false, unique=true)
+    @Column(name="serviceId")
     @SequenceGenerator(name="serviceTypeSequence", sequenceName="serviceNxtId")
     @GeneratedValue(generator="serviceTypeSequence")
     public Integer getId() {
@@ -122,6 +124,7 @@ public class OnmsServiceType implements Serializable {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String toString() {
         return new ToStringCreator(this)
             .append("id", getId())
@@ -130,7 +133,8 @@ public class OnmsServiceType implements Serializable {
     }
 
     /** {@inheritDoc} */
-    public boolean equals(Object obj) {
+    @Override
+    public boolean equals(final Object obj) {
         if (obj instanceof OnmsServiceType) {
             OnmsServiceType t = (OnmsServiceType)obj;
             return m_id.equals(t.m_id);
@@ -143,6 +147,7 @@ public class OnmsServiceType implements Serializable {
      *
      * @return a int.
      */
+    @Override
     public int hashCode() {
         return m_id.intValue();
     }

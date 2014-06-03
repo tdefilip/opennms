@@ -55,9 +55,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.Type;
-import org.opennms.core.xml.bind.InetAddressXmlAdapter;
+import org.opennms.core.network.InetAddressXmlAdapter;
 import org.springframework.core.style.ToStringCreator;
 
 
@@ -68,6 +69,7 @@ import org.springframework.core.style.ToStringCreator;
 @Entity
 @Table(name="notifications")
 @Filter(name=FilterManager.AUTH_FILTER_NAME, condition="exists (select distinct x.nodeid from node x join category_node cn on x.nodeid = cn.nodeid join category_group cg on cn.categoryId = cg.categoryId where x.nodeid = nodeid and cg.groupId in (:userGroups))")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class OnmsNotification implements Acknowledgeable, Serializable {
 
     private static final long serialVersionUID = -1162549324168290004L;
@@ -446,6 +448,7 @@ public class OnmsNotification implements Acknowledgeable, Serializable {
     @XmlTransient
     @ManyToOne
     @JoinColumn(name="nodeId")
+    @Override
     public OnmsNode getNode() {
         return m_node;
     }
@@ -499,6 +502,7 @@ public class OnmsNotification implements Acknowledgeable, Serializable {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String toString() {
         return new ToStringCreator(this)
             .append("notifyid", getNotifyId())
@@ -526,6 +530,7 @@ public class OnmsNotification implements Acknowledgeable, Serializable {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void acknowledge(String ackUser) {
         if(m_answeredBy == null || m_respondTime == null) {
             m_answeredBy = ackUser;
@@ -539,6 +544,7 @@ public class OnmsNotification implements Acknowledgeable, Serializable {
      * @return a {@link org.opennms.netmgt.model.AckType} object.
      */
     @Transient
+    @Override
     public AckType getType() {
         return AckType.NOTIFICATION;
     }
@@ -549,6 +555,7 @@ public class OnmsNotification implements Acknowledgeable, Serializable {
      * @return a {@link java.lang.Integer} object.
      */
     @Transient
+    @Override
     public Integer getAckId() {
         return m_notifyId;
     }
@@ -559,6 +566,7 @@ public class OnmsNotification implements Acknowledgeable, Serializable {
      * @return a {@link java.lang.String} object.
      */
     @Transient
+    @Override
     public String getAckUser() {
         return m_answeredBy;
     }
@@ -569,11 +577,13 @@ public class OnmsNotification implements Acknowledgeable, Serializable {
      * @return a {@link java.util.Date} object.
      */
     @Transient
+    @Override
     public Date getAckTime() {
         return m_respondTime;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void clear(String ackUser) {
         /* Note: this currently works based on the way Notifd currently processes queued notifications.
          * Outstanding notifications are not removed from the queue when a response is received, instead,
@@ -584,12 +594,14 @@ public class OnmsNotification implements Acknowledgeable, Serializable {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void escalate(String ackUser) {
         //does nothing for there is no severity state in a notification object
         //escalation of a notification is handled in the notification path
     }
 
     /** {@inheritDoc} */
+    @Override
     public void unacknowledge(String ackUser) {
         m_respondTime = null;
         m_answeredBy = null;

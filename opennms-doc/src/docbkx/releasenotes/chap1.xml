@@ -4,6 +4,57 @@
 
 	<subtitle>About This Release</subtitle>
 
+	<!-- Start 1.13 -->
+
+	<section id="introduction-1.13.2">
+		<title>Release 1.13.2</title>
+
+		<para>
+			Release 1.13.2 is the 3rd unstable release; it is a preview of
+			what will eventually become the OpenNMS 1.14.x stable series.
+			It contains a large number of changes over 1.13.1, including
+			collection updates, lots of refactoring, more topology UI
+			enhancements, auto-acknowledge notification updates, Linkd
+			updates, VMware graph enhancements, and many other small
+			improvements.
+		</para>
+		<para>
+			The codename for 1.13.2 is <emphasis>Boston</emphasis>
+		</para>
+	</section>
+
+	<section id="introduction-1.13.1">
+		<title>Release 1.13.1</title>
+
+		<para>
+			Release 1.13.1 is the 2nd unstable release; it is a preview of
+			what will eventually become the OpenNMS 1.14.x stable series.
+			It contains a large number of changes over 1.13.0, including
+			Java8 support, many core cleanups, support for running Camel
+         and ActiveMQ in the OpenNMS Karaf container, MANY ReST-related
+         cleanups for XML and JSON output, plus tons of other fixes
+         and features.
+		</para>
+		<para>
+			The codename for 1.13.1 is <emphasis>Seigmen</emphasis>
+		</para>
+	</section>
+
+	<section id="introduction-1.13.0">
+		<title>Release 1.13.0</title>
+
+		<para>
+			Release 1.13.0 is the first unstable release; it is a preview of
+			what will eventually become the OpenNMS 1.14.x stable series.
+			It contains a number of enhancements, most notably GUI work in the
+			topology UI, as well as some code cleanup and other updates that
+			are too invasive to include in 1.12.
+		</para>
+		<para>
+			The codename for 1.13.0 is <emphasis>Hedningarna</emphasis>
+		</para>
+	</section>
+
 	<!-- Start 1.12 -->
 
 	<section id="introduction-1.12.7">

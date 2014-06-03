@@ -42,6 +42,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.Marshaller;
@@ -49,7 +51,6 @@ import org.exolab.castor.xml.ValidationException;
 import org.opennms.core.utils.OwnedInterval;
 import org.opennms.core.utils.OwnedIntervalSequence;
 import org.opennms.core.utils.Owner;
-import org.opennms.core.utils.ThreadCategory;
 import org.opennms.core.xml.CastorUtils;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.config.groups.Group;
@@ -62,6 +63,8 @@ import org.opennms.netmgt.config.groups.Schedule;
 import org.opennms.netmgt.config.users.DutySchedule;
 import org.opennms.netmgt.model.OnmsGroup;
 import org.opennms.netmgt.model.OnmsGroupList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -73,6 +76,46 @@ import org.opennms.netmgt.model.OnmsGroupList;
  * @author <a href="mailto:dj@gregor.com">DJ Gregor</a>
  */
 public abstract class GroupManager {
+
+    public static class OnmsGroupMapper {
+
+        public Group map(OnmsGroup inputGroup) {
+            if (inputGroup == null) return null;
+            Group castorGroup = new Group();
+            castorGroup.setName(inputGroup.getName());
+            castorGroup.setComments(inputGroup.getComments());
+            castorGroup.setUser(inputGroup.getUsers().toArray(EMPTY_STRING_ARRAY));
+            return castorGroup;
+        }
+
+        public OnmsGroup map(Group inputGroup) {
+            if (inputGroup == null) return null;
+            final OnmsGroup xmlGroup = new OnmsGroup(inputGroup.getName());
+            xmlGroup.setComments(inputGroup.getComments());
+            xmlGroup.setUsers(inputGroup.getUserCollection());
+            return xmlGroup;
+        }
+
+        public Collection<OnmsGroup> map(Collection<Group> inputGroups) {
+            Collection<OnmsGroup> xmlGroups = new ArrayList<OnmsGroup>();
+            for (Group eachGroup : inputGroups) {
+                if (eachGroup == null) continue;
+                xmlGroups.add(map(eachGroup));
+            }
+            return xmlGroups;
+        }
+    }
+
+    public static class OnmsGroupListMapper {
+        public OnmsGroupList map(Collection<OnmsGroup> groups) {
+            final OnmsGroupList list = new OnmsGroupList();
+            list.addAll(groups);
+            list.setTotalCount(list.getCount());
+            return list;
+        }
+    }
+
+    private static final Logger LOG = LoggerFactory.getLogger(GroupManager.class);
 
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
@@ -144,25 +187,14 @@ public abstract class GroupManager {
     }
 
     public OnmsGroupList getOnmsGroupList() throws MarshalException, ValidationException, IOException {
-        final OnmsGroupList list = new OnmsGroupList();
-        
-        for (final String name : getGroupNames()) {
-            list.add(getOnmsGroup(name));
-        }
-        list.setTotalCount(list.getCount());
-
-        return list;
+        return new OnmsGroupListMapper().map(
+                new OnmsGroupMapper().map(getGroups().values()));
     }
 
     public OnmsGroup getOnmsGroup(final String groupName) throws MarshalException, ValidationException, IOException {
         final Group castorGroup = getGroup(groupName);
         if (castorGroup == null) return null;
-        
-        final OnmsGroup group = new OnmsGroup(groupName);
-        group.setComments(castorGroup.getComments());
-        group.setUsers(castorGroup.getUserCollection());
-        
-        return group;
+        return new OnmsGroupMapper().map(castorGroup);
     }
 
     public synchronized void save(final OnmsGroup group) throws Exception {
@@ -276,14 +308,13 @@ public abstract class GroupManager {
      */
     private static void buildDutySchedules(Map<String, Group> groups) {
         m_dutySchedules = new HashMap<String, List<DutySchedule>>();
-        Iterator<String> i = groups.keySet().iterator();
-        while(i.hasNext()) {
-            String key = i.next();
-            Group curGroup = groups.get(key);
+        for (final Entry<String, Group> entry : groups.entrySet()) {
+            final String key = entry.getKey();
+            final Group curGroup = entry.getValue();
             if (curGroup.getDutyScheduleCount() > 0) {
-                List<DutySchedule> dutyList = new ArrayList<DutySchedule>();
-                for (String duty : curGroup.getDutyScheduleCollection()) {
-                	dutyList.add(new DutySchedule(duty));
+                final List<DutySchedule> dutyList = new ArrayList<DutySchedule>();
+                for (final String duty : curGroup.getDutyScheduleCollection()) {
+                    dutyList.add(new DutySchedule(duty));
                 }
                 m_dutySchedules.put(key, dutyList);
             }
@@ -328,7 +359,6 @@ public abstract class GroupManager {
      * @throws org.exolab.castor.xml.ValidationException if any.
      */
     public long groupNextOnDuty(String group, Calendar time) throws IOException, MarshalException, ValidationException {
-        ThreadCategory log = ThreadCategory.getInstance(this.getClass());
         long next = -1;
         update();
         //if the group has no duty schedules then it is on duty
@@ -340,9 +370,7 @@ public abstract class GroupManager {
             DutySchedule curSchedule = dutySchedules.get(i);
             long tempnext =  curSchedule.nextInSchedule(time);
             if( tempnext < next || next == -1 ) {
-                if (log.isDebugEnabled()) {
-                    log.debug("isGroupOnDuty: On duty in " + tempnext + " millisec from schedule " + i);
-                }
+                LOG.debug("isGroupOnDuty: On duty in {} millisec from schedule {}", i, tempnext);
                 next = tempnext;
             }
         }
@@ -531,7 +559,8 @@ public abstract class GroupManager {
      * @return an array of {@link java.lang.String} objects.
      */
     public String[] getRoleNames() {
-        return (String[]) m_roles.keySet().toArray(new String[m_roles.keySet().size()]);
+        final Set<String> keys = m_roles.keySet();
+        return (String[]) keys.toArray(new String[keys.size()]);
     }
     
     /**

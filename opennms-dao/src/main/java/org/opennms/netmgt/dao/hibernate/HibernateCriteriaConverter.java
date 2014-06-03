@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.FetchMode;
+import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
@@ -44,6 +45,7 @@ import org.hibernate.type.StringType;
 import org.opennms.core.criteria.AbstractCriteriaVisitor;
 import org.opennms.core.criteria.Alias;
 import org.opennms.core.criteria.Criteria;
+import org.opennms.core.criteria.Criteria.LockType;
 import org.opennms.core.criteria.Fetch;
 import org.opennms.core.criteria.Order;
 import org.opennms.core.criteria.Order.OrderVisitor;
@@ -67,7 +69,7 @@ import org.opennms.core.criteria.restrictions.NullRestriction;
 import org.opennms.core.criteria.restrictions.Restriction;
 import org.opennms.core.criteria.restrictions.RestrictionVisitor;
 import org.opennms.core.criteria.restrictions.SqlRestriction;
-import org.opennms.netmgt.dao.CriteriaConverter;
+import org.opennms.netmgt.dao.api.CriteriaConverter;
 
 public class HibernateCriteriaConverter implements CriteriaConverter<DetachedCriteria> {
     public org.hibernate.Criteria convert(final Criteria criteria, final Session session) {
@@ -95,6 +97,7 @@ public class HibernateCriteriaConverter implements CriteriaConverter<DetachedCri
     @Override
     public DetachedCriteria convertForCount(final Criteria criteria) {
         final HibernateCriteriaVisitor visitor = new HibernateCriteriaVisitor() {
+            @Override
             public void visitOrder(final Order order) {
                 // skip order-by when converting for count
             }
@@ -105,6 +108,7 @@ public class HibernateCriteriaConverter implements CriteriaConverter<DetachedCri
     }
 
     public static class CountHibernateCriteriaVisitor extends HibernateCriteriaVisitor {
+        @Override
         public void visitOrder(final Order order) {
             // skip order-by when converting for count
         }
@@ -191,7 +195,13 @@ public class HibernateCriteriaConverter implements CriteriaConverter<DetachedCri
                 aliasType = org.hibernate.Criteria.INNER_JOIN;
                 break;
             }
-            m_criteria.createAlias(alias.getAssociationPath(), alias.getAlias(), aliasType);
+            if (alias.hasJoinCondition()) { // an additional condition for the join
+                final HibernateRestrictionVisitor visitor = new HibernateRestrictionVisitor();
+                alias.getJoinCondition().visit(visitor);
+                m_criteria.createAlias(alias.getAssociationPath(), alias.getAlias(), aliasType, visitor.getCriterions().get(0));
+            } else { // no additional condition for the join
+                m_criteria.createAlias(alias.getAssociationPath(), alias.getAlias(), aliasType);
+            }
         }
 
         @Override
@@ -208,6 +218,41 @@ public class HibernateCriteriaConverter implements CriteriaConverter<DetachedCri
                 break;
             default:
                 m_criteria.setFetchMode(fetch.getAttribute(), FetchMode.DEFAULT);
+                break;
+            }
+        }
+
+        @Override
+        public void visitLockType(final LockType lock) {
+            if (lock == null) return;
+
+            switch (lock) {
+            case NONE:
+                m_criteria.setLockMode(LockMode.NONE);
+                break;
+            case OPTIMISTIC:
+                m_criteria.setLockMode(LockMode.OPTIMISTIC);
+                break;
+            case OPTIMISTIC_FORCE_INCREMENT:
+                m_criteria.setLockMode(LockMode.OPTIMISTIC_FORCE_INCREMENT);
+                break;
+            case PESSIMISTIC_FORCE_INCREMENT:
+                m_criteria.setLockMode(LockMode.PESSIMISTIC_FORCE_INCREMENT);
+                break;
+            case PESSIMISTIC_READ:
+                m_criteria.setLockMode(LockMode.PESSIMISTIC_READ);
+                break;
+            case PESSIMISTIC_WRITE:
+                m_criteria.setLockMode(LockMode.PESSIMISTIC_WRITE);
+                break;
+            case READ:
+                m_criteria.setLockMode(LockMode.READ);
+                break;
+            case UPGRADE_NOWAIT:
+                m_criteria.setLockMode(LockMode.UPGRADE_NOWAIT);
+                break;
+            case WRITE:
+                m_criteria.setLockMode(LockMode.WRITE);
                 break;
             }
         }

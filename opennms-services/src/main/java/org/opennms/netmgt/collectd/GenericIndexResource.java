@@ -30,10 +30,12 @@ package org.opennms.netmgt.collectd;
 
 import java.io.File;
 
-import org.opennms.netmgt.config.StorageStrategy;
-import org.opennms.netmgt.config.collector.ServiceParameters;
-import org.opennms.netmgt.model.RrdRepository;
+import org.opennms.netmgt.collection.api.ServiceParameters;
+import org.opennms.netmgt.collection.api.StorageStrategy;
+import org.opennms.netmgt.rrd.RrdRepository;
 import org.opennms.netmgt.snmp.SnmpInstId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>GenericIndexResource class.</p>
@@ -42,9 +44,9 @@ import org.opennms.netmgt.snmp.SnmpInstId;
  * @version $Id: $
  */
 public class GenericIndexResource extends SnmpCollectionResource {
-
-    private SnmpInstId m_inst;
-    private String m_name;
+    private static final Logger LOG = LoggerFactory.getLogger(GenericIndexResource.class);
+    private final SnmpInstId m_inst;
+    private final String m_name;
     private String m_resourceLabel;
 
     /**
@@ -63,9 +65,9 @@ public class GenericIndexResource extends SnmpCollectionResource {
     /** {@inheritDoc} */
     @Override
     public File getResourceDir(RrdRepository repository) {
-        String resourcePath = getStrategy().getRelativePathForAttribute(getParent(), getLabel(), null);
+        String resourcePath = getStrategy().getRelativePathForAttribute(getParent(), getInterfaceLabel());
         File resourceDir = new File(repository.getRrdBaseDir(), resourcePath);
-        log().debug("getResourceDir: " + resourceDir);
+        LOG.debug("getResourceDir: {}", resourceDir);
         return resourceDir;
     }
 
@@ -75,6 +77,7 @@ public class GenericIndexResource extends SnmpCollectionResource {
      * @return a {@link java.lang.String} object.
      */
     // NMS-5062: Avoid call getLabel here, otherwise the SiblingColumnStorageStrategy will fail if DEBUG is enabled for Collectd.
+    @Override
     public String toString() {
         return "node["+getCollectionAgent().getNodeId() + "]." + getResourceTypeName() + "[" + getInstance() + "]";
     }
@@ -82,7 +85,7 @@ public class GenericIndexResource extends SnmpCollectionResource {
 
     /** {@inheritDoc} */
     @Override
-    public int getType() {
+    public int getSnmpIfType() {
         return -1;	// XXX is this right?
     }
 
@@ -97,6 +100,7 @@ public class GenericIndexResource extends SnmpCollectionResource {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String getResourceTypeName() {
         return m_name;
     }
@@ -106,6 +110,7 @@ public class GenericIndexResource extends SnmpCollectionResource {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String getInstance() {
         return m_inst.toString();
     }
@@ -114,6 +119,7 @@ public class GenericIndexResource extends SnmpCollectionResource {
         return ((GenericIndexResourceType)getResourceType()).getStorageStrategy();
     }
 
+    @Override
     public String getParent() {
         return getCollectionAgent().getStorageDir().toString();
     }
@@ -127,7 +133,8 @@ public class GenericIndexResource extends SnmpCollectionResource {
      *
      * @return a {@link java.lang.String} object.
      */
-    public String getLabel() {
+    @Override
+    public String getInterfaceLabel() {
         if (m_resourceLabel == null) {
             m_resourceLabel = getStrategy().getResourceNameFromIndex(this);
         }

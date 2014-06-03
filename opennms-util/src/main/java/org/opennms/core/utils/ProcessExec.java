@@ -28,21 +28,26 @@
 
 package org.opennms.core.utils;
 
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 
-import org.apache.commons.io.IOUtils;
-
 /**
  * <p>ProcessExec class.</p>
  */
 public class ProcessExec {
-    PrintStream m_out = null;
+	
+	private static final Logger LOG = LoggerFactory.getLogger(ProcessExec.class);
+	
+    private PrintStream m_out = null;
 
-    PrintStream m_err = null;
+    private PrintStream m_err = null;
 
     /**
      * <p>Constructor for ProcessExec.</p>
@@ -93,6 +98,7 @@ public class ProcessExec {
             m_printStream = printStream;
         }
 
+        @Override
         public void run() {
             InputStreamReader isr = null;
             BufferedReader in = null;
@@ -106,7 +112,7 @@ public class ProcessExec {
                     m_printStream.println(line);
                 }
             } catch (final Exception e) {
-                LogUtils.warnf(this, e, "an error occurred while reading the input stream");
+            	LOG.warn("an error occurred while reading the input stream", e);
             } finally {
                 IOUtils.closeQuietly(in);
                 IOUtils.closeQuietly(isr);

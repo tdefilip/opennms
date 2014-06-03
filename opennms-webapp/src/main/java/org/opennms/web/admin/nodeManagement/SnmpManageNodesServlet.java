@@ -44,9 +44,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.opennms.core.db.DataSourceFactory;
-import org.opennms.core.resource.Vault;
 import org.opennms.core.utils.DBUtils;
-import org.opennms.core.utils.LogUtils;
 import org.opennms.core.utils.WebSecurityUtils;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.config.NotificationFactory;
@@ -55,6 +53,8 @@ import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.xml.event.Event;
 import org.opennms.web.api.Util;
 import org.opennms.web.element.NetworkElementFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A servlet that handles managing or unmanaging interfaces and services on a
@@ -64,6 +64,9 @@ import org.opennms.web.element.NetworkElementFactory;
  * @author <A HREF="http://www.opennms.org/">OpenNMS </A>
  */
 public class SnmpManageNodesServlet extends HttpServlet {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(SnmpManageNodesServlet.class);
+
     private static final long serialVersionUID = 1604691299928314549L;
     private static final String UPDATE_INTERFACE = "UPDATE snmpInterface SET snmpCollect = ? WHERE id = ?";
 
@@ -72,13 +75,8 @@ public class SnmpManageNodesServlet extends HttpServlet {
      *
      * @throws javax.servlet.ServletException if any.
      */
+    @Override
     public void init() throws ServletException {
-        try {
-            DataSourceFactory.init();
-        } catch (Throwable e) {
-            throw new ServletException("Could not initialize database factory: " + e.getMessage(), e);
-        }
-
         try {
             NotificationFactory.init();
         } catch (Throwable e) {
@@ -87,6 +85,7 @@ public class SnmpManageNodesServlet extends HttpServlet {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession userSession = request.getSession(false);
         List<SnmpManagedInterface> allInterfaces = getManagedInterfacesFromSession(userSession);
@@ -106,7 +105,7 @@ public class SnmpManageNodesServlet extends HttpServlet {
 
         final DBUtils d = new DBUtils(getClass());
         try {
-            Connection connection = Vault.getDbConnection();
+            Connection connection = DataSourceFactory.getInstance().getConnection();
             d.watch(connection);
             try {
                 connection.setAutoCommit(false);
@@ -115,7 +114,7 @@ public class SnmpManageNodesServlet extends HttpServlet {
 
                 for (SnmpManagedInterface curInterface : allInterfaces) {
                     String option = request.getParameter("collect-" + curInterface.getIfIndex());
-                    LogUtils.debugf(this, "option = %s", option);
+                    LOG.debug("option = {}", option);
                     stmt.setString(1, option);
                     stmt.setInt(2, curInterface.getSnmpInterfaceId());
                     stmt.execute();

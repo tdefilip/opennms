@@ -33,9 +33,9 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
-import org.opennms.core.utils.BeanUtils;
 import org.opennms.netmgt.dao.DatabasePopulator;
 import org.opennms.test.JUnitConfigurationEnvironment;
 import org.opennms.web.svclayer.ProgressMonitor;
@@ -56,7 +56,8 @@ import org.springframework.transaction.annotation.Transactional;
         "classpath*:/META-INF/opennms/component-service.xml",
         "classpath:org/opennms/web/svclayer/applicationContext-svclayer.xml",
         "classpath:META-INF/opennms/applicationContext-reportingCore.xml",
-        "classpath:/META-INF/opennms/applicationContext-insertData-enabled.xml"
+        "classpath:/META-INF/opennms/applicationContext-insertData-enabled.xml",
+        "classpath:/META-INF/opennms/applicationContext-minimal-conf.xml"
 })
 @JUnitConfigurationEnvironment
 @JUnitTemporaryDatabase
@@ -83,10 +84,12 @@ public class DefaultSurveillanceServiceIntegrationTest implements InitializingBe
         String viewName = "default";
         SimpleWebTable table = m_surveillanceService.createSurveillanceTable(viewName, new ProgressMonitor() {
 
+            @Override
             public void beginNextPhase(String string) {
                 System.err.println("PHASE: " + string);
             }
 
+            @Override
             public void setPhaseCount(int i) {
 
             }

@@ -213,8 +213,7 @@ public class Mask implements Serializable {
      */
     public boolean removeMaskelement(
             final org.opennms.netmgt.xml.event.Maskelement vMaskelement) {
-        boolean removed = _maskelementList.remove(vMaskelement);
-        return removed;
+        return _maskelementList.remove(vMaskelement);
     }
 
     /**
@@ -225,8 +224,7 @@ public class Mask implements Serializable {
      */
     public org.opennms.netmgt.xml.event.Maskelement removeMaskelementAt(
             final int index) {
-        java.lang.Object obj = this._maskelementList.remove(index);
-        return (org.opennms.netmgt.xml.event.Maskelement) obj;
+        return this._maskelementList.remove(index);
     }
 
     /**
@@ -290,6 +288,7 @@ public class Mask implements Serializable {
         this._maskelementList = maskelementList;
     }
 
+        @Override
     public String toString() {
     	return new ToStringBuilder(this)
     		.append("maskelement", _maskelementList)

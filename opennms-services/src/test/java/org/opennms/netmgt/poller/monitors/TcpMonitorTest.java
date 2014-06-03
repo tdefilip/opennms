@@ -31,6 +31,7 @@ package org.opennms.netmgt.poller.monitors;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.opennms.core.utils.InetAddressUtils.addr;
 
 import java.net.UnknownHostException;
 import java.util.Map;
@@ -43,10 +44,11 @@ import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.test.http.annotations.JUnitHttpServer;
 import org.opennms.netmgt.config.poller.Parameter;
-import org.opennms.netmgt.model.PollStatus;
 import org.opennms.netmgt.poller.MonitoredService;
+import org.opennms.netmgt.poller.PollStatus;
 import org.opennms.netmgt.poller.ServiceMonitor;
 import org.opennms.netmgt.poller.mock.MonitorTestUtils;
+import org.opennms.netmgt.utils.DnsUtils;
 import org.opennms.test.JUnitConfigurationEnvironment;
 import org.opennms.test.mock.MockUtil;
 import org.springframework.test.context.ContextConfiguration;
@@ -56,9 +58,6 @@ import org.springframework.test.context.ContextConfiguration;
 @ContextConfiguration(locations={"classpath:/META-INF/opennms/emptyContext.xml"})
 @JUnitConfigurationEnvironment
 public class TcpMonitorTest {
-
-    private boolean m_runTests = true;
-
     @Before
     public void setUp() throws Exception {
         MockLogAppender.setupLogging();
@@ -69,14 +68,11 @@ public class TcpMonitorTest {
      */
     @Test
     public void testExternalServerConnection() throws UnknownHostException {
-
-        if (m_runTests == false) return;
-
         Map<String, Object> m = new ConcurrentSkipListMap<String, Object>();
         Parameter p = new Parameter();
 
         ServiceMonitor monitor = new TcpMonitor();
-        MonitoredService svc = MonitorTestUtils.getMonitoredService(99, "www.opennms.org", "TCP");
+        MonitoredService svc = MonitorTestUtils.getMonitoredService(99, "www.opennms.org", DnsUtils.resolveHostname("www.opennms.org"), "TCP");
 
         p.setKey("port");
         p.setValue("3020");
@@ -100,14 +96,11 @@ public class TcpMonitorTest {
     @Test
     @JUnitHttpServer(port=10342)
     public void testLocalhostConnection() throws UnknownHostException {
-
-        if (m_runTests == false) return;
-
         Map<String, Object> m = new ConcurrentSkipListMap<String, Object>();
         Parameter p = new Parameter();
 
         ServiceMonitor monitor = new TcpMonitor();
-        MonitoredService svc = MonitorTestUtils.getMonitoredService(3, "localhost", "TCP");
+        MonitoredService svc = MonitorTestUtils.getMonitoredService(3, "localhost", DnsUtils.resolveHostname("localhost"), "TCP");
 
         p.setKey("port");
         p.setValue("10342");
@@ -130,14 +123,13 @@ public class TcpMonitorTest {
     @Test
     @JUnitHttpServer(port=10342)
     public void testLocalhostIPv6Connection() throws UnknownHostException {
-
-        if (m_runTests == false) return;
+        if (Boolean.getBoolean("skipIpv6Tests")) return;
 
         Map<String, Object> m = new ConcurrentSkipListMap<String, Object>();
         Parameter p = new Parameter();
 
         ServiceMonitor monitor = new TcpMonitor();
-        MonitoredService svc = MonitorTestUtils.getMonitoredService(3, "::1", "TCP");
+        MonitoredService svc = MonitorTestUtils.getMonitoredService(3, "::1", addr("::1"), "TCP");
 
         p.setKey("port");
         p.setValue("10342");

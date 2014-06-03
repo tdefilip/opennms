@@ -21,9 +21,13 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.opennms.core.test.http.annotations.JUnitHttpServer;
 import org.opennms.core.test.http.annotations.Webapp;
-import org.opennms.core.utils.LogUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JUnitServer {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(JUnitServer.class);
+	
     private Server m_server;
     private JUnitHttpServer m_config;
 
@@ -64,7 +68,7 @@ public class JUnitServer {
 
         if (config.basicAuth()) {
             // check for basic auth if we're configured to do so
-                LogUtils.debugf(this, "configuring basic auth");
+        	LOG.debug("configuring basic auth");
 
             final HashLoginService loginService = new HashLoginService("MyRealm", config.basicAuthFile());
             loginService.setRefreshInterval(300000);
@@ -102,7 +106,16 @@ public class JUnitServer {
         if (webapps != null) {
             for (final Webapp webapp : webapps) {
                 final WebAppContext wac = new WebAppContext();
-                wac.setWar(webapp.path());
+                String path = null;
+                if (!"".equals(webapp.pathSystemProperty()) && System.getProperty(webapp.pathSystemProperty()) != null) {
+                    path = System.getProperty(webapp.pathSystemProperty());
+                } else {
+                    path = webapp.path();
+                }
+                if (path == null || "".equals(path)) {
+                    throw new IllegalArgumentException("path or pathSystemProperty of @Webapp points to a null or blank value");
+                }
+                wac.setWar(path);
                 wac.setContextPath(webapp.context());
                 handlers.addHandler(wac);
             }
@@ -121,22 +134,22 @@ public class JUnitServer {
     }
 
     public synchronized void start() throws Exception {
-        LogUtils.debugf(this, "starting jetty on port %d", m_config.port());
+    	LOG.debug("starting jetty on port {}", m_config.port());
         m_server.start();
     }
 
     // NOTE: we retry server stop because of a concurrency issue inside Jetty that is not
     // easily solvable.
     public synchronized void stop() throws Exception {
-        LogUtils.debugf(this, "shutting down jetty on port %d", m_config.port());
+    	LOG.debug("shutting down jetty on port {}", m_config.port());
         try {
             m_server.stop();
         } catch (final InterruptedException e) {
-            LogUtils.debugf(this, e, "Interrupted while attempting to shut down Jetty, propagating interrupt and trying again.");
+        	LOG.debug("Interrupted while attempting to shut down Jetty, propagating interrupt and trying again.", e);
             Thread.currentThread().interrupt();
             m_server.stop();
         } catch (final RuntimeException e) {
-            LogUtils.debugf(this, e, "An exception occurred while attempting to shut down Jetty.");
+        	LOG.debug("An exception occurred while attempting to shut down Jetty.", e);
             m_server.stop();
             throw e;
         }

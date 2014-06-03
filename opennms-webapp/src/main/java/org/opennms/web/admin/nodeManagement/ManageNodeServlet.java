@@ -40,6 +40,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -52,14 +53,14 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.io.IOUtils;
 import org.opennms.core.db.DataSourceFactory;
-import org.opennms.core.resource.Vault;
 import org.opennms.core.utils.DBUtils;
-import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.config.NotificationFactory;
 import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.xml.event.Event;
 import org.opennms.web.api.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A servlet that handles managing or unmanaging interfaces and services on a
@@ -70,6 +71,9 @@ import org.opennms.web.api.Util;
  * @since 1.8.1
  */
 public class ManageNodeServlet extends HttpServlet {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(ManageNodeServlet.class);
+
     private static final long serialVersionUID = -544260517139205801L;
 
     // FIXME: Should this be deleted?
@@ -89,13 +93,8 @@ public class ManageNodeServlet extends HttpServlet {
      *
      * @throws javax.servlet.ServletException if any.
      */
+    @Override
     public void init() throws ServletException {
-        try {
-            DataSourceFactory.init();
-        } catch (Throwable e) {
-            throw new ServletException("Could not initialize database factory: " + e.getMessage(), e);
-        }
-
         try {
             NotificationFactory.init();
         } catch (Throwable e) {
@@ -104,15 +103,16 @@ public class ManageNodeServlet extends HttpServlet {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession userSession = request.getSession(false);
         List<ManagedInterface> allNodes = getManagedInterfacesFromSession(userSession);
 
         // the list of all interfaces marked as managed
-        List<String> interfaceList = getList(request.getParameterValues("interfaceCheck"));
+        List<String> interfaceList = Arrays.asList(request.getParameterValues("interfaceCheck"));
 
         // the list of all services marked as managed
-        List<String> serviceList = getList(request.getParameterValues("serviceCheck"));
+        List<String> serviceList = Arrays.asList(request.getParameterValues("serviceCheck"));
 
         // the list of interfaces that need to be put into the URL file
         List<String> addToURL = new ArrayList<String>();
@@ -124,7 +124,7 @@ public class ManageNodeServlet extends HttpServlet {
 
         final DBUtils d = new DBUtils(getClass());
         try {
-            Connection connection = Vault.getDbConnection();
+            Connection connection = DataSourceFactory.getInstance().getConnection();
             d.watch(connection);
             try {
                 connection.setAutoCommit(false);
@@ -185,7 +185,7 @@ public class ManageNodeServlet extends HttpServlet {
                             stmt.setString(2, curInterface.getAddress());
                             stmt.setInt(3, curInterface.getNodeid());
                             stmt.setInt(4, curService.getId());
-                            log().debug("doPost: executing manage service update for " + curInterface.getAddress() + " " + curService.getName());
+                            LOG.debug("doPost: executing manage service update for {} {}", curInterface.getAddress(), curService.getName());
                             stmt.executeUpdate();
                             
                             EventBuilder bldr = new EventBuilder(EventConstants.RESUME_POLLING_SERVICE_EVENT_UEI, "web ui", curDate);
@@ -201,7 +201,7 @@ public class ManageNodeServlet extends HttpServlet {
                             outagesstmt.setString(1, curInterface.getAddress());
                             outagesstmt.setInt(2, curInterface.getNodeid());
                             outagesstmt.setInt(3, curService.getId());
-                            log().debug("doPost: executing unmanage service update for " + curInterface.getAddress() + " " + curService.getName());
+                            LOG.debug("doPost: executing unmanage service update for {} {}", curInterface.getAddress(), curService.getName());
                             stmt.executeUpdate();
                             outagesstmt.executeUpdate();
 
@@ -266,7 +266,7 @@ public class ManageNodeServlet extends HttpServlet {
         }
         query.append(")");
 
-        log().debug("manageInterfaces: query string: " + query);
+        LOG.debug("manageInterfaces: query string: {}", query);
         Statement update = connection.createStatement();
         update.executeUpdate(query.toString());
         update.close();
@@ -286,7 +286,7 @@ public class ManageNodeServlet extends HttpServlet {
         }
         query.append(")");
 
-        log().debug("unmanageInterfaces: query: " + query);
+        LOG.debug("unmanageInterfaces: query: {}", query);
         Statement update = connection.createStatement();
         update.executeUpdate(query.toString());
         update.close();
@@ -330,21 +330,7 @@ public class ManageNodeServlet extends HttpServlet {
 
     /**
      */
-    private List<String> getList(String array[]) {
-        List<String> newList = new ArrayList<String>();
-
-        if (array != null) {
-            for (int i = 0; i < array.length; i++) {
-                newList.add(array[i]);
-            }
-        }
-
-        return newList;
-    }
-
-    /**
-     */
-    private void sendEvent(Event event) throws ServletException {
+    private static void sendEvent(Event event) throws ServletException {
         try {
             Util.createEventProxy().send(event);
         } catch (Throwable e) {
@@ -352,7 +338,4 @@ public class ManageNodeServlet extends HttpServlet {
         }
     }
 
-    private ThreadCategory log() {
-        return ThreadCategory.getInstance(getClass());
-    }
 }

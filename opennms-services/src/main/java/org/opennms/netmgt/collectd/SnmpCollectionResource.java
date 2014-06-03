@@ -34,15 +34,17 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.opennms.core.utils.ThreadCategory;
-import org.opennms.core.utils.TimeKeeper;
-import org.opennms.netmgt.config.collector.AttributeGroup;
-import org.opennms.netmgt.config.collector.AttributeGroupType;
-import org.opennms.netmgt.config.collector.CollectionResource;
-import org.opennms.netmgt.config.collector.CollectionSetVisitor;
-import org.opennms.netmgt.config.collector.ServiceParameters;
-import org.opennms.netmgt.model.RrdRepository;
+import org.opennms.netmgt.collection.api.AttributeGroup;
+import org.opennms.netmgt.collection.api.AttributeGroupType;
+import org.opennms.netmgt.collection.api.CollectionAgent;
+import org.opennms.netmgt.collection.api.CollectionResource;
+import org.opennms.netmgt.collection.api.CollectionSetVisitor;
+import org.opennms.netmgt.collection.api.ServiceParameters;
+import org.opennms.netmgt.collection.api.TimeKeeper;
+import org.opennms.netmgt.rrd.RrdRepository;
 import org.opennms.netmgt.snmp.SnmpValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -53,9 +55,11 @@ import org.opennms.netmgt.snmp.SnmpValue;
  */
 public abstract class SnmpCollectionResource implements CollectionResource {
     
-    private ResourceType m_resourceType;
+    private static final Logger LOG = LoggerFactory.getLogger(SnmpCollectionResource.class);
+    
+    private final ResourceType m_resourceType;
 
-    private Map<AttributeGroupType, AttributeGroup> m_groups = new HashMap<AttributeGroupType, AttributeGroup>();
+    private final Map<AttributeGroupType, AttributeGroup> m_groups = new HashMap<AttributeGroupType, AttributeGroup>();
 
     /**
      * <p>Constructor for SnmpCollectionResource.</p>
@@ -78,13 +82,14 @@ public abstract class SnmpCollectionResource implements CollectionResource {
     /**
      * <p>getCollectionAgent</p>
      *
-     * @return a {@link org.opennms.netmgt.collectd.CollectionAgent} object.
+     * @return a {@link org.opennms.netmgt.collection.api.CollectionAgent} object.
      */
     public final CollectionAgent getCollectionAgent() {
         return m_resourceType.getAgent();
     }
 
     /** {@inheritDoc} */
+    @Override
     public abstract boolean shouldPersist(ServiceParameters params);
 
     /**
@@ -92,34 +97,30 @@ public abstract class SnmpCollectionResource implements CollectionResource {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String getOwnerName() {
         return getCollectionAgent().getHostAddress();
     }
 
     /** {@inheritDoc} */
+    @Override
     public abstract File getResourceDir(RrdRepository repository) throws FileNotFoundException;
-    
+
     /**
-     * <p>getType</p>
+     * Returns ifType; is (but not sure if it should be) -1 for non interface type collections, otherwise
+     * the SNMP type of the interface. This field is used to match the ifType field of the group from 
+     * datacollection-config.xml.
      *
      * @return a int.
      */
-    public abstract int getType();
+    public abstract int getSnmpIfType();
     
-    /**
-     * <p>log</p>
-     *
-     * @return a {@link org.opennms.core.utils.ThreadCategory} object.
-     */
-    public ThreadCategory log() {
-        return ThreadCategory.getInstance(getClass());
-    }
-
     /**
      * <p>rescanNeeded</p>
      *
      * @return a boolean.
      */
+    @Override
     public boolean rescanNeeded() {
     	return false;
     }
@@ -137,22 +138,21 @@ public abstract class SnmpCollectionResource implements CollectionResource {
 
     private void addAttribute(final SnmpAttribute attr) {
         AttributeGroup group = getGroup(attr.getAttributeType().getGroupType());
-        if (log().isDebugEnabled()) {
-            log().debug("Adding attribute " + attr.getClass().getName() + ": " + attr + " to group " + group);
-        }
+        LOG.debug("Adding attribute {}: {} to group {}", attr.getClass().getName(), attr, group);
         group.addAttribute(attr);
     }
 
     private AttributeGroup getGroup(final AttributeGroupType groupType) {
         AttributeGroup group = m_groups.get(groupType);
         if (group == null) {
-            group = new AttributeGroup(this, groupType);
+            group = new SnmpAttributeGroup(this, groupType);
             m_groups.put(groupType, group);
         }
         return group;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void visit(final CollectionSetVisitor visitor) {
         visitor.visitResource(this);
         
@@ -172,6 +172,7 @@ public abstract class SnmpCollectionResource implements CollectionResource {
         return m_groups.values();
     }
 
+    @Override
     public TimeKeeper getTimeKeeper() {
         return null;
     }

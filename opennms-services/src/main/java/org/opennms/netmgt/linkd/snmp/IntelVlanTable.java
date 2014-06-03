@@ -29,10 +29,13 @@
 package org.opennms.netmgt.linkd.snmp;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.opennms.netmgt.capsd.snmp.SnmpTable;
+import org.opennms.netmgt.model.OnmsVlan;
 import org.opennms.netmgt.snmp.SnmpInstId;
 import org.opennms.netmgt.snmp.SnmpObjId;
+import org.opennms.netmgt.snmp.SnmpStore;
 
 /**
  * <P>
@@ -46,7 +49,7 @@ import org.opennms.netmgt.snmp.SnmpObjId;
  * @see <A HREF="http://www.ietf.org/rfc/rfc1213.txt">RFC1213 </A>
  * @version $Id: $
  */
-public class IntelVlanTable extends SnmpTable<IntelVlanTableEntry> {
+public class IntelVlanTable extends VlanTableBasic {
 
 	/**
 	 * <p>Constructor for IntelVlanTable.</p>
@@ -58,9 +61,19 @@ public class IntelVlanTable extends SnmpTable<IntelVlanTableEntry> {
     }
     
     /** {@inheritDoc} */
+        @Override
     protected IntelVlanTableEntry createTableEntry(SnmpObjId base, SnmpInstId inst, Object val) {
         return new IntelVlanTableEntry();
     }
 
+	@Override
+	public List<OnmsVlan> getVlansForSnmpCollection() {
+		List<OnmsVlan> vlans = new ArrayList<OnmsVlan>();
+		for (SnmpStore elm: getEntries()) {
+				IntelVlanTableEntry vle = (IntelVlanTableEntry) elm;
+				vlans.add(vle.getOnmsVlan());
+		}
+		return vlans;
+	}
 }
 

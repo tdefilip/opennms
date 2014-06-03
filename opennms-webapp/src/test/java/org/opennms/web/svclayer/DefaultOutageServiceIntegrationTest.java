@@ -38,11 +38,11 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
-import org.opennms.core.utils.BeanUtils;
 import org.opennms.netmgt.dao.DatabasePopulator;
-import org.opennms.netmgt.dao.OutageDao;
+import org.opennms.netmgt.dao.api.OutageDao;
 import org.opennms.netmgt.model.OnmsCriteria;
 import org.opennms.netmgt.model.OnmsOutage;
 import org.opennms.test.JUnitConfigurationEnvironment;
@@ -62,7 +62,8 @@ import org.springframework.transaction.annotation.Transactional;
         "classpath*:/META-INF/opennms/component-dao.xml",
         "classpath*:/META-INF/opennms/component-service.xml",
         "classpath:/META-INF/opennms/applicationContext-databasePopulator.xml",
-        "classpath:/META-INF/opennms/applicationContext-insertData-enabled.xml"
+        "classpath:/META-INF/opennms/applicationContext-insertData-enabled.xml",
+        "classpath:/META-INF/opennms/applicationContext-minimal-conf.xml"
 })
 @JUnitConfigurationEnvironment
 @JUnitTemporaryDatabase
@@ -102,7 +103,6 @@ public class DefaultOutageServiceIntegrationTest implements InitializingBean {
     @Test
     @Transactional
     @Ignore
-    @JUnitTemporaryDatabase
     public void testGetSupressedOutages() {
         Collection<OnmsOutage> outages = m_outageService.getSuppressedOutages();
         assertTrue("Collection should be emtpy ", outages.isEmpty());
@@ -119,7 +119,6 @@ public class DefaultOutageServiceIntegrationTest implements InitializingBean {
     @Test
     @Transactional
     @Ignore
-    @JUnitTemporaryDatabase
     public void testNoOfSuppressedOutages(){
         Integer outages = m_outageService.getSuppressedOutageCount();
         assertTrue("We should find suppressed messages ", outages == 0);

@@ -1,8 +1,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2012 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2012 The OpenNMS Group, Inc.
+ * Copyright (C) 2013 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2013 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -28,55 +28,26 @@
 
 package org.opennms.features.topology.plugins.browsers;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-
+import org.opennms.core.criteria.Alias;
 import org.opennms.core.criteria.Criteria;
-import org.opennms.core.criteria.Order;
-import org.opennms.core.criteria.restrictions.AnyRestriction;
 import org.opennms.core.criteria.restrictions.EqRestriction;
 import org.opennms.core.criteria.restrictions.Restriction;
-import org.opennms.features.topology.api.SelectionContext;
-import org.opennms.features.topology.api.topo.VertexRef;
-import org.opennms.netmgt.dao.NodeDao;
+import org.opennms.features.topology.api.VerticesUpdateManager;
+import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.model.PrimaryType;
+import org.opennms.osgi.EventConsumer;
 
-import com.vaadin.data.util.BeanItem;
+import java.util.Arrays;
+import java.util.List;
 
 public class NodeDaoContainer extends OnmsDaoContainer<OnmsNode,Integer> {
 
 	private static final long serialVersionUID = -5697472655705494537L;
 
-	private Map<Object,Class<?>> m_properties;
-
 	public NodeDaoContainer(NodeDao dao) {
-		super(dao);
-	}
-
-	@Override
-	public Class<OnmsNode> getItemClass() {
-		return OnmsNode.class;
-	}
-
-	private synchronized void loadPropertiesIfNull() {
-		if (m_properties == null) {
-			m_properties = new TreeMap<Object,Class<?>>();
-			BeanItem<OnmsNode> item = new BeanItem<OnmsNode>(new OnmsNode());
-			for (Object key : item.getItemPropertyIds()) {
-				m_properties.put(key, item.getItemProperty(key).getType());
-			}
-		}
-	}
-
-	@Override
-	public Collection<?> getContainerPropertyIds() {
-		loadPropertiesIfNull();
-
-		return Collections.unmodifiableCollection(m_properties.keySet());
+		super(OnmsNode.class, dao);
+        addBeanToHibernatePropertyMapping("primaryInterface", "ipInterfaces.ipAddress");
 	}
 
 	@Override
@@ -84,40 +55,37 @@ public class NodeDaoContainer extends OnmsDaoContainer<OnmsNode,Integer> {
 		return bean == null ? null : bean.getId();
 	}
 
-	@Override
-	public Class<?> getType(Object propertyId) {
-		return m_properties.get(propertyId);
-	}
+    @Override
+    protected void addAdditionalCriteriaOptions(Criteria criteria, Page page, boolean doOrder) {
+        if (!doOrder) return;
+        criteria.setAliases(Arrays.asList(new Alias[] {
+                new Alias("ipInterfaces", "ipInterfaces", Alias.JoinType.LEFT_JOIN, new EqRestriction("ipInterfaces.isSnmpPrimary", PrimaryType.PRIMARY))
+        }));
+    }
 
-	@Override
-	public Collection<?> getSortableContainerPropertyIds() {
-		loadPropertiesIfNull();
+    @Override
+    protected void doItemAddedCallBack(int rowNumber, Integer id, OnmsNode eachBean) {
+        eachBean.getPrimaryInterface();
+    }
 
-		Collection<Object> propertyIds = new HashSet<Object>();
-		propertyIds.addAll(m_properties.keySet());
+    @Override
+    @EventConsumer
+    public void verticesUpdated(VerticesUpdateManager.VerticesUpdateEvent event) {
+        final NodeIdFocusToRestrictionsConverter converter = new NodeIdFocusToRestrictionsConverter() {
 
-		// primaryInterface is a complex object so we can't sort on it (yet)
-		propertyIds.remove("primaryInterface");
+            @Override
+            protected Restriction createRestriction(Integer nodeId) {
+                return new EqRestriction("id", nodeId);
+            }
+        };
+        List<Restriction> newRestrictions = converter.getRestrictions(event.getVertexRefs());
 
-		return Collections.unmodifiableCollection(propertyIds);
-	}
-
-	@Override
-	public void selectionChanged(SelectionContext selectionContext) {
-		Collection<Order> oldOrders = m_criteria.getOrders();
-		Set<Restriction> restrictions = new HashSet<Restriction>();
-		for (VertexRef ref : selectionContext.getSelectedVertexRefs()) {
-			if ("nodes".equals(ref.getNamespace())) {
-				restrictions.add(new EqRestriction("id", Integer.valueOf(ref.getId())));
-			}
-		}
-
-		m_criteria = new Criteria(getItemClass());
-		if (restrictions.size() > 0) {
-			AnyRestriction any = new AnyRestriction(restrictions.toArray(new Restriction[0]));
-			m_criteria.addRestriction(any);
-		}
-		m_criteria.setOrders(oldOrders);
-		fireItemSetChangedEvent();
-	}
+        if (!getRestrictions().equals(newRestrictions)) { // selection really changed
+            setRestrictions(newRestrictions);
+            getCache().reload(getPage());
+            fireItemSetChangedEvent();
+        }
+    }
 }
+
+

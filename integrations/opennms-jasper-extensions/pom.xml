@@ -4,12 +4,12 @@
 <parent>
   <groupId>org.opennms</groupId>
   <artifactId>opennms-integrations</artifactId>
-  <version>1.12.8-SNAPSHOT</version>
+  <version>1.13.3-SNAPSHOT</version>
 </parent>
 <!-- the name must alphabetically come before jasperreports jar -->
   <artifactId>jasper-extensions</artifactId>
 
-  <name>opennms-jasper-extensions</name>
+	<name>OpenNMS Integrations Integrations Jasper Extensions</name>
   <url>http://maven.apache.org</url>
 
   <packaging>bundle</packaging>

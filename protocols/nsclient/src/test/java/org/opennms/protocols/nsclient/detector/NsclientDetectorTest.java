@@ -31,15 +31,15 @@ package org.opennms.protocols.nsclient.detector;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.MockLogAppender;
-import org.opennms.core.utils.BeanUtils;
 import org.opennms.netmgt.provision.server.SimpleServer;
 import org.opennms.netmgt.provision.server.exchange.RequestHandler;
 
@@ -81,6 +81,7 @@ public class NsclientDetectorTest implements InitializingBean {
         MockLogAppender.setupLogging();
         // Initialize Mock NSClient Server
         m_server  = new SimpleServer() {
+            @Override
             public void onInit() {
                 addResponseHandler(startsWith("None&1"), new RequestHandler() {
                     @Override

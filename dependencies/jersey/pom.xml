@@ -3,13 +3,13 @@
   <parent>
     <artifactId>dependencies</artifactId>
     <groupId>org.opennms</groupId>
-    <version>1.12.8-SNAPSHOT</version>
+    <version>1.13.3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.dependencies</groupId>
   <artifactId>jersey-dependencies</artifactId>
   <packaging>pom</packaging>
-  <name>OpenNMS Jersey Dependencies</name>
+  <name>OpenNMS Dependencies Jersey</name>
   <properties>
     <jerseyVersion>1.10</jerseyVersion>
   </properties>
@@ -113,6 +113,12 @@
       <groupId>com.sun.jersey.contribs</groupId>
       <artifactId>jersey-apache-client</artifactId>
       <version>${jerseyVersion}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.sun.jersey.contribs</groupId>
@@ -142,7 +148,6 @@
     <dependency>
       <groupId>org.opennms.dependencies</groupId>
       <artifactId>spring-web-dependencies</artifactId>
-      <version>${project.version}</version>
       <type>pom</type>
     </dependency>
   </dependencies>

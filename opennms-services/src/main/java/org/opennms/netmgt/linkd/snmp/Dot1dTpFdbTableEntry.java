@@ -28,8 +28,8 @@
 
 package org.opennms.netmgt.linkd.snmp;
 
-import org.opennms.netmgt.capsd.snmp.NamedSnmpVar;
-import org.opennms.netmgt.capsd.snmp.SnmpStore;
+import org.opennms.netmgt.snmp.NamedSnmpVar;
+import org.opennms.netmgt.snmp.SnmpStore;
 
 /**
  *<P>The Dot1dTpFdbTableEntry class is designed to hold all the MIB-II

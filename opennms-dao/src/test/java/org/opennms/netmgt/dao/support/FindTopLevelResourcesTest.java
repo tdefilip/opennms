@@ -48,14 +48,15 @@ import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.config.CollectdConfigFactory;
 import org.opennms.netmgt.config.DataCollectionConfigDao;
 import org.opennms.netmgt.config.datacollection.ResourceType;
-import org.opennms.netmgt.dao.LocationMonitorDao;
-import org.opennms.netmgt.dao.NodeDao;
+import org.opennms.netmgt.dao.api.LocationMonitorDao;
+import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.filter.FilterDao;
 import org.opennms.netmgt.filter.FilterDaoFactory;
 import org.opennms.netmgt.model.LocationMonitorIpInterface;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsResource;
+import org.opennms.netmgt.model.ResourceTypeUtils;
 import org.opennms.netmgt.rrd.RrdUtils;
 import org.opennms.netmgt.rrd.jrobin.JRobinRrdStrategy;
 import org.opennms.test.FileAnticipator;
@@ -145,8 +146,8 @@ public class FindTopLevelResourcesTest {
         expect(m_locationMonitorDao.findStatusChangesForNodeForUniqueMonitorAndInterface(n1.getId())).andReturn(new ArrayList<LocationMonitorIpInterface>(0));
 
         // Common directories
-        File snmpDir = m_fileAnticipator.tempDir(DefaultResourceDao.SNMP_DIRECTORY);
-        File responseDir = m_fileAnticipator.tempDir(DefaultResourceDao.RESPONSE_DIRECTORY);
+        File snmpDir = m_fileAnticipator.tempDir(ResourceTypeUtils.SNMP_DIRECTORY);
+        File responseDir = m_fileAnticipator.tempDir(ResourceTypeUtils.RESPONSE_DIRECTORY);
 
         // RRD Directory for n1
         File nodeDir = m_fileAnticipator.tempDir(snmpDir, n1.getId().toString());
@@ -219,9 +220,9 @@ public class FindTopLevelResourcesTest {
         }
 
         // Common directories
-        File snmpDir = m_fileAnticipator.tempDir(DefaultResourceDao.SNMP_DIRECTORY);
-        File responseDir = m_fileAnticipator.tempDir(DefaultResourceDao.RESPONSE_DIRECTORY);
-        File fsDir = m_fileAnticipator.tempDir(snmpDir, DefaultResourceDao.FOREIGN_SOURCE_DIRECTORY);
+        File snmpDir = m_fileAnticipator.tempDir(ResourceTypeUtils.SNMP_DIRECTORY);
+        File responseDir = m_fileAnticipator.tempDir(ResourceTypeUtils.RESPONSE_DIRECTORY);
+        File fsDir = m_fileAnticipator.tempDir(snmpDir, ResourceTypeUtils.FOREIGN_SOURCE_DIRECTORY);
         File foreignSourceDir = m_fileAnticipator.tempDir(fsDir, foreignSource);
 
         // RRD Directory for n1
@@ -333,9 +334,9 @@ public class FindTopLevelResourcesTest {
         expect(m_nodeDao.get(n2.getId())).andReturn(n2).times(2); // TODO ResponseTimeResourceType is the responsible for this.
 
         // Common directories
-        File snmpDir = m_fileAnticipator.tempDir(DefaultResourceDao.SNMP_DIRECTORY);
-        File responseDir = m_fileAnticipator.tempDir(DefaultResourceDao.RESPONSE_DIRECTORY);
-        File featureDir = m_fileAnticipator.tempDir(snmpDir, DefaultResourceDao.FOREIGN_SOURCE_DIRECTORY);
+        File snmpDir = m_fileAnticipator.tempDir(ResourceTypeUtils.SNMP_DIRECTORY);
+        File responseDir = m_fileAnticipator.tempDir(ResourceTypeUtils.RESPONSE_DIRECTORY);
+        File featureDir = m_fileAnticipator.tempDir(snmpDir, ResourceTypeUtils.FOREIGN_SOURCE_DIRECTORY);
         File fsDir = m_fileAnticipator.tempDir(featureDir, foreignSource);
 
         // RRD Directory for n1

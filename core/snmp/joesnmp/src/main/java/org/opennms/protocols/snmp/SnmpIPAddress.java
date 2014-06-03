@@ -155,6 +155,7 @@ public class SnmpIPAddress extends SnmpOctetString {
      * @return The ASN.1 value for this object.
      * 
      */
+    @Override
     public byte typeId() {
         return SnmpSMI.SMI_APPSTRING;
     }
@@ -165,6 +166,7 @@ public class SnmpIPAddress extends SnmpOctetString {
      * @return A newly created duplicate object.
      * 
      */
+    @Override
     public SnmpSyntax duplicate() {
         return new SnmpIPAddress(this);
     }
@@ -175,6 +177,7 @@ public class SnmpIPAddress extends SnmpOctetString {
      * @return A newly created duplicate object.
      * 
      */
+    @Override
     public Object clone() {
         return new SnmpIPAddress(this);
     }
@@ -199,6 +202,7 @@ public class SnmpIPAddress extends SnmpOctetString {
      *             Thrown if the passed buffer is not valid against the SMI
      *             definition.
      */
+    @Override
     public void setString(byte[] data) {
         if (data == null || data.length < 4)
             throw new java.security.InvalidParameterException("Buffer underflow error converting IP address");
@@ -232,6 +236,7 @@ public class SnmpIPAddress extends SnmpOctetString {
      * 
      * @see java.lang.String#getBytes()
      */
+    @Override
     public void setString(String data) {
         byte[] bdata = (data == null ? null : data.getBytes());
         if (bdata == null || bdata.length < 4)
@@ -262,6 +267,7 @@ public class SnmpIPAddress extends SnmpOctetString {
      *                Thrown by the encoder if an error occurs trying to decode
      *                the data buffer.
      */
+    @Override
     public int decodeASN(byte[] buf, int offset, AsnEncoder encoder) throws AsnDecodingException {
         Object[] rVals = encoder.parseString(buf, offset);
 
@@ -284,11 +290,10 @@ public class SnmpIPAddress extends SnmpOctetString {
      * length is not four bytes in length or an error occurs during the
      * conversion then an exception is thrown.
      * 
-     * @return The IPv4Address converted from the appliation string
+     * @return The IPv4Address converted from the application string
      * 
-     * @exception SnmpBadConversionException
-     *                Thrown if the length of the string is invalid. Must be
-     *                equal to four
+     * @exception RuntimeException
+     *                Thrown if the length of the string is invalid. Must be equal to four.
      * 
      */
     public InetAddress convertToIpAddress() {
@@ -310,6 +315,7 @@ public class SnmpIPAddress extends SnmpOctetString {
     /**
      * Returns the application string as a IPv4 dotted decimal address
      */
+    @Override
     public String toString() {
         byte[] data = getString();
 

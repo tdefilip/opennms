@@ -61,8 +61,8 @@ Requires(pre):		opennms-webui      >= %{version}-%{release}
 Requires:		opennms-webui      >= %{version}-%{release}
 Requires(pre):		opennms-core        = %{version}-%{release}
 Requires:		opennms-core        = %{version}-%{release}
-Requires(pre):		postgresql-server  >= 8.1
-Requires:		postgresql-server  >= 8.1
+Requires(pre):		postgresql-server  >= 8.4
+Requires:		postgresql-server  >= 8.4
 
 # don't worry about buildrequires, the shell script will bomb quick  =)
 BuildRequires:		%{jdk}
@@ -436,6 +436,20 @@ The Juniper JCA collector provides a collector plugin for Collectd to collect da
 %{extrainfo2}
 
 
+%package plugin-collector-vtdxml-handler
+Summary:	VTD-XML Collection Handler for OpenNMS
+Group:		Applications/System
+Requires(pre):	opennms-plugin-protocol-xml = %{version}-%{release}
+Requires:	opennms-plugin-protocol-xml = %{version}-%{release}
+
+%description plugin-collector-vtdxml-handler
+The XML Collection Handler for Standard and 3GPP XMLs based on VTD-XML.
+VTD-XML is very fast GPL library for parsing XMLs with XPath Suppoer.
+
+%{extrainfo}
+%{extrainfo2}
+
+
 %prep
 
 tar -xvzf $RPM_SOURCE_DIR/%{name}-source-%{version}-%{release}.tar.gz -C $RPM_BUILD_DIR
@@ -533,9 +547,8 @@ rm -rf $RPM_BUILD_ROOT%{instprefix}/etc/README.build
 %endif
 
 install -d -m 755 $RPM_BUILD_ROOT%{logdir}
-mv $RPM_BUILD_ROOT%{instprefix}/logs/* $RPM_BUILD_ROOT%{logdir}/
+mv $RPM_BUILD_ROOT%{instprefix}/logs/.readme $RPM_BUILD_ROOT%{logdir}/
 rm -rf $RPM_BUILD_ROOT%{instprefix}/logs
-install -d -m 755 $RPM_BUILD_ROOT%{logdir}/{controller,daemon,webapp}
 
 install -d -m 755 $RPM_BUILD_ROOT%{sharedir}
 mv $RPM_BUILD_ROOT%{instprefix}/share/* $RPM_BUILD_ROOT%{sharedir}/
@@ -637,6 +650,8 @@ find $RPM_BUILD_ROOT%{instprefix}/lib ! -type d | \
 	grep -v 'opennms-integration-otrs' | \
 	grep -v 'opennms-integration-rt' | \
 	grep -v 'org.opennms.protocols.xml' | \
+	grep -v 'opennms-vtdxml-collector-handler' | \
+	grep -v 'vtd-xml' | \
 	grep -v 'org.opennms.protocols.xmp' | \
 	grep -v 'xmp' | \
 	grep -v 'org.opennms.features.juniper-tca-collector' | \
@@ -682,9 +697,6 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(664 root root 775)
 %attr(755,root,root)	%{profiledir}/%{name}.sh
 %attr(755,root,root) %{logdir}
-			%{logdir}/controller
-			%{logdir}/daemon
-			%{logdir}/webapp
 			%{instprefix}/data
 			%{instprefix}/deploy
 
@@ -722,7 +734,6 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644 root root 755)
 %config %{jettydir}/opennms-remoting/WEB-INF/*.xml
 %config %{jettydir}/%{servletdir}/WEB-INF/*.properties
-%config %{jettydir}/opennms-remoting/WEB-INF/*.properties
 
 %files plugins
 
@@ -828,6 +839,11 @@ rm -rf $RPM_BUILD_ROOT
 %{sharedir}/etc-pristine/datacollection/juniper-tca*
 %{sharedir}/etc-pristine/snmp-graph.properties.d/juniper-tca*
 
+%files plugin-collector-vtdxml-handler
+%defattr(664 root root 775)
+%{instprefix}/lib/opennms-vtdxml-collector-handler-*.jar
+%{instprefix}/lib/vtd-xml-*.jar
+
 %post docs
 printf -- "- making symlink for $RPM_INSTALL_PREFIX0/docs... "
 if [ -e "$RPM_INSTALL_PREFIX0/docs" ] && [ ! -L "$RPM_INSTALL_PREFIX0/docs" ]; then
@@ -862,16 +878,6 @@ if [ "$RPM_INSTALL_PREFIX0/logs" != "$RPM_INSTALL_PREFIX2" ]; then
 		echo "done"
 	fi
 fi
-
-for dir in controller daemon webapp; do
-	if [ -f "$RPM_INSTALL_PREFIX2/$dir" ]; then
-		printf -- "ERROR: not sure what to do... $RPM_INSTALL_PREFIX2/$dir is a file, but it should be a directory or symlink.  Expect problems.  :)"
-	else
-		if [ ! -d "$RPM_INSTALL_PREFIX2/$dir" ]; then
-			mkdir -p "$RPM_INSTALL_PREFIX2/$dir"
-		fi
-	fi
-done
 
 if [ "$RPM_INSTALL_PREFIX0/share" != "$RPM_INSTALL_PREFIX1" ]; then
 	printf -- "- making symlink for $RPM_INSTALL_PREFIX0/share... "

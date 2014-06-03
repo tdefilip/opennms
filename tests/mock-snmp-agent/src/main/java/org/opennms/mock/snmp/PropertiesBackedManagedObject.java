@@ -86,6 +86,7 @@ public class PropertiesBackedManagedObject implements ManagedObject, MockSnmpMOL
 	HashMap<String,DynamicVariable> m_dynamicVariableCache = new HashMap<String,DynamicVariable>();
     
     /** {@inheritDoc} */
+        @Override
     public List<ManagedObject> loadMOs(URL moFile) {
     	final Properties props = loadProperties(moFile);
     	
@@ -134,13 +135,16 @@ public class PropertiesBackedManagedObject implements ManagedObject, MockSnmpMOL
 	
 	private void closeQuietly(InputStream in) {
 		try {
-			in.close();
+			if (in != null) {
+				in.close();
+			}
 		} catch (IOException e) {
 			// ignore this -- hence the quietly
 		}
 	}
     
     /** {@inheritDoc} */
+        @Override
     public OID find(final MOScope range) {
         if (!m_scope.isOverlapping(range)) {
             return null;
@@ -187,6 +191,7 @@ public class PropertiesBackedManagedObject implements ManagedObject, MockSnmpMOL
     }
 
     /** {@inheritDoc} */
+        @Override
     public void get(final SubRequest request) {
         getVariable(request, request.getVariableBinding().getOid());
     }
@@ -204,11 +209,13 @@ public class PropertiesBackedManagedObject implements ManagedObject, MockSnmpMOL
      *
      * @return a {@link org.snmp4j.agent.MOScope} object.
      */
+        @Override
     public MOScope getScope() {
         return m_scope;
     }
 
     /** {@inheritDoc} */
+        @Override
     public boolean next(final SubRequest request) {
     	final OID nextOid = findNextOid(request.getVariableBinding().getOid());
         if (nextOid == null) {
@@ -219,6 +226,7 @@ public class PropertiesBackedManagedObject implements ManagedObject, MockSnmpMOL
     }
 
     /** {@inheritDoc} */
+        @Override
     public void prepare(final SubRequest request) {
     	// store the old value, in case we undo it
     	final VariableBinding vb = request.getVariableBinding();
@@ -229,6 +237,7 @@ public class PropertiesBackedManagedObject implements ManagedObject, MockSnmpMOL
     }
 
     /** {@inheritDoc} */
+        @Override
     public void commit(final SubRequest request) {
     	final VariableBinding vb = request.getVariableBinding();
     	final Variable v = vb.getVariable();
@@ -238,6 +247,7 @@ public class PropertiesBackedManagedObject implements ManagedObject, MockSnmpMOL
     }
 
     /** {@inheritDoc} */
+        @Override
     public void cleanup(final SubRequest request) {
     	m_oldValue = null;
     	final RequestStatus status = request.getStatus();
@@ -245,6 +255,7 @@ public class PropertiesBackedManagedObject implements ManagedObject, MockSnmpMOL
     }
 
     /** {@inheritDoc} */
+        @Override
     public void undo(final SubRequest request) {
     	m_vars.put(request.getVariableBinding().getOid(), m_oldValue);
     	m_oldValue = null;
@@ -254,6 +265,7 @@ public class PropertiesBackedManagedObject implements ManagedObject, MockSnmpMOL
     }
 
     /** {@inheritDoc} */
+        @Override
     public void updateValue(final OID oid, final Variable value) {
         m_vars.put(oid, value);
     }
@@ -263,6 +275,7 @@ public class PropertiesBackedManagedObject implements ManagedObject, MockSnmpMOL
      *
      * @return a boolean.
      */
+        @Override
     public boolean isAccessibleForCreate() {
         return false;
     }
@@ -272,6 +285,7 @@ public class PropertiesBackedManagedObject implements ManagedObject, MockSnmpMOL
      *
      * @return a boolean.
      */
+        @Override
     public boolean isAccessibleForNotify() {
         return false;
     }
@@ -281,6 +295,7 @@ public class PropertiesBackedManagedObject implements ManagedObject, MockSnmpMOL
      *
      * @return a boolean.
      */
+        @Override
     public boolean isAccessibleForRead() {
         return true;
     }
@@ -290,6 +305,7 @@ public class PropertiesBackedManagedObject implements ManagedObject, MockSnmpMOL
      *
      * @return a boolean.
      */
+        @Override
     public boolean isAccessibleForWrite() {
         return false;
     }

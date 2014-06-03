@@ -59,6 +59,7 @@ public class UpdateGroupServlet extends HttpServlet {
     private static final long serialVersionUID = -4328190323404240442L;
 
     /** {@inheritDoc} */
+    @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession userSession = request.getSession(false);
 
@@ -69,7 +70,7 @@ public class UpdateGroupServlet extends HttpServlet {
             // get the rest of the group information from the form
             newGroup.removeAllUser();
 
-            String users[] = request.getParameterValues("selectedUsers");
+            String[] users = request.getParameterValues("selectedUsers");
 
             if (users != null) {
                 for (int i = 0; i < users.length; i++) {

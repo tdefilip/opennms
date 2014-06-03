@@ -33,14 +33,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.opennms.core.utils.TimeKeeper;
-import org.opennms.netmgt.config.collector.CollectionAttribute;
-import org.opennms.netmgt.config.collector.CollectionAttributeType;
-import org.opennms.netmgt.config.collector.CollectionResource;
-import org.opennms.netmgt.config.collector.CollectionSetVisitor;
-import org.opennms.netmgt.config.collector.Persister;
-import org.opennms.netmgt.config.collector.ServiceParameters;
-import org.opennms.netmgt.model.RrdRepository;
+import org.opennms.netmgt.collection.api.CollectionAttribute;
+import org.opennms.netmgt.collection.api.CollectionAttributeType;
+import org.opennms.netmgt.collection.api.CollectionResource;
+import org.opennms.netmgt.collection.api.CollectionSetVisitor;
+import org.opennms.netmgt.collection.api.Persister;
+import org.opennms.netmgt.collection.api.ServiceParameters;
+import org.opennms.netmgt.collection.api.TimeKeeper;
+import org.opennms.netmgt.rrd.RrdRepository;
 
 /**
  * MockCollectionResource
@@ -49,10 +49,10 @@ import org.opennms.netmgt.model.RrdRepository;
  */
 public class MockCollectionResource implements CollectionResource {
     
-    private String parent;
+    private final String parent;
     private String instance;
-    private String type;
-    private Map<String,String> attributes = new HashMap<String,String>();
+    private final String type;
+    private final Map<String,String> attributes = new HashMap<String,String>();
     
     public MockCollectionResource(String parent, String instance, String type) {
         this.parent = parent;
@@ -87,24 +87,29 @@ public class MockCollectionResource implements CollectionResource {
             final String attrName = entry.getKey();
             final String attrValue = entry.getValue();
             CollectionAttribute attribute = new CollectionAttribute() {
+                @Override
                 public CollectionResource getResource() { return resource; }
+                @Override
                 public String getStringValue() { return attrValue; }
+                @Override
                 public String getNumericValue() { return attrValue; }
+                @Override
                 public String getName() { return attrName; }
+                @Override
                 public void storeAttribute(Persister persister) {}
+                @Override
                 public boolean shouldPersist(ServiceParameters params) { return true; }
+                @Override
                 public CollectionAttributeType getAttributeType() { return null; }
+                @Override
                 public void visit(CollectionSetVisitor visitor) { }
+                @Override
                 public String getType() { return "string"; }
+                @Override
                 public String getMetricIdentifier() { return "MOCK_"+getName(); }
             };
             visitor.visitAttribute(attribute);
         }
-    }
-
-    @Override
-    public int getType() {
-        return 0;
     }
 
     @Override
@@ -127,14 +132,15 @@ public class MockCollectionResource implements CollectionResource {
     }
 
     @Override
-    public String getLabel() {
+    public String getInterfaceLabel() {
         return null;
     }
     
-    public Map<String,String> getAttribtueMap() {
+    public Map<String,String> getAttributeMap() {
         return attributes;
     }
 
+    @Override
     public TimeKeeper getTimeKeeper() {
         return null;
     }

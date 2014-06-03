@@ -3,12 +3,12 @@
   <parent>
     <artifactId>opennms</artifactId>
     <groupId>org.opennms</groupId>
-    <version>1.12.8-SNAPSHOT</version>
+    <version>1.13.3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>opennms-model</artifactId>
   <name>OpenNMS Data Model Components</name>
-  <packaging>jar</packaging>
+  <packaging>bundle</packaging>
   <build>
     <plugins>
       <plugin>
@@ -27,7 +27,6 @@
           </execution>
         </executions>
       </plugin>
-<!--
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
@@ -40,7 +39,6 @@
           </instructions>
         </configuration>
       </plugin>
--->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
@@ -89,7 +87,7 @@
     </dependency>
     <dependency>
       <groupId>org.opennms.dependencies</groupId>
-      <artifactId>spring-security-dependencies</artifactId>
+      <artifactId>spring-security-core-dependencies</artifactId>
       <type>pom</type>
     </dependency>
     <!-- used by castor -->
@@ -99,8 +97,8 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>org.opennms</groupId>
-      <artifactId>opennms-util</artifactId>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
     </dependency>
     <dependency>
       <groupId>org.opennms.core</groupId>
@@ -108,7 +106,7 @@
     </dependency>
     <dependency>
       <groupId>org.opennms.core</groupId>
-      <artifactId>org.opennms.core.db</artifactId>
+      <artifactId>org.opennms.core.logging</artifactId>
     </dependency>
     <dependency>
       <groupId>org.opennms.core</groupId>
@@ -117,6 +115,18 @@
     <dependency>
       <groupId>org.opennms.core</groupId>
       <artifactId>org.opennms.core.xml</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-util</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.features.poller</groupId>
+      <artifactId>org.opennms.features.poller.api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-rrd-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.opennms</groupId>

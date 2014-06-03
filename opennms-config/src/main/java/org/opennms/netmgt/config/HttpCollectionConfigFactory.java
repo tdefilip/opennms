@@ -39,11 +39,12 @@ import org.apache.commons.io.IOUtils;
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
 import org.opennms.core.utils.ConfigFileConstants;
-import org.opennms.core.utils.ThreadCategory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.opennms.core.xml.CastorUtils;
 import org.opennms.netmgt.config.httpdatacollection.HttpCollection;
 import org.opennms.netmgt.config.httpdatacollection.HttpDatacollectionConfig;
-import org.opennms.netmgt.model.RrdRepository;
+import org.opennms.netmgt.rrd.RrdRepository;
 
 /**
  * <p>HttpCollectionConfigFactory class.</p>
@@ -52,6 +53,7 @@ import org.opennms.netmgt.model.RrdRepository;
  * @version $Id: $
  */
 public class HttpCollectionConfigFactory {
+    private static final Logger LOG = LoggerFactory.getLogger(HttpCollectionConfigFactory.class);
     /** The singleton instance. */
     private static HttpCollectionConfigFactory m_instance;
 
@@ -97,7 +99,7 @@ public class HttpCollectionConfigFactory {
     }
 
     private void initialize(InputStream stream) throws MarshalException, ValidationException {
-        log().debug("initialize: initializing http collection config factory.");
+        LOG.debug("initialize: initializing http collection config factory.");
         m_config = CastorUtils.unmarshal(HttpDatacollectionConfig.class, stream);
     }
 
@@ -193,10 +195,6 @@ public class HttpCollectionConfigFactory {
         HttpCollectionConfigFactory.m_config = m_config;
     }
 
-    private ThreadCategory log() {
-        return ThreadCategory.getInstance();
-    }
-
     /**
      * <p>getHttpCollection</p>
      *
@@ -223,7 +221,7 @@ public class HttpCollectionConfigFactory {
      * <p>getRrdRepository</p>
      *
      * @param collectionName a {@link java.lang.String} object.
-     * @return a {@link org.opennms.netmgt.model.RrdRepository} object.
+     * @return a {@link org.opennms.netmgt.rrd.RrdRepository} object.
      */
     public RrdRepository getRrdRepository(String collectionName) {
         RrdRepository repo = new RrdRepository();

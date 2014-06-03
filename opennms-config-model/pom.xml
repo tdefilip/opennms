@@ -3,7 +3,7 @@
   <parent>
     <artifactId>opennms</artifactId>
     <groupId>org.opennms</groupId>
-    <version>1.12.8-SNAPSHOT</version>
+    <version>1.13.3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>opennms-config-model</artifactId>
@@ -97,11 +97,12 @@
               org.opennms.netmgt.config.categories.*;version="${project.version}",
               org.opennms.netmgt.config.charts.*;version="${project.version}",
               org.opennms.netmgt.config.collectd.*;version="${project.version}",
+              org.opennms.netmgt.config.collector.*;version="${project.version}",
               org.opennms.netmgt.config.databaseReports.*;version="${project.version}",
-              org.opennms.netmgt.config.datacollection.*;version="${project.version}",
               org.opennms.netmgt.config.destinationPaths.*;version="${project.version}",
               org.opennms.netmgt.config.discovery.*;version="${project.version}",
               org.opennms.netmgt.config.eventd.*;version="${project.version}",
+              org.opennms.netmgt.config.filter.*;version="${project.version}",
               org.opennms.netmgt.config.groups.*;version="${project.version}",
               org.opennms.netmgt.config.httpdatacollection.*;version="${project.version}",
               org.opennms.netmgt.config.javamail.*;version="${project.version}",
@@ -127,7 +128,6 @@
               org.opennms.netmgt.config.server.*;version="${project.version}",
               org.opennms.netmgt.config.service.*;version="${project.version}",
               org.opennms.netmgt.config.siteStatusViews.*;version="${project.version}",
-              org.opennms.netmgt.config.snmp.*;version="${project.version}",
               org.opennms.netmgt.config.snmpAsset.adapter.*;version="${project.version}",
               org.opennms.netmgt.config.snmpinterfacepoller.*;version="${project.version}",
               org.opennms.netmgt.config.statsd.*;version="${project.version}",
@@ -145,6 +145,7 @@
               org.opennms.netmgt.config.webuiColors.*;version="${project.version}",
               org.opennms.netmgt.config.wmi.*;version="${project.version}",
               org.opennms.netmgt.config.xmlrpcd.*;version="${project.version}",
+              org.opennms.netmgt.eventd.datablock.*;version="${project.version}",
               org.opennms.netmgt.xml.eventconf.*;version="${project.version}",
               org.opennms.netmgt.xml.rtc.*;version="${project.version}"
             </Export-Package>
@@ -152,39 +153,6 @@
         </configuration>
       </plugin>
     </plugins>
-    <pluginManagement>
-    	<plugins>
-    		<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
-    		<plugin>
-    			<groupId>org.eclipse.m2e</groupId>
-    			<artifactId>lifecycle-mapping</artifactId>
-    			<version>1.0.0</version>
-    			<configuration>
-    				<lifecycleMappingMetadata>
-    					<pluginExecutions>
-    						<pluginExecution>
-    							<pluginExecutionFilter>
-    								<groupId>
-    									org.opennms.maven.plugins
-    								</groupId>
-    								<artifactId>
-    									castor-maven-plugin
-    								</artifactId>
-    								<versionRange>[1.0,)</versionRange>
-    								<goals>
-    									<goal>generate</goal>
-    								</goals>
-    							</pluginExecutionFilter>
-    							<action>
-    								<ignore></ignore>
-    							</action>
-    						</pluginExecution>
-    					</pluginExecutions>
-    				</lifecycleMappingMetadata>
-    			</configuration>
-    		</plugin>
-    	</plugins>
-    </pluginManagement>
   </build>
   <dependencies>
     <dependency>
@@ -193,8 +161,8 @@
       <type>pom</type>
     </dependency>
     <dependency>
-      <groupId>org.opennms.core</groupId>
-      <artifactId>org.opennms.core.db</artifactId>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-config-jaxb</artifactId>
     </dependency>
     <dependency>
       <groupId>org.opennms.core</groupId>

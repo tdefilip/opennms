@@ -28,8 +28,11 @@
 
 package org.opennms.features.topology.app.internal.jung;
 
+import java.awt.*;
+import java.awt.geom.Point2D;
 import java.util.Collection;
 
+import org.apache.commons.collections15.Transformer;
 import org.opennms.features.topology.api.Graph;
 import org.opennms.features.topology.api.GraphContainer;
 import org.opennms.features.topology.api.Layout;
@@ -45,11 +48,11 @@ public class FRLayoutAlgorithm extends AbstractLayoutAlgorithm {
 
 	@Override
 	public void updateLayout(final GraphContainer graphContainer) {
-		
+
 		Graph g = graphContainer.getGraph();
-		
+
 		final Layout graphLayout = g.getLayout();
-		
+
 		SparseGraph<VertexRef, EdgeRef> jungGraph = new SparseGraph<VertexRef, EdgeRef>();
 
 		Collection<Vertex> vertices = g.getDisplayVertices();
@@ -57,28 +60,37 @@ public class FRLayoutAlgorithm extends AbstractLayoutAlgorithm {
 		for(Vertex v : vertices) {
 			jungGraph.addVertex(v);
 		}
-		
+
 		Collection<Edge> edges = g.getDisplayEdges();
-		
+
 		for(Edge e : edges) {
 			jungGraph.addEdge(e, e.getSource().getVertex(), e.getTarget().getVertex());
 		}
-		
 
 		FRLayout<VertexRef, EdgeRef> layout = new FRLayout<VertexRef, EdgeRef>(jungGraph);
-		layout.setInitializer(initializer(graphLayout));
-		layout.setSize(selectLayoutSize(graphContainer));
-		
+		// Initialize the vertex positions to the last known positions from the layout
+        Dimension size = selectLayoutSize(graphContainer);
+        layout.setInitializer(initializer(graphLayout, (int)size.getWidth()/2, (int)size.getHeight()/2));
+        // Resize the graph to accommodate the number of vertices
+        layout.setSize(size);
+
 		while(!layout.done()) {
 			layout.step();
 		}
-		
-		
+
+		// Store the new positions in the layout
 		for(Vertex v : vertices) {
-			graphLayout.setLocation(v, (int)layout.getX(v), (int)layout.getY(v));
+			graphLayout.setLocation(v, (int)layout.getX(v) - (size.getWidth()/2), (int)layout.getY(v) - (size.getHeight()/2));
 		}
-		
-		
 	}
 
+    protected static Transformer<VertexRef, Point2D> initializer(final Layout graphLayout, final int xOffset, final int yOffset) {
+        return new Transformer<VertexRef, Point2D>() {
+            @Override
+            public Point2D transform(VertexRef v) {
+                org.opennms.features.topology.api.Point location = graphLayout.getLocation(v);
+                return new Point2D.Double(location.getX()+xOffset, location.getY()+yOffset);
+            }
+        };
+    }
 }

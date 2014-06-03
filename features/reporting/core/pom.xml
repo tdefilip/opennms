@@ -3,12 +3,12 @@
   <parent>
     <groupId>org.opennms.features</groupId>
     <artifactId>org.opennms.features.reporting</artifactId>
-    <version>1.12.8-SNAPSHOT</version>
+    <version>1.13.3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features.reporting</groupId>
   <artifactId>org.opennms.features.reporting.core</artifactId>
-  <name>OpenNMS Reporting Core</name>
+  <name>OpenNMS Features Reporting Core</name>
   <url>http://www.opennms.org/</url>
   <packaging>bundle</packaging>
   <build>
@@ -95,6 +95,10 @@
       <groupId>org.opennms.dependencies</groupId>
       <artifactId>spring-dependencies</artifactId>
       <type>pom</type>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
     </dependency>
     <dependency>
       <groupId>org.opennms.dependencies</groupId>

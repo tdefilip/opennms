@@ -31,10 +31,10 @@ package org.opennms.netmgt.provision.persist;
 import java.io.File;
 import java.net.URL;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.opennms.core.utils.LogUtils;
 import org.opennms.netmgt.provision.persist.foreignsource.ForeignSource;
 import org.opennms.netmgt.provision.persist.requisition.Requisition;
 import org.springframework.beans.factory.InitializingBean;
@@ -84,8 +84,9 @@ public class FusedForeignSourceRepository extends AbstractForeignSourceRepositor
      *
      * @return a {@link java.util.Set} object.
      */
-    public Set<String> getActiveForeignSourceNames() {
-        Set<String> fsNames = m_pendingForeignSourceRepository.getActiveForeignSourceNames();
+    @Override
+    public synchronized Set<String> getActiveForeignSourceNames() {
+        final Set<String> fsNames = new HashSet<String>(m_pendingForeignSourceRepository.getActiveForeignSourceNames());
         fsNames.addAll(m_deployedForeignSourceRepository.getActiveForeignSourceNames());
         return fsNames;
     }
@@ -126,6 +127,7 @@ public class FusedForeignSourceRepository extends AbstractForeignSourceRepositor
     }
 
     /** {@inheritDoc} */
+    @Override
     public synchronized void delete(ForeignSource foreignSource) throws ForeignSourceRepositoryException {
         m_pendingForeignSourceRepository.delete(foreignSource);
         m_deployedForeignSourceRepository.delete(foreignSource);
@@ -137,12 +139,14 @@ public class FusedForeignSourceRepository extends AbstractForeignSourceRepositor
      * @param requisition a {@link org.opennms.netmgt.provision.persist.requisition.Requisition} object.
      * @throws org.opennms.netmgt.provision.persist.ForeignSourceRepositoryException if any.
      */
+    @Override
     public synchronized void delete(Requisition requisition) throws ForeignSourceRepositoryException {
         m_pendingForeignSourceRepository.delete(requisition);
         m_deployedForeignSourceRepository.delete(requisition);
     }
 
     /** {@inheritDoc} */
+    @Override
     public ForeignSource getForeignSource(String foreignSourceName) throws ForeignSourceRepositoryException {
         return m_deployedForeignSourceRepository.getForeignSource(foreignSourceName);
     }
@@ -153,6 +157,7 @@ public class FusedForeignSourceRepository extends AbstractForeignSourceRepositor
      * @return a int.
      * @throws org.opennms.netmgt.provision.persist.ForeignSourceRepositoryException if any.
      */
+    @Override
     public int getForeignSourceCount() throws ForeignSourceRepositoryException {
         return m_deployedForeignSourceRepository.getForeignSourceCount();
     }
@@ -163,11 +168,13 @@ public class FusedForeignSourceRepository extends AbstractForeignSourceRepositor
      * @return a {@link java.util.Set} object.
      * @throws org.opennms.netmgt.provision.persist.ForeignSourceRepositoryException if any.
      */
+    @Override
     public Set<ForeignSource> getForeignSources() throws ForeignSourceRepositoryException {
         return m_deployedForeignSourceRepository.getForeignSources();
     }
 
     /** {@inheritDoc} */
+    @Override
     public Requisition getRequisition(String foreignSourceName) throws ForeignSourceRepositoryException {
         return m_deployedForeignSourceRepository.getRequisition(foreignSourceName);
     }
@@ -179,6 +186,7 @@ public class FusedForeignSourceRepository extends AbstractForeignSourceRepositor
      * @return a {@link org.opennms.netmgt.provision.persist.requisition.Requisition} object.
      * @throws org.opennms.netmgt.provision.persist.ForeignSourceRepositoryException if any.
      */
+    @Override
     public Requisition getRequisition(ForeignSource foreignSource) throws ForeignSourceRepositoryException {
         return m_deployedForeignSourceRepository.getRequisition(foreignSource);
     }
@@ -201,11 +209,13 @@ public class FusedForeignSourceRepository extends AbstractForeignSourceRepositor
      * @return a {@link java.util.Set} object.
      * @throws org.opennms.netmgt.provision.persist.ForeignSourceRepositoryException if any.
      */
+    @Override
     public Set<Requisition> getRequisitions() throws ForeignSourceRepositoryException {
         return m_deployedForeignSourceRepository.getRequisitions();
     }
 
     /** {@inheritDoc} */
+    @Override
     public synchronized void save(ForeignSource foreignSource) throws ForeignSourceRepositoryException {
         m_pendingForeignSourceRepository.delete(foreignSource);
         m_deployedForeignSourceRepository.save(foreignSource);
@@ -217,6 +227,7 @@ public class FusedForeignSourceRepository extends AbstractForeignSourceRepositor
      * @param requisition a {@link org.opennms.netmgt.provision.persist.requisition.Requisition} object.
      * @throws org.opennms.netmgt.provision.persist.ForeignSourceRepositoryException if any.
      */
+    @Override
     public synchronized void save(final Requisition requisition) throws ForeignSourceRepositoryException {
         m_deployedForeignSourceRepository.save(requisition);
         cleanUpSnapshots(requisition);
@@ -249,7 +260,6 @@ public class FusedForeignSourceRepository extends AbstractForeignSourceRepositor
         RequisitionFileUtils.deleteResourceIfSnapshot(requisition);
 
         final Date deployedDate = m_deployedForeignSourceRepository.getRequisitionDate(foreignSource);
-        LogUtils.debugf(this, "deployed date = %s", deployedDate);
         if (deployedDate != null) {
             RequisitionFileUtils.deleteSnapshotsOlderThan(getPendingForeignSourceRepository(), foreignSource, deployedDate);
         }

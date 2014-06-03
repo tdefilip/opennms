@@ -33,10 +33,10 @@ import java.util.Set;
 
 import javax.servlet.http.HttpSession;
 
-import org.opennms.netmgt.config.SnmpAgentConfigFactory;
-import org.opennms.netmgt.dao.GraphDao;
-import org.opennms.netmgt.dao.NodeDao;
-import org.opennms.netmgt.dao.ResourceDao;
+import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
+import org.opennms.netmgt.dao.api.GraphDao;
+import org.opennms.netmgt.dao.api.NodeDao;
+import org.opennms.netmgt.dao.api.ResourceDao;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsResource;
 import org.opennms.netmgt.model.PrefabGraph;
@@ -192,7 +192,7 @@ public class NrtController {
      * @param create
      * @return Map of nrtCollectionTaskId to CollectionJob
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // Since this is caused by the servlet API
     private Map<String, CollectionJob> getCollectionJobMap(HttpSession httpSession, boolean create) {
         if (create && httpSession.getAttribute("NrtCollectionTasks") == null) {
             httpSession.setAttribute("NrtCollectionTasks", new HashMap<String, CollectionJob>());
@@ -224,19 +224,23 @@ public class NrtController {
         resultDestinations.add(nrtCollectionTaskId);
         //resultDestinations.add("NrtPersistMe");
 
-        for (String protocol : metricsByProtocol.keySet()) {
-            CollectionJob collectionJob = new DefaultCollectionJob();
+        for (final Map.Entry<String,List<MetricTuple>> entry : metricsByProtocol.entrySet()) {
+            final String protocol = entry.getKey();
+            final List<MetricTuple> tuples = entry.getValue();
+
+            final CollectionJob collectionJob = new DefaultCollectionJob();
             collectionJob.setService(protocol);
             collectionJob.setNodeId(nodeId);
             collectionJob.setCreationTimestamp(createTimestamp);
 
-            for (MetricTuple metricTuple : metricsByProtocol.get(protocol)) {
+            for (final MetricTuple metricTuple : tuples) {
                 collectionJob.addMetric(metricTuple.getMetricId(), resultDestinations, metricTuple.getOnmsLogicMetricId());
             }
+
             //I know....
             if (protocol.equals("SNMP") || protocol.equals("TCA")) {
                 collectionJob.setNetInterface(protocol);
-                SnmpAgentConfig snmpAgentConfig = m_snmpAgentConfigFactory.getAgentConfig(node.getPrimaryInterface().getIpAddress());
+                final SnmpAgentConfig snmpAgentConfig = m_snmpAgentConfigFactory.getAgentConfig(node.getPrimaryInterface().getIpAddress());
                 collectionJob.setProtocolConfiguration(snmpAgentConfig.toProtocolConfigString());
                 collectionJob.setNetInterface(node.getPrimaryInterface().getIpAddress().getHostAddress());
                 collectionJobs.add(collectionJob);
@@ -290,9 +294,12 @@ public class NrtController {
 
     private Map<String, String> getRrdGraphAttributesToMetricIds(Map<String, String> onmsResourceNamesToMetaDataLines) {
         Map<String, String> rrdGraphAttributesToMetricIds = new HashMap<String, String>();
-        for (String onmsResouceName : onmsResourceNamesToMetaDataLines.keySet()) {
-            String rrdGraphAttributeName = onmsResouceName.toString().substring(onmsResouceName.lastIndexOf(".") +1);
-            rrdGraphAttributesToMetricIds.put(rrdGraphAttributeName, getMetricIdFromMetaDataLine(onmsResourceNamesToMetaDataLines.get(onmsResouceName)));
+        for (final Map.Entry<String,String> entry : onmsResourceNamesToMetaDataLines.entrySet()) {
+            final String onmsResouceName = entry.getKey();
+            final String value = entry.getValue();
+
+            final String rrdGraphAttributeName = onmsResouceName.substring(onmsResouceName.lastIndexOf('.') +1);
+            rrdGraphAttributesToMetricIds.put(rrdGraphAttributeName, getMetricIdFromMetaDataLine(value));
         }
         return rrdGraphAttributesToMetricIds;
     }
@@ -324,17 +331,15 @@ public class NrtController {
         return metaData;
     }
 
-    private final String PROTOCOLDELIMITER = "_";
-    private final String METRICID_DELIMITER = "=";
+    private static final String PROTOCOLDELIMITER = "_";
+    private static final String METRICID_DELIMITER = "=";
     
     private String getProtocolFromMetaDataLine(String metaDataLine) {
-        String protocol = metaDataLine.substring(0, metaDataLine.indexOf(PROTOCOLDELIMITER));
-        return protocol;
+        return metaDataLine.substring(0, metaDataLine.indexOf(PROTOCOLDELIMITER));
     }
 
     private String getMetricIdFromMetaDataLine(String metaDataLine) {
-        String metricId = metaDataLine.substring(metaDataLine.indexOf(PROTOCOLDELIMITER) + 1, metaDataLine.lastIndexOf(METRICID_DELIMITER));
-        return metricId;
+        return metaDataLine.substring(metaDataLine.indexOf(PROTOCOLDELIMITER) + 1, metaDataLine.lastIndexOf(METRICID_DELIMITER));
     }
 
     /**

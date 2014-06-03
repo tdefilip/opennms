@@ -55,6 +55,7 @@ public class IPAddrLikeFilter extends IPLikeFilter {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String getTextDescription() {
         return ("IP Address like \"" + getValue() + "\"");
     }
@@ -64,6 +65,7 @@ public class IPAddrLikeFilter extends IPLikeFilter {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String toString() {
         return ("<IPLikeFilter: " + this.getDescription() + ">");
     }
@@ -78,7 +80,10 @@ public class IPAddrLikeFilter extends IPLikeFilter {
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean equals(Object obj) {
+        if (obj == null) return false;
+        if (!(obj instanceof IPAddrLikeFilter)) return false;
         return (this.toString().equals(obj.toString()));
     }
 }

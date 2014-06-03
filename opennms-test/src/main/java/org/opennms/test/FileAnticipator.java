@@ -42,24 +42,25 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Random;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 import junit.framework.AssertionFailedError;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.opennms.core.utils.LogUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * File anticipator.
  *
  * Example usage with late initialization:
- * <pre>
- * private FileAnticipator m_fileAnticipator;
  *
  * @author <a href="mailto:dj@opennms.org">DJ Gregor</a>
- * @version $Id: $
  */
 public class FileAnticipator extends Assert {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(FileAnticipator.class);
+
     private static final String JAVA_IO_TMPDIR = "java.io.tmpdir";
     
     private LinkedList<File> m_expecting = new LinkedList<File>();
@@ -88,10 +89,12 @@ public class FileAnticipator extends Assert {
         }
     }
     
-    /** {@inheritDoc} */
+    /** {@inheritDoc} 
+     * @throws Throwable */
     @Override
-    protected void finalize() {
+    protected void finalize() throws Throwable {
         tearDown();
+        super.finalize();
     }
 
     /**
@@ -132,10 +135,10 @@ public class FileAnticipator extends Assert {
             		FileUtils.forceDelete(m_tempDir);
             		return;
             	} catch (final IOException innerThrowable) {
-                    LogUtils.warnf(this, innerThrowable, "an error occurred while forcibly removing temporary directory %s", m_tempDir);
+                    LOG.warn("an error occurred while forcibly removing temporary directory {}", m_tempDir, innerThrowable);
                 }
             } else {
-            	LogUtils.warnf(this, t, "does not exist? %s", m_tempDir);
+            	LOG.warn("does not exist? {}", m_tempDir, t);
             }
             if (t instanceof RuntimeException) {
                 throw (RuntimeException) t;
@@ -443,6 +446,7 @@ public class FileAnticipator extends Assert {
         assertInitialized();
 
         Collections.sort(m_expecting, new Comparator<File>() {
+            @Override
             public int compare(File a, File b) {
                 return a.getAbsolutePath().compareTo(b.getAbsolutePath());
             }

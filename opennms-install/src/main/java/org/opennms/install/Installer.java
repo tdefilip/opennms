@@ -43,8 +43,8 @@ import java.net.InetAddress;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Properties;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,11 +55,8 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.opennms.bootstrap.Bootstrap;
-import org.opennms.core.db.ConnectionFactoryUtil;
+import org.opennms.core.db.DataSourceConfigurationFactory;
 import org.opennms.core.db.install.InstallerDb;
 import org.opennms.core.db.install.SimpleDataSource;
 import org.opennms.core.schema.ExistingResourceAccessor;
@@ -89,6 +86,7 @@ import org.springframework.util.StringUtils;
  * @version $Id: $
  */
 public class Installer {
+
     static final String LIBRARY_PROPERTY_FILE = "libraries.properties";
 
     String m_opennms_home = null;
@@ -160,12 +158,12 @@ public class Installer {
         	final File cfgFile = ConfigFileConstants.getFile(ConfigFileConstants.OPENNMS_DATASOURCE_CONFIG_FILE_NAME);
             
             InputStream is = new FileInputStream(cfgFile);
-            final JdbcDataSource adminDsConfig = ConnectionFactoryUtil.marshalDataSourceFromConfig(is, ADMIN_DATA_SOURCE_NAME);
+            final JdbcDataSource adminDsConfig = new DataSourceConfigurationFactory(is).getJdbcDataSource(ADMIN_DATA_SOURCE_NAME);
             final DataSource adminDs = new SimpleDataSource(adminDsConfig);
             is.close();
 
             is = new FileInputStream(cfgFile);
-            final JdbcDataSource dsConfig = ConnectionFactoryUtil.marshalDataSourceFromConfig(is, OPENNMS_DATA_SOURCE_NAME);
+            final JdbcDataSource dsConfig = new DataSourceConfigurationFactory(is).getJdbcDataSource(OPENNMS_DATA_SOURCE_NAME);
             final DataSource ds = new SimpleDataSource(dsConfig);
             is.close();
 
@@ -954,9 +952,6 @@ public class Installer {
      * @throws java.lang.Exception if any.
      */
     public static void main(String[] argv) throws Exception {
-        BasicConfigurator.configure();
-        Logger.getRootLogger().setLevel(Level.WARN);
-        
         new Installer().install(argv);
     }
 
@@ -1041,8 +1036,8 @@ public class Installer {
             for (final Object k : p.keySet()) {
                 String key = (String)k;
                 if (key.startsWith("opennms.library")) {
-                    final String value = p.getProperty(key);
-                    value.replaceAll(File.separator + "[^" + File.separator + "]*$", "");
+                    String value = p.getProperty(key);
+                    value = value.replaceAll(File.separator + "[^" + File.separator + "]*$", "");
                     searchPaths.add(value);
                 }
             }

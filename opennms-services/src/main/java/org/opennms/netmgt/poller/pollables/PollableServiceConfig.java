@@ -31,17 +31,18 @@ package org.opennms.netmgt.poller.pollables;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.config.PollOutagesConfig;
 import org.opennms.netmgt.config.PollerConfig;
 import org.opennms.netmgt.config.poller.Downtime;
 import org.opennms.netmgt.config.poller.Package;
 import org.opennms.netmgt.config.poller.Parameter;
 import org.opennms.netmgt.config.poller.Service;
-import org.opennms.netmgt.model.PollStatus;
+import org.opennms.netmgt.poller.PollStatus;
 import org.opennms.netmgt.poller.ServiceMonitor;
 import org.opennms.netmgt.scheduler.ScheduleInterval;
 import org.opennms.netmgt.scheduler.Timer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents a PollableServiceConfig
@@ -50,6 +51,7 @@ import org.opennms.netmgt.scheduler.Timer;
  * @version $Id: $
  */
 public class PollableServiceConfig implements PollConfig, ScheduleInterval {
+    private static final Logger LOG = LoggerFactory.getLogger(PollableServiceConfig.class);
 
     private PollerConfig m_pollerConfig;
     private PollOutagesConfig m_pollOutagesConfig;
@@ -86,7 +88,7 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
      * @return
      */
     private synchronized Service findService(Package pkg) {
-        for (Service s : m_pkg.getServiceCollection()) {
+        for (Service s : m_pkg.getServices()) {
             if (s.getName().equalsIgnoreCase(m_service.getSvcName())) {
                 return s;
             }
@@ -99,8 +101,9 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
     /**
      * <p>poll</p>
      *
-     * @return a {@link org.opennms.netmgt.model.PollStatus} object.
+     * @return a {@link org.opennms.netmgt.poller.PollStatus} object.
      */
+    @Override
     public PollStatus poll() {
         String packageName = null;
         synchronized(this) {
@@ -108,12 +111,12 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
         }
         try {
             ServiceMonitor monitor = getServiceMonitor();
-            ThreadCategory.getInstance(getClass()).debug("Polling "+m_service+" using pkg " + packageName);
+            LOG.debug("Polling {} using pkg {}", packageName, m_service);
             PollStatus result = monitor.poll(m_service, getParameters());
-            ThreadCategory.getInstance(getClass()).debug("Finish polling "+m_service+" using pkg " + packageName + " result = "+result);
+            LOG.debug("Finish polling {} using pkg {} result = {}", result, m_service, packageName);
             return result;
         } catch (Throwable e) {
-            ThreadCategory.getInstance(getClass()).error("Unexpected exception while polling "+m_service+". Marking service as DOWN", e);
+            LOG.error("Unexpected exception while polling {}. Marking service as DOWN", m_service, e);
             return PollStatus.down("Unexpected exception while polling "+m_service+". "+e);
         }
     }
@@ -131,10 +134,11 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
      * Uses the existing package name to try and re-obtain the package from the poller config factory.
      * Should be called when the poller config has been reloaded.
      */
+    @Override
     public synchronized void refresh() {
         Package newPkg = m_pollerConfig.getPackage(m_pkg.getName());
         if (newPkg == null) {
-            ThreadCategory.getInstance(PollableServiceConfig.class).warn("Package named "+m_pkg.getName()+" no longer exists.");
+            LOG.warn("Package named {} no longer exists.", m_pkg.getName());
         }
         m_pkg = newPkg;
         m_configService = findService(m_pkg);
@@ -145,6 +149,7 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
     /**
      * Should be called when thresholds configuration has been reloaded
      */
+    @Override
     public synchronized void refreshThresholds() {
         ((LatencyStoringServiceMonitorAdaptor)getServiceMonitor()).refreshThresholds();
     }
@@ -163,7 +168,7 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
 
     private Map<String,Object> createPropertyMap(Service svc) {
         Map<String,Object> m = new ConcurrentSkipListMap<String,Object>();
-        for (Parameter p : svc.getParameterCollection()) {
+        for (Parameter p : svc.getParameters()) {
             String val = p.getValue();
             if (val == null) {
             	val = (p.getAnyObject() == null ? "" : p.getAnyObject().toString());
@@ -180,6 +185,7 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
      *
      * @return a long.
      */
+    @Override
     public long getCurrentTime() {
         return m_timer.getCurrentTime();
     }
@@ -189,6 +195,7 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
      *
      * @return a long.
      */
+    @Override
     public synchronized long getInterval() {
         
         if (m_service.isDeleted())
@@ -199,13 +206,13 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
         if (m_service.getStatus().isDown()) {
             long downSince = m_timer.getCurrentTime() - m_service.getStatusChangeTime();
             boolean matched = false;
-            for (Downtime dt : m_pkg.getDowntimeCollection()) {
+            for (Downtime dt : m_pkg.getDowntimes()) {
                 if (dt.getBegin() <= downSince) {
                     if (dt.getDelete() != null && (dt.getDelete().equals("yes") || dt.getDelete().equals("true"))) {
                         when = -1;
                         matched = true;
                     }
-                    else if (dt.hasEnd() && dt.getEnd() > downSince) {
+                    else if (dt.getEnd() != null && dt.getEnd() > downSince) {
                         // in this interval
                         //
                         when = dt.getInterval();
@@ -218,7 +225,7 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
                 }
             }
             if (!matched) {
-                ThreadCategory.getInstance(getClass()).warn("getInterval: Could not locate downtime model, throwing runtime exception");
+                LOG.warn("getInterval: Could not locate downtime model, throwing runtime exception");
                 throw new RuntimeException("Downtime model is invalid, cannot schedule service " + m_service);
             }
         }
@@ -237,9 +244,10 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
      *
      * @return a boolean.
      */
+    @Override
     public synchronized boolean scheduledSuspension() {
         long nodeId=m_service.getNodeId();
-        for (String outageName : m_pkg.getOutageCalendarCollection()) {
+        for (String outageName : m_pkg.getOutageCalendars()) {
             // Does the outage apply to the current time?
             if (m_pollOutagesConfig.isTimeInOutage(m_timer.getCurrentTime(), outageName)) {
                 // Does the outage apply to this interface?
@@ -247,8 +255,7 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
                 if (m_pollOutagesConfig.isNodeIdInOutage(nodeId, outageName) || 
                     (m_pollOutagesConfig.isInterfaceInOutage(m_service.getIpAddr(), outageName)) || 
                         (m_pollOutagesConfig.isInterfaceInOutage("match-any", outageName))) {
-                    if (ThreadCategory.getInstance(getClass()).isDebugEnabled())
-                        ThreadCategory.getInstance(getClass()).debug("scheduledOutage: configured outage '" + outageName + "' applies, " + m_configService + " will not be polled.");
+                    LOG.debug("scheduledOutage: configured outage '{}' applies, {} will not be polled.", outageName, m_configService);
                     return true;
                 }
             }

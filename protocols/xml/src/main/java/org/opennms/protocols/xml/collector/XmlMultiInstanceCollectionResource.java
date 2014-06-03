@@ -30,10 +30,11 @@ package org.opennms.protocols.xml.collector;
 
 import java.io.File;
 
-import org.opennms.core.utils.ThreadCategory;
-import org.opennms.netmgt.collectd.CollectionAgent;
-import org.opennms.netmgt.config.collector.ServiceParameters;
-import org.opennms.netmgt.model.RrdRepository;
+import org.opennms.netmgt.collection.api.CollectionAgent;
+import org.opennms.netmgt.collection.api.ServiceParameters;
+import org.opennms.netmgt.rrd.RrdRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The Class XmlMultiInstanceCollectionResource.
@@ -42,14 +43,17 @@ import org.opennms.netmgt.model.RrdRepository;
  */
 public class XmlMultiInstanceCollectionResource extends XmlCollectionResource {
 
+    /** The Constant LOG. */
+    private static final Logger LOG = LoggerFactory.getLogger(XmlMultiInstanceCollectionResource.class);
+
     /** The collection resource instance. */
-    private String m_instance;
+    private final String m_instance;
 
     /** The resource label. */
     private String m_resourceLabel;
 
     /** The collection resource type name. */
-    private XmlResourceType m_resourceType;
+    private final XmlResourceType m_resourceType;
 
     /**
      * Instantiates a new XML Multi-instance collection resource.
@@ -78,11 +82,9 @@ public class XmlMultiInstanceCollectionResource extends XmlCollectionResource {
      */
     @Override
     public File getResourceDir(RrdRepository repository) {
-        String resourcePath = m_resourceType.getStorageStrategy().getRelativePathForAttribute(getParent(), getLabel(), null);
+        String resourcePath = m_resourceType.getStorageStrategy().getRelativePathForAttribute(getParent(), getInterfaceLabel());
         File resourceDir = new File(repository.getRrdBaseDir(), resourcePath);
-        if (log().isDebugEnabled()) {
-            log().debug("getResourceDir: " + resourceDir);
-        }
+        LOG.debug("getResourceDir: {}", resourceDir);
         return resourceDir;
     }
 
@@ -107,26 +109,18 @@ public class XmlMultiInstanceCollectionResource extends XmlCollectionResource {
      */
     @Override
     public String toString() {
-        return "node[" + m_agent.getNodeId() + "]." + getResourceTypeName() + "[" + getLabel() +"]";
+        return "node[" + m_agent.getNodeId() + "]." + getResourceTypeName() + "[" + getInterfaceLabel() +"]";
     }
 
     /* (non-Javadoc)
      * @see org.opennms.netmgt.collectd.AbstractCollectionResource#getLabel()
      */
-    public String getLabel() {
+    @Override
+    public String getInterfaceLabel() {
         if (m_resourceLabel == null) {
             m_resourceLabel = m_resourceType.getStorageStrategy().getResourceNameFromIndex(this);
         }
         return m_resourceLabel;
-    }
-
-    /**
-     * Log.
-     *
-     * @return the thread category
-     */
-    private ThreadCategory log() {
-        return ThreadCategory.getInstance(getClass());
     }
 
 }

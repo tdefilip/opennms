@@ -36,7 +36,7 @@ import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 public class SpringBoard implements SpringBoardMBean {
     
-    private File contextDir;
+    private File m_contextDir;
     private FileSystemXmlApplicationContext m_context;
     
     /**
@@ -44,22 +44,24 @@ public class SpringBoard implements SpringBoardMBean {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String getContextDir() {
-        return (contextDir == null ? null : contextDir.getAbsolutePath());
+        return (m_contextDir == null ? null : m_contextDir.getAbsolutePath());
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setContextDir(String contextDir) {
-        // TODO Auto-generated method stub
-        
+        m_contextDir = new File(contextDir);
     }
 
     /**
      * <p>start</p>
      */
+    @Override
     public void start() {
         String appContext = System.getProperty("opennms.appcontext", "opennms-appContext.xml");
-        File contextFile = new File(contextDir, appContext);
+        File contextFile = new File(m_contextDir, appContext);
         System.err.println(contextFile.getPath());
         m_context = new FileSystemXmlApplicationContext(contextFile.getPath());
     }
@@ -69,6 +71,7 @@ public class SpringBoard implements SpringBoardMBean {
      *
      * @return a {@link java.util.List} object.
      */
+    @Override
     public List<String> status() {
         return Collections.singletonList(m_context.toString());
     }
@@ -76,6 +79,7 @@ public class SpringBoard implements SpringBoardMBean {
     /**
      * <p>stop</p>
      */
+    @Override
     public void stop() {
         m_context.close();
     }

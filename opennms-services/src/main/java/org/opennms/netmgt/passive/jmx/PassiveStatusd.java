@@ -28,18 +28,13 @@
 
 package org.opennms.netmgt.passive.jmx;
 
-import java.beans.PropertyVetoException;
-import java.io.IOException;
-import java.sql.SQLException;
-
-import org.exolab.castor.xml.MarshalException;
-import org.exolab.castor.xml.ValidationException;
 import org.opennms.core.db.DataSourceFactory;
-import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.daemon.AbstractServiceDaemon;
 import org.opennms.netmgt.eventd.EventIpcManagerFactory;
 import org.opennms.netmgt.model.events.EventIpcManager;
 import org.opennms.netmgt.passive.PassiveStatusKeeper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>PassiveStatusd class.</p>
@@ -49,7 +44,8 @@ import org.opennms.netmgt.passive.PassiveStatusKeeper;
  * @author <a href="mailto:dj@opennms.org">DJ Gregor</a>
  */
 public class PassiveStatusd extends AbstractServiceDaemon implements PassiveStatusdMBean {
-
+    
+    private static final Logger LOG = LoggerFactory.getLogger(PassiveStatusd.class);
     /**
      * <p>Constructor for PassiveStatusd.</p>
      */
@@ -57,31 +53,13 @@ public class PassiveStatusd extends AbstractServiceDaemon implements PassiveStat
         super(NAME);
     }
 
-    /** Constant <code>NAME="OpenNMS.PassiveStatus"</code> */
-    public final static String NAME = "OpenNMS.PassiveStatusKeeper";
+    public final static String NAME = "passive";
 
     /**
      * <p>onInit</p>
      */
+    @Override
     protected void onInit() {
-        ThreadCategory log = ThreadCategory.getInstance(this.getClass());
-        try {
-            DataSourceFactory.init();
-        } catch (MarshalException e) {
-            log.error("Could not unmarshall configuration", e);
-        } catch (ValidationException e) {
-            log.error("validation error ", e);
-        } catch (IOException e) {
-            log.error("IOException: ", e);
-        } catch (ClassNotFoundException e) {
-            log.error("Unable to initialize database: "+e.getMessage(), e);
-        } catch (SQLException e) {
-            log.error("SQLException: ", e);
-        } catch (PropertyVetoException e) {
-            log.error("PropertyVetoException: "+e.getMessage(), e);
-        }
-        // XXX We don't throw an exception?
-        
         EventIpcManagerFactory.init();
         EventIpcManager mgr = EventIpcManagerFactory.getIpcManager();
 
@@ -94,6 +72,7 @@ public class PassiveStatusd extends AbstractServiceDaemon implements PassiveStat
     /**
      * <p>onStart</p>
      */
+    @Override
     protected void onStart() {
         getPassiveStatusKeeper().start();
     }
@@ -101,6 +80,7 @@ public class PassiveStatusd extends AbstractServiceDaemon implements PassiveStat
     /**
      * <p>onStop</p>
      */
+    @Override
     protected void onStop() {
         getPassiveStatusKeeper().stop();
     }
@@ -110,6 +90,7 @@ public class PassiveStatusd extends AbstractServiceDaemon implements PassiveStat
      *
      * @return a int.
      */
+    @Override
     public int getStatus() {
         return getPassiveStatusKeeper().getStatus();
     }

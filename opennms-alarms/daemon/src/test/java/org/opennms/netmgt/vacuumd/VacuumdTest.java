@@ -51,19 +51,22 @@ import org.junit.runner.RunWith;
 import org.opennms.core.db.DataSourceFactory;
 import org.opennms.core.fiber.Fiber;
 import org.opennms.core.fiber.PausableFiber;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.ConfigurationTestUtils;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.test.db.MockDatabase;
 import org.opennms.core.test.db.TemporaryDatabaseAware;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
-import org.opennms.core.utils.BeanUtils;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.alarmd.Alarmd;
 import org.opennms.netmgt.config.VacuumdConfigFactory;
 import org.opennms.netmgt.config.vacuumd.Automation;
 import org.opennms.netmgt.config.vacuumd.Trigger;
-import org.opennms.netmgt.dao.NodeDao;
-import org.opennms.netmgt.eventd.mock.MockEventIpcManager;
+import org.opennms.netmgt.dao.api.NodeDao;
+import org.opennms.netmgt.dao.mock.EventAnticipator;
+import org.opennms.netmgt.dao.mock.MockEventIpcManager;
+import org.opennms.netmgt.dao.mock.MockEventIpcManager.EmptyEventConfDao;
+import org.opennms.netmgt.eventd.EventExpander;
 import org.opennms.netmgt.mock.MockNetwork;
 import org.opennms.netmgt.mock.MockNode;
 import org.opennms.netmgt.model.OnmsNode;
@@ -117,6 +120,7 @@ public class VacuumdTest implements TemporaryDatabaseAware<MockDatabase>, Initia
 
     private MockDatabase m_database;
 
+    @Override
     public void setTemporaryDatabase(MockDatabase database) {
         m_database = database;
     }
@@ -138,6 +142,9 @@ public class VacuumdTest implements TemporaryDatabaseAware<MockDatabase>, Initia
         }
 
         m_eventdIpcMgr.setEventWriter(m_database);
+        EventExpander expander = new EventExpander();
+        expander.setEventConfDao(new EmptyEventConfDao());
+        m_eventdIpcMgr.setEventExpander(expander);
 
         m_vacuumd = Vacuumd.getSingleton();
         m_vacuumd.setEventManager(m_eventdIpcMgr);
@@ -233,11 +240,35 @@ public class VacuumdTest implements TemporaryDatabaseAware<MockDatabase>, Initia
         }
     }
 
-    public final void testConfigReload() {
-        // TODO: Check configuration before and after
-        EventBuilder builder = new EventBuilder(EventConstants.RELOAD_VACUUMD_CONFIG_UEI, "test");
-        Event e = builder.getEvent();
-        m_eventdIpcMgr.sendNow(e);
+    @Test
+    public final void testConfigReload() throws Exception {
+        // Start vacuumd
+        m_vacuumd.start();
+
+        // Setup our event anticipator
+        EventAnticipator eventAnticipator = new EventAnticipator();
+        eventAnticipator.setDiscardUnanticipated(true);
+        m_eventdIpcMgr.setEventAnticipator(eventAnticipator);
+
+        // Build and anticipate the request reload event
+        EventBuilder builder = new EventBuilder(EventConstants.RELOAD_DAEMON_CONFIG_UEI, "test");
+        builder.addParam(EventConstants.PARM_DAEMON_NAME, m_vacuumd.getName());
+        Event requestReloadEvent = builder.getEvent();
+        eventAnticipator.anticipateEvent(requestReloadEvent);
+
+        // Build and anticipate the reload confirmation event
+        builder = new EventBuilder(EventConstants.RELOAD_DAEMON_CONFIG_SUCCESSFUL_UEI, m_vacuumd.getName());
+        Event reloadSuccesfulEvent = builder.getEvent();
+        eventAnticipator.anticipateEvent(reloadSuccesfulEvent);
+
+        // Send the reload event
+        m_eventdIpcMgr.sendNow(requestReloadEvent);
+        Thread.sleep(1000);
+
+        // Stop the daemon and verify that the configuration reload was confirmed
+        m_vacuumd.stop();
+        m_eventdIpcMgr.setEventAnticipator(null);
+        eventAnticipator.verifyAnticipated();
     }
 
     /**
@@ -465,7 +496,7 @@ public class VacuumdTest implements TemporaryDatabaseAware<MockDatabase>, Initia
      */
     @Test
     public final void testGetName() {
-        assertEquals("OpenNMS.Vacuumd", m_vacuumd.getName());
+        assertEquals("vacuumd", m_vacuumd.getName());
     }
 
     /**

@@ -32,7 +32,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
-import org.opennms.core.utils.LogUtils;
 import org.opennms.protocols.http.HttpUrlConnection;
 import org.opennms.protocols.http.HttpUrlHandler;
 import org.opennms.protocols.http.HttpsUrlHandler;
@@ -40,6 +39,8 @@ import org.opennms.protocols.sftp.Sftp3gppUrlHandler;
 import org.opennms.protocols.sftp.SftpUrlConnection;
 import org.opennms.protocols.sftp.SftpUrlHandler;
 import org.opennms.protocols.xml.config.Request;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A factory for creating URL objects.
@@ -47,6 +48,9 @@ import org.opennms.protocols.xml.config.Request;
  * @author <a href="mailto:agalue@opennms.org">Alejandro Galue</a>
  */
 public class UrlFactory {
+
+    /** The Constant LOG. */
+    private static final Logger LOG = LoggerFactory.getLogger(UrlFactory.class);
 
     /**
      * Instantiates a new URL factory.
@@ -98,7 +102,7 @@ public class UrlFactory {
             if (connection instanceof HttpUrlConnection)
                 ((HttpUrlConnection)connection).disconnect();
         } catch (Exception e) {
-            LogUtils.errorf(UrlFactory.class, e, "Can't close open connection.");
+            LOG.error("Can't close open connection.", e);
         }
     }
 }

@@ -39,13 +39,14 @@ import java.util.List;
 
 import javax.servlet.ServletContext;
 
-import org.opennms.core.resource.Vault;
+import org.opennms.core.db.DataSourceFactory;
 import org.opennms.core.utils.DBUtils;
-import org.opennms.core.utils.ThreadCategory;
 import org.opennms.web.filter.Filter;
 import org.opennms.web.outage.filter.InterfaceFilter;
 import org.opennms.web.outage.filter.NodeFilter;
 import org.opennms.web.outage.filter.ServiceFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Encapsulates all querying functionality for outages.
@@ -54,9 +55,11 @@ import org.opennms.web.outage.filter.ServiceFilter;
  * @author <A HREF="mailto:jason@opennms.org">Jason Johns </A>
  */
 public class OutageFactory extends Object {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(OutageFactory.class);
+
 
     /** Constant <code>log</code> */
-    protected static final ThreadCategory log = ThreadCategory.getInstance("OutageFactory");
 
     /** Private constructor so this class cannot be instantiated. */
     private OutageFactory() {
@@ -74,7 +77,7 @@ public class OutageFactory extends Object {
      */
     public static int getOutageCount() throws SQLException {
         int outageCount = 0;
-        final Connection conn = Vault.getDbConnection();
+        final Connection conn = DataSourceFactory.getInstance().getConnection();
         final DBUtils d = new DBUtils(OutageFactory.class, conn);
 
         try {
@@ -108,7 +111,7 @@ public class OutageFactory extends Object {
         }
 
         int outageCount = 0;
-        final Connection conn = Vault.getDbConnection();
+        final Connection conn = DataSourceFactory.getInstance().getConnection();
         final DBUtils d = new DBUtils(OutageFactory.class, conn);
 
         try {
@@ -150,7 +153,7 @@ public class OutageFactory extends Object {
      */
     public static Outage getOutage(int outageId) throws SQLException {
         Outage outage = null;
-        final Connection conn = Vault.getDbConnection();
+        final Connection conn = DataSourceFactory.getInstance().getConnection();
         final DBUtils d = new DBUtils(OutageFactory.class, conn);
 
         try {
@@ -254,7 +257,7 @@ public class OutageFactory extends Object {
         }
 
         Outage[] outages = null;
-        final Connection conn = Vault.getDbConnection();
+        final Connection conn = DataSourceFactory.getInstance().getConnection();
         final DBUtils d = new DBUtils(OutageFactory.class, conn);
 
         try {
@@ -275,7 +278,7 @@ public class OutageFactory extends Object {
                 select.append(offset);
             }
 
-            log.debug(select.toString());
+            LOG.debug(select.toString());
 
             final PreparedStatement stmt = conn.prepareStatement(select.toString());
             d.watch(stmt);

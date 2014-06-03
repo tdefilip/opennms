@@ -61,6 +61,7 @@ public class NegativeNodeFilter extends NotEqualOrNullFilter<Integer> {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String getTextDescription() {
         
         String nodeName = NetworkElementFactory.getInstance(m_servletContext).getNodeLabel(getValue());
@@ -82,7 +83,10 @@ public class NegativeNodeFilter extends NotEqualOrNullFilter<Integer> {
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean equals(Object obj) {
+        if (obj == null) return false;
+        if (!(obj instanceof NegativeNodeFilter)) return false;
         return (this.toString().equals(obj.toString()));
     }
 }

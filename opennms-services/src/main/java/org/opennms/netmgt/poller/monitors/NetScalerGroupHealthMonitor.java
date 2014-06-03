@@ -32,13 +32,12 @@ import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.log4j.Level;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.core.utils.ParameterMap;
 import org.opennms.netmgt.config.SnmpPeerFactory;
-import org.opennms.netmgt.model.PollStatus;
 import org.opennms.netmgt.poller.MonitoredService;
 import org.opennms.netmgt.poller.NetworkInterface;
+import org.opennms.netmgt.poller.PollStatus;
 import org.opennms.netmgt.snmp.RowCallback;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
 import org.opennms.netmgt.snmp.SnmpInstId;
@@ -49,6 +48,9 @@ import org.opennms.netmgt.snmp.SnmpValue;
 import org.opennms.netmgt.snmp.SnmpWalker;
 import org.opennms.netmgt.snmp.TableTracker;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * <p>NetScalerGroupHealthMonitor class.</p>
  *
@@ -56,6 +58,7 @@ import org.opennms.netmgt.snmp.TableTracker;
  */
 public class NetScalerGroupHealthMonitor extends SnmpMonitorStrategy {
     private static final String SVC_GRP_MEMBER_STATE = ".1.3.6.1.4.1.5951.4.1.2.7.1.6";
+    private static final Logger LOG = LoggerFactory.getLogger(NetScalerGroupHealthMonitor.class);
 
     public PollStatus poll(MonitoredService svc, Map<String, Object> parameters) {
         NetworkInterface<InetAddress> iface = svc.getNetInterface();
@@ -72,7 +75,7 @@ public class NetScalerGroupHealthMonitor extends SnmpMonitorStrategy {
         String groupName = ParameterMap.getKeyedString(parameters, "group-name", null);
         if (groupName == null) {
             status.setReason("NetScalerGroupHealthMonitor no group-name defined, addr=" + hostAddress);
-            log().warn("NetScalerGroupHealthMonitor.poll: No Service Name Defined! ");
+            LOG.warn("NetScalerGroupHealthMonitor.poll: No Service Name Defined!");
             return status;
         }
 
@@ -82,7 +85,7 @@ public class NetScalerGroupHealthMonitor extends SnmpMonitorStrategy {
         for (byte thisByte : groupName.getBytes()) {
             serviceOidBuf.append(".").append(Byte.toString(thisByte));
         }
-        log().debug("For group name '" + groupName +"', OID to check is " + serviceOidBuf.toString());
+        LOG.debug("For group name '{}', OID to check is {}", groupName, serviceOidBuf.toString());
 
         try {
             final SnmpObjId groupStateOid = SnmpObjId.get(serviceOidBuf.toString());
@@ -100,7 +103,8 @@ public class NetScalerGroupHealthMonitor extends SnmpMonitorStrategy {
 
             int totalServers = hostResults.size();
             if (totalServers == 0) {
-                status = logDown(Level.DEBUG, "NetScalerGroupHealthMonitor poll failed: there are 0 servers on group " + groupName + " for " + hostAddress);
+                status = PollStatus.unavailable("NetScalerGroupHealthMonitor poll failed: there are 0 servers on group " + groupName + " for " + hostAddress);
+                LOG.debug(status.getReason());
             }
 
             int activeServers = 0;
@@ -110,16 +114,18 @@ public class NetScalerGroupHealthMonitor extends SnmpMonitorStrategy {
                 }
             }
 
-            double health = (new Double(activeServers)/new Double(totalServers)) * new Double(100);
-            log().debug("There are " + activeServers + " of " + totalServers + " active servers (" + health + "%) on group " + groupName + " for NetScaler " + hostAddress);
+            double health = (new Double(activeServers)/new Double(totalServers)) * 100.0;
+            LOG.debug("There are {} of {} active servers ({}%) on group {} for NetScaler {}", activeServers, totalServers, health, groupName, hostAddress);
 
             if (health >= groupHealth) {
                 status = PollStatus.available();
             } else {
-                status = logDown(Level.DEBUG, "NetScalerGroupHealthMonitor poll failed: there are " + activeServers + " of " + totalServers + " servers active (" + health + "%) on group " + groupName + ", which is less than " + groupHealth + "% for " + hostAddress);
+                status = PollStatus.unavailable("NetScalerGroupHealthMonitor poll failed: there are " + activeServers + " of " + totalServers + " servers active (" + health + "%) on group " + groupName + ", which is less than " + groupHealth + "% for " + hostAddress);
+                LOG.debug(status.getReason());
             }
         } catch (Throwable t) {
-            status = logDown(Level.WARN, "Unexpected exception during SNMP poll of interface " + hostAddress, t);
+            status = PollStatus.unavailable("Unexpected exception during SNMP poll of interface " + hostAddress);
+            LOG.warn(status.getReason(), t);
         }
         return status;
     }

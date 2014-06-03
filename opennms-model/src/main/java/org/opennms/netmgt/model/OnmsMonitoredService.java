@@ -61,12 +61,15 @@ import javax.xml.bind.annotation.XmlIDREF;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.hibernate.annotations.Where;
 import org.springframework.core.style.ToStringCreator;
 
 @XmlRootElement(name = "service")
 @Entity
 @Table(name="ifServices")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class OnmsMonitoredService extends OnmsEntity implements Serializable,
 Comparable<OnmsMonitoredService> {
 
@@ -328,6 +331,7 @@ Comparable<OnmsMonitoredService> {
      * @return a {@link org.opennms.netmgt.model.OnmsIpInterface} object.
      */
     @XmlIDREF
+    @JsonIgnore
     @XmlElement(name="ipInterfaceId")
     @ManyToOne(optional=false, fetch=FetchType.LAZY)
     @JoinColumn(name="ipInterfaceId")
@@ -380,6 +384,7 @@ Comparable<OnmsMonitoredService> {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String toString() {
         return new ToStringCreator(this)
         .append("id", m_id)
@@ -410,6 +415,7 @@ Comparable<OnmsMonitoredService> {
 
 
     /** {@inheritDoc} */
+    @Override
     public void visit(EntityVisitor visitor) {
         visitor.visitMonitoredService(this);
         visitor.visitMonitoredServiceComplete(this);
@@ -513,6 +519,7 @@ Comparable<OnmsMonitoredService> {
      * @param o a {@link org.opennms.netmgt.model.OnmsMonitoredService} object.
      * @return a int.
      */
+    @Override
     public int compareTo(OnmsMonitoredService o) {
         int diff;
 

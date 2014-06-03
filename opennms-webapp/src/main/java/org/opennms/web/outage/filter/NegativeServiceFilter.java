@@ -75,6 +75,7 @@ public class NegativeServiceFilter extends NotEqualOrNullFilter<Integer> {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String toString() {
         return ("<NegativeServiceFilter: " + this.getDescription() + ">");
     }
@@ -89,7 +90,10 @@ public class NegativeServiceFilter extends NotEqualOrNullFilter<Integer> {
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean equals(Object obj) {
+        if (obj == null) return false;
+        if (!(obj instanceof NegativeServiceFilter)) return false;
         return (this.toString().equals(obj.toString()));
     }
 }

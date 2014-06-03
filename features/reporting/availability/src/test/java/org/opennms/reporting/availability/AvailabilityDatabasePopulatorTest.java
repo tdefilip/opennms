@@ -32,40 +32,42 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
-import org.opennms.core.utils.BeanUtils;
-import org.opennms.core.utils.LogUtils;
-import org.opennms.netmgt.dao.IpInterfaceDao;
-import org.opennms.netmgt.dao.NodeDao;
-import org.opennms.netmgt.dao.OutageDao;
-import org.opennms.netmgt.dao.ServiceTypeDao;
+import org.opennms.netmgt.dao.api.IpInterfaceDao;
+import org.opennms.netmgt.dao.api.NodeDao;
+import org.opennms.netmgt.dao.api.OutageDao;
+import org.opennms.netmgt.dao.api.ServiceTypeDao;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.test.JUnitConfigurationEnvironment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 @RunWith(OpenNMSJUnit4ClassRunner.class)
 @ContextConfiguration(locations={
-		"classpath:/META-INF/opennms/applicationContext-soa.xml",
-		"classpath:/META-INF/opennms/applicationContext-dao.xml",
-		"classpath*:/META-INF/opennms/component-dao.xml",
-		"classpath:/META-INF/opennms/applicationContext-availabilityDatabasePopulator.xml"
+        "classpath:/META-INF/opennms/applicationContext-soa.xml",
+        "classpath:/META-INF/opennms/applicationContext-dao.xml",
+        "classpath*:/META-INF/opennms/component-dao.xml",
+        "classpath:/META-INF/opennms/applicationContext-availabilityDatabasePopulator.xml",
+        "classpath:META-INF/opennms/applicationContext-minimal-conf.xml"
 })
 @JUnitConfigurationEnvironment
 @JUnitTemporaryDatabase
 public class AvailabilityDatabasePopulatorTest implements InitializingBean {
+    private static final Logger LOG = LoggerFactory.getLogger(AvailabilityDatabasePopulatorTest.class);
 
 	@Autowired
 	AvailabilityDatabasePopulator m_dbPopulator;
@@ -83,7 +85,7 @@ public class AvailabilityDatabasePopulatorTest implements InitializingBean {
 	OutageDao m_outageDao;
 
 	@Autowired
-	SimpleJdbcTemplate m_template;
+	JdbcTemplate m_template;
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -127,6 +129,7 @@ public class AvailabilityDatabasePopulatorTest implements InitializingBean {
 					"AND (ifServices.ipaddr = '192.168.100.1') AND ipinterface.ipaddr = '192.168.100.1' AND ipinterface.isManaged ='M' AND " + 
 					"(ifServices.serviceid = service.serviceid) AND (ifservices.status = 'A')) AND node.nodeid = 1 AND node.nodetype = 'A'", 
 					new RowMapper<OnmsMonitoredService>() {
+                                                @Override
 						public OnmsMonitoredService mapRow(ResultSet rs, int rowNum) throws SQLException {
 							OnmsMonitoredService retval = new OnmsMonitoredService(oneHundredDotOne, m_serviceTypeDao.findByName(rs.getString("servicename")));
 							return retval;
@@ -137,7 +140,7 @@ public class AvailabilityDatabasePopulatorTest implements InitializingBean {
 			Assert.assertTrue("interface results for 192.168.100.2", stmt.size() > 0);
 			Assert.assertEquals(new Integer(1) ,stmt.get(0).getServiceId());
 		} catch (Exception e) {
-			LogUtils.errorf(this, e, "unable to execute SQL");
+			LOG.error("unable to execute SQL", e);
 			throw e;
 		}
 

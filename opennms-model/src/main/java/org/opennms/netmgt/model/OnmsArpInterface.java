@@ -30,6 +30,8 @@ package org.opennms.netmgt.model;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
@@ -46,19 +48,31 @@ import javax.persistence.TemporalType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.springframework.core.style.ToStringCreator;
 
 @XmlRootElement(name = "arpInterface")
 @Entity
 @Table(name="atInterface")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class OnmsArpInterface extends OnmsEntity implements Serializable {
 
     @Embeddable
     public static class StatusType implements Comparable<StatusType>, Serializable {
         private static final long serialVersionUID = -4784344871599250528L;
-        private static final char[] s_order = {'A', 'N', 'D', 'K' };
+        private static final char[] s_order = {'A', 'N', 'D', 'U', 'B', 'G' };
         private char m_statusType;
 
+        private static final Map<Character, String> statusMap = new HashMap<Character, String>();
+        
+        static {
+            statusMap.put( 'A', "Active" );
+            statusMap.put( 'U', "Unknown" );
+            statusMap.put( 'D', "Deleted" );
+            statusMap.put( 'N', "Not Active" );
+            statusMap.put( 'B', "Bad" );
+            statusMap.put( 'G', "Good" );
+        }
         @SuppressWarnings("unused")
         private StatusType() {
         }
@@ -76,6 +90,7 @@ public class OnmsArpInterface extends OnmsEntity implements Serializable {
             m_statusType = statusType;
         }
 
+        @Override
         public int compareTo(StatusType o) {
             return getIndex(m_statusType) - getIndex(o.m_statusType);
         }
@@ -89,6 +104,7 @@ public class OnmsArpInterface extends OnmsEntity implements Serializable {
             throw new IllegalArgumentException("illegal statusType code '"+code+"'");
         }
 
+        @Override
         public boolean equals(Object o) {
             if (o instanceof StatusType) {
                 return m_statusType == ((StatusType)o).m_statusType;
@@ -96,10 +112,12 @@ public class OnmsArpInterface extends OnmsEntity implements Serializable {
             return false;
         }
 
+        @Override
         public int hashCode() {
             return toString().hashCode();
         }
 
+        @Override
         public String toString() {
             return String.valueOf(m_statusType);
         }
@@ -109,12 +127,27 @@ public class OnmsArpInterface extends OnmsEntity implements Serializable {
             case 'A': return ACTIVE;
             case 'N': return INACTIVE;
             case 'D': return DELETED;
-            case 'K': return UNKNOWN;
+            case 'U': return UNKNOWN;
+            case 'B': return BAD;
+            case 'G': return GOOD;
             default:
                 throw new IllegalArgumentException("Cannot create statusType from code "+code);
             }
         }
 
+        /**
+         * <p>getStatusString</p>
+         *
+         * @return a {@link java.lang.String} object.
+         */
+        /**
+         */
+        public static String getStatusString(char code) {
+            if (statusMap.containsKey(code))
+                    return statusMap.get( code);
+            return null;
+        }
+        
         public static StatusType get(String code) {
             if (code == null)
                 return UNKNOWN;
@@ -127,10 +160,12 @@ public class OnmsArpInterface extends OnmsEntity implements Serializable {
                 return get(code.charAt(0));
         }
 
-        public static StatusType ACTIVE = new StatusType('A');
-        public static StatusType INACTIVE = new StatusType('N');
-        public static StatusType DELETED = new StatusType('D');
-        public static StatusType UNKNOWN = new StatusType('K');
+        public static final StatusType ACTIVE = new StatusType('A');
+        public static final StatusType INACTIVE = new StatusType('N');
+        public static final StatusType DELETED = new StatusType('D');
+        public static final StatusType UNKNOWN = new StatusType('U');
+        public static final StatusType BAD = new StatusType('B');
+        public static final StatusType GOOD = new StatusType('G');
 
 
     }

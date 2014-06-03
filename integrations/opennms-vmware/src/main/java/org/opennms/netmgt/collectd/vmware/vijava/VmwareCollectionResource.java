@@ -28,10 +28,9 @@
 
 package org.opennms.netmgt.collectd.vmware.vijava;
 
-import org.opennms.netmgt.collectd.AbstractCollectionResource;
-import org.opennms.netmgt.collectd.CollectionAgent;
-import org.opennms.netmgt.config.collector.CollectionAttributeType;
-import org.opennms.netmgt.config.collector.ServiceParameters;
+import org.opennms.netmgt.collection.api.CollectionAgent;
+import org.opennms.netmgt.collection.api.CollectionAttributeType;
+import org.opennms.netmgt.collection.support.AbstractCollectionResource;
 
 public abstract class VmwareCollectionResource extends AbstractCollectionResource {
 
@@ -39,28 +38,15 @@ public abstract class VmwareCollectionResource extends AbstractCollectionResourc
         super(agent);
     }
 
-    public int getType() {
-        return -1; //Is this right?
-    }
-
-    public boolean rescanNeeded() {
-        return false;
-    }
-
-    public boolean shouldPersist(final ServiceParameters params) {
-        return true;
-    }
-
     public void setAttributeValue(final CollectionAttributeType type, final String value) {
-        final VmwareCollectionAttribute attr = new VmwareCollectionAttribute(this, type, type.getName(), value);
+        final VmwareCollectionAttribute attr = new VmwareCollectionAttribute(this, type, value);
         addAttribute(attr);
     }
 
+    @Override
     public abstract String getResourceTypeName();
 
+    @Override
     public abstract String getInstance();
 
-    public String getParent() {
-        return m_agent.getStorageDir().toString();
-    }
 }

@@ -31,9 +31,12 @@ package org.opennms.netmgt.config;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.opennms.core.test.MockLogAppender;
-import org.opennms.netmgt.eventd.mock.EventAnticipator;
-import org.opennms.netmgt.eventd.mock.MockEventIpcManager;
+import org.opennms.netmgt.dao.mock.EventAnticipator;
+import org.opennms.netmgt.dao.mock.MockEventIpcManager;
 import org.opennms.netmgt.mock.OpenNMSTestCase;
 import org.opennms.netmgt.mock.OutageAnticipator;
 import org.opennms.netmgt.translator.EventTranslator;
@@ -43,8 +46,6 @@ import org.opennms.netmgt.translator.EventTranslator;
  * 
  */
 public class EventTranslatorConfigFactoryTest extends OpenNMSTestCase {
-
-	
     private EventTranslator m_translator;
     private MockEventIpcManager m_eventMgr;
     private String m_passiveStatusConfiguration = getStandardConfig();
@@ -53,10 +54,9 @@ public class EventTranslatorConfigFactoryTest extends OpenNMSTestCase {
     private OutageAnticipator m_outageAnticipator;
 
 
-    /*
-     * @see TestCase#setUp()
-     */
-    protected void setUp() throws Exception {
+    @Before
+    @Override
+    public void setUp() throws Exception {
         super.setUp();
         MockLogAppender.setupLogging();
 
@@ -82,15 +82,13 @@ public class EventTranslatorConfigFactoryTest extends OpenNMSTestCase {
 
     }
 
-    /*
-     * @see TestCase#tearDown()
-     */
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         super.tearDown();
-		MockLogAppender.assertNoWarningsOrGreater();
-
+        MockLogAppender.assertNoWarningsOrGreater();
     }
     
+    @Test
     public void testDoNothing() {
         // FIXME: This is because the below test is commented out
     }

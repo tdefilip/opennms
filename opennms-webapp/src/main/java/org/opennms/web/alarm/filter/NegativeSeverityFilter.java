@@ -43,10 +43,12 @@ public class NegativeSeverityFilter extends NotEqualsFilter<OnmsSeverity> {
         super(TYPE, SQLType.SEVERITY, "ALARMS.SEVERITY", "severity", severity);
     }
 
+    @Override
     public String getTextDescription() {
         return (TYPE + " is not " + getValue().getLabel());
     }
 
+    @Override
     public String toString() {
         return ("<AlarmFactory.NegativeSeverityFilter: " + this.getDescription() + ">");
     }
@@ -55,7 +57,10 @@ public class NegativeSeverityFilter extends NotEqualsFilter<OnmsSeverity> {
         return getValue().getId();
     }
 
+    @Override
     public boolean equals(final Object obj) {
+        if (obj == null) return false;
+        if (!(obj instanceof NegativeSeverityFilter)) return false;
         return (this.toString().equals(obj.toString()));
     }
 }

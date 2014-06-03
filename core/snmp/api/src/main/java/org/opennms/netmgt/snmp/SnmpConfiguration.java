@@ -37,12 +37,13 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement(name="snmpConfiguration")
 public class SnmpConfiguration {
-    
+	
     public static final int DEFAULT_TIMEOUT = 3000;
     public static final int DEFAULT_PORT = 161;
     public static final int VERSION1 = 1;
     public static final int VERSION2C = 2;
     public static final int VERSION3 = 3;
+    public static final int VERSION_UNSPECIFIED = -1;
     public static final int DEFAULT_VERSION = VERSION1;
     public static final int DEFAULT_RETRIES = 1;
     public static final int DEFAULT_MAX_REQUEST_SIZE = 65535;
@@ -105,6 +106,7 @@ public class SnmpConfiguration {
     private String m_contextName;
     private String m_engineId;
     private String m_contextEngineId;
+    private String m_enterpriseId;
     
     public SnmpConfiguration() {
         this(DEFAULTS);
@@ -129,6 +131,7 @@ public class SnmpConfiguration {
             setContextName(config.getContextName());
             setEngineId(config.getEngineId());
             setContextEngineId(config.getContextEngineId());
+            setEnterpriseId(config.getEnterpriseId());
         }
     }
 
@@ -311,4 +314,15 @@ public class SnmpConfiguration {
         m_contextEngineId = contextEngineId;
     }
 
+    public final String getEnterpriseId() {
+    	return m_enterpriseId;
+    }
+    
+    public void setEnterpriseId(final String enterpriseId) {
+    	m_enterpriseId = enterpriseId;
+    }
+    
+    public boolean isVersion3() {
+    	return getVersion() == VERSION3;
+    }
 }

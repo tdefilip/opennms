@@ -62,6 +62,7 @@ public class UpdateUserServlet extends HttpServlet {
     private static final long serialVersionUID = -945279264373810897L;
 
     /** {@inheritDoc} */
+    @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession userSession = request.getSession(false);
 
@@ -170,7 +171,7 @@ public class UpdateUserServlet extends HttpServlet {
                 if (deleteFlag == null) {
                     for (int i = 0; i < 7; i++) {
                         String curDayFlag = request.getParameter("duty" + duties + days.format(i));
-                        newSchedule.add(new Boolean(curDayFlag != null));
+                        newSchedule.add(Boolean.valueOf(curDayFlag != null));
                     }
 
                     int startTime = WebSecurityUtils.safeParseInt(request.getParameter("duty" + duties + "Begin"));

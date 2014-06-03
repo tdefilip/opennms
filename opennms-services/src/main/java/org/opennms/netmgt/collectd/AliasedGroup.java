@@ -30,13 +30,14 @@ package org.opennms.netmgt.collectd;
 
 import java.util.Collection;
 
-import org.opennms.core.utils.ThreadCategory;
-import org.opennms.netmgt.config.collector.AttributeGroup;
-import org.opennms.netmgt.config.collector.AttributeGroupType;
-import org.opennms.netmgt.config.collector.CollectionAttribute;
-import org.opennms.netmgt.config.collector.CollectionResource;
-import org.opennms.netmgt.config.collector.CollectionSetVisitor;
-import org.opennms.netmgt.config.collector.ServiceParameters;
+import org.opennms.netmgt.collection.api.AttributeGroup;
+import org.opennms.netmgt.collection.api.AttributeGroupType;
+import org.opennms.netmgt.collection.api.CollectionAttribute;
+import org.opennms.netmgt.collection.api.CollectionResource;
+import org.opennms.netmgt.collection.api.CollectionSetVisitor;
+import org.opennms.netmgt.collection.api.ServiceParameters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>AliasedGroup class.</p>
@@ -45,16 +46,19 @@ import org.opennms.netmgt.config.collector.ServiceParameters;
  * @version $Id: $
  */
 public class AliasedGroup extends AttributeGroup {
+    
+    
+    private static final Logger LOG = LoggerFactory.getLogger(AliasedGroup.class);
 	
-	AttributeGroup m_group;
+	private final AttributeGroup m_group;
 
 	/**
 	 * <p>Constructor for AliasedGroup.</p>
 	 *
-	 * @param resource a {@link org.opennms.netmgt.config.collector.CollectionResource} object.
-	 * @param group a {@link org.opennms.netmgt.config.collector.AttributeGroup} object.
+	 * @param resource a {@link org.opennms.netmgt.collection.api.CollectionResource} object.
+	 * @param group a {@link org.opennms.netmgt.collection.api.AttributeGroup} object.
 	 */
-	public AliasedGroup(CollectionResource resource, AttributeGroup group) {
+	public AliasedGroup(SnmpCollectionResource resource, AttributeGroup group) {
 		super(resource, group.getGroupType());
 		m_group = group;
 	}
@@ -69,6 +73,7 @@ public class AliasedGroup extends AttributeGroup {
 	}
 
 	/** {@inheritDoc} */
+        @Override
 	public boolean equals(Object obj) {
 		return m_group.equals(obj);
 	}
@@ -78,6 +83,7 @@ public class AliasedGroup extends AttributeGroup {
 	 *
 	 * @return a {@link java.util.Collection} object.
 	 */
+        @Override
 	public Collection<CollectionAttribute> getAttributes() {
 		return m_group.getAttributes();
 	}
@@ -85,8 +91,9 @@ public class AliasedGroup extends AttributeGroup {
 	/**
 	 * <p>getGroupType</p>
 	 *
-	 * @return a {@link org.opennms.netmgt.config.collector.AttributeGroupType} object.
+	 * @return a {@link org.opennms.netmgt.collection.api.AttributeGroupType} object.
 	 */
+        @Override
 	public AttributeGroupType getGroupType() {
 		return m_group.getGroupType();
 	}
@@ -96,6 +103,7 @@ public class AliasedGroup extends AttributeGroup {
 	 *
 	 * @return a {@link java.lang.String} object.
 	 */
+        @Override
 	public String getName() {
 		return m_group.getName();
 	}
@@ -105,11 +113,13 @@ public class AliasedGroup extends AttributeGroup {
 	 *
 	 * @return a int.
 	 */
+        @Override
 	public int hashCode() {
 		return m_group.hashCode();
 	}
 
 	/** {@inheritDoc} */
+        @Override
 	public boolean shouldPersist(ServiceParameters params) {
 		return m_group.shouldPersist(params);
 	}
@@ -119,21 +129,19 @@ public class AliasedGroup extends AttributeGroup {
 	 *
 	 * @return a {@link java.lang.String} object.
 	 */
+        @Override
 	public String toString() {
 		return m_group.toString();
 	}
 	
-	ThreadCategory log(){
-		return ThreadCategory.getInstance(getClass());
-	}
-
 	/** {@inheritDoc} */
+        @Override
 	public void visit(CollectionSetVisitor visitor) {
 		visitor.visitGroup(this);
 		
 		for(CollectionAttribute attr : getAttributes()) {
 		    AliasedAttribute aliased = new AliasedAttribute(getResource(), (SnmpAttribute)attr);
-		    log().debug("visiting at aliased  = " + aliased);
+		    LOG.debug("visiting at aliased  = {}", aliased);
 		    aliased.visit(visitor);
 		}
 		

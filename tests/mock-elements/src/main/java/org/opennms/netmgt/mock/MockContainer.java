@@ -33,7 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.opennms.netmgt.model.PollStatus;
+import org.opennms.netmgt.poller.PollStatus;
 
 /**
  * <ul>
@@ -65,6 +65,7 @@ abstract public class MockContainer<P extends MockContainer<?,?>, C extends Mock
     @Override
     public void addAnticipator(final PollAnticipator trigger) {
         MockVisitor triggerAdder = new MockVisitorAdapter() {
+            @Override
             public void visitService(MockService service) {
                 service.addAnticipator(trigger);
             }
@@ -121,6 +122,7 @@ abstract public class MockContainer<P extends MockContainer<?,?>, C extends Mock
                 return pollCount;
             }
 
+            @Override
             public void visitService(MockService service) {
                 pollCount += service.getPollCount();
             }
@@ -135,7 +137,7 @@ abstract public class MockContainer<P extends MockContainer<?,?>, C extends Mock
     /**
      * <p>getPollStatus</p>
      *
-     * @return a {@link org.opennms.netmgt.model.PollStatus} object.
+     * @return a {@link org.opennms.netmgt.poller.PollStatus} object.
      */
     @Override
     public PollStatus getPollStatus() {
@@ -152,6 +154,7 @@ abstract public class MockContainer<P extends MockContainer<?,?>, C extends Mock
     @Override
     public void removeAnticipator(final PollAnticipator trigger) {
         MockVisitor triggerRemover = new MockVisitorAdapter() {
+            @Override
             public void visitService(MockService service) {
                 service.removeAnticipator(trigger);
             }
@@ -177,6 +180,7 @@ abstract public class MockContainer<P extends MockContainer<?,?>, C extends Mock
     @Override
     public void resetPollCount() {
         class PollCountReset extends MockVisitorAdapter {
+            @Override
             public void visitService(MockService service) {
                 service.resetPollCount();
             }

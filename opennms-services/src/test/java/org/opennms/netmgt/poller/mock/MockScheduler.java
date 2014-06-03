@@ -48,6 +48,11 @@ public class MockScheduler implements Scheduler {
     //private long m_currentTime = 0;
     private SortedMap<Long, List<ReadyRunnable>> m_scheduleEntries = new TreeMap<Long, List<ReadyRunnable>>();
 
+    /**
+     * Used to keep track of the number of tasks that have been executed.
+     */
+    private long m_numTasksExecuted = 0;
+
     public MockScheduler() {
         this(new MockTimer());
     }
@@ -57,6 +62,7 @@ public class MockScheduler implements Scheduler {
     }
 
     
+    @Override
     public void schedule(long interval, ReadyRunnable schedule) {
         Long nextTime = Long.valueOf(getCurrentTime()+interval);
         //MockUtil.println("Scheduled "+schedule+" for "+nextTime);
@@ -100,6 +106,7 @@ public class MockScheduler implements Scheduler {
             m_scheduleEntries.remove(nextTime);
         }
         runnable.run();
+        m_numTasksExecuted++;
         return getCurrentTime();
     }
     
@@ -117,25 +124,35 @@ public class MockScheduler implements Scheduler {
         return getCurrentTime();
     }
 
+    @Override
     public long getCurrentTime() {
         return m_timer.getCurrentTime();
     }
 
+    @Override
 	public void start() {
 		
 	}
 
+    @Override
 	public void stop() {
 	}
 
+    @Override
 	public void pause() {
 	}
 
+    @Override
 	public void resume() {
 	}
 
+    @Override
 	public int getStatus() {
 		return 0;
 	}
-    
+
+    @Override
+    public long getNumTasksExecuted() {
+        return m_numTasksExecuted;
+    }
 }

@@ -41,7 +41,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.commons.lang.builder.CompareToBuilder;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import org.opennms.netmgt.model.RrdRepository;
+import org.opennms.netmgt.rrd.RrdRepository;
 
 @XmlRootElement(name="jdbc-datacollection-config")
 public class JdbcDataCollectionConfig implements Serializable, Comparable<JdbcDataCollectionConfig> {
@@ -115,6 +115,7 @@ public class JdbcDataCollectionConfig implements Serializable, Comparable<JdbcDa
         return repo;
     }
     
+    @Override
     public int compareTo(JdbcDataCollectionConfig obj) {
         return new CompareToBuilder()
             .append(getRrdRepository(), obj.getRrdRepository())

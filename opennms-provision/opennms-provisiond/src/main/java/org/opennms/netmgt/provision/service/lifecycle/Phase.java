@@ -33,11 +33,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 
 import org.opennms.core.tasks.BatchTask;
 import org.opennms.core.tasks.ContainerTask;
 import org.opennms.core.tasks.Task;
-import org.opennms.core.utils.LogUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.opennms.netmgt.provision.service.lifecycle.annotations.Activity;
 import org.opennms.netmgt.provision.service.lifecycle.annotations.Attribute;
 
@@ -48,6 +50,7 @@ import org.opennms.netmgt.provision.service.lifecycle.annotations.Attribute;
  * @version $Id: $
  */
 public class Phase extends BatchTask {
+    private static final Logger LOG = LoggerFactory.getLogger(Phase.class);
     private LifeCycleInstance m_lifecycle;
     private String m_name;
     private Object[] m_providers;
@@ -64,7 +67,7 @@ public class Phase extends BatchTask {
         super(lifecycle.getCoordinator(), parent);
         m_lifecycle = lifecycle;
         m_name = name;
-        m_providers = providers;
+        m_providers = Arrays.copyOf(providers, providers.length);
 
         addPhaseMethods();
     }
@@ -169,13 +172,15 @@ public class Phase extends BatchTask {
         
         private Runnable phaseRunner() {
             return new Runnable() {
+                @Override
                 public void run() {
                     try {
                         doInvoke(m_phase.getLifeCycleInstance());
                     } catch (final Exception e) {
-                        LogUtils.infof(this, e, "failed to invoke lifecycle instance");
+                        LOG.info("failed to invoke lifecycle instance", e);
                     }
                 }
+                @Override
                 public String toString() {
                     return "Runner for "+m_phase.toString();
                 }
@@ -240,6 +245,7 @@ public class Phase extends BatchTask {
             return null;
         }
 
+        @Override
         public String toString() {
             return String.format("%s.%s(%s)", m_target.getClass().getSimpleName(), m_method.getName(), m_phase.getLifeCycleInstance());
         }
@@ -252,6 +258,7 @@ public class Phase extends BatchTask {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String toString() {
         return String.format("Phase %s of lifecycle %s", getName(), m_lifecycle.getName());
     }

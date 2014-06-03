@@ -48,11 +48,11 @@ import java.util.TreeSet;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
-import org.opennms.netmgt.dao.ApplicationDao;
-import org.opennms.netmgt.dao.GraphDao;
-import org.opennms.netmgt.dao.LocationMonitorDao;
-import org.opennms.netmgt.dao.MonitoredServiceDao;
-import org.opennms.netmgt.dao.ResourceDao;
+import org.opennms.netmgt.dao.api.ApplicationDao;
+import org.opennms.netmgt.dao.api.GraphDao;
+import org.opennms.netmgt.dao.api.LocationMonitorDao;
+import org.opennms.netmgt.dao.api.MonitoredServiceDao;
+import org.opennms.netmgt.dao.api.ResourceDao;
 import org.opennms.netmgt.mock.MockResourceType;
 import org.opennms.netmgt.model.OnmsApplication;
 import org.opennms.netmgt.model.OnmsAttribute;
@@ -64,9 +64,9 @@ import org.opennms.netmgt.model.OnmsMonitoringLocationDefinition;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsResource;
 import org.opennms.netmgt.model.OnmsServiceType;
-import org.opennms.netmgt.model.PollStatus;
 import org.opennms.netmgt.model.PrefabGraph;
 import org.opennms.netmgt.model.OnmsLocationMonitor.MonitorStatus;
+import org.opennms.netmgt.poller.PollStatus;
 import org.opennms.test.ThrowableAnticipator;
 import org.opennms.test.mock.EasyMockUtils;
 import org.opennms.web.command.DistributedStatusDetailsCommand;
@@ -312,7 +312,7 @@ public class DefaultDistributedStatusServiceTest extends TestCase {
         m_easyMockUtils.verifyAll();
         
         SimpleWebTable expectedTable = new SimpleWebTable();
-        expectedTable.setTitle("Distributed poller view for Application 1 from Raleigh location");
+        expectedTable.setTitle("Distributed status view for Application 1 from Raleigh location");
         
         expectedTable.addColumn("Node", "");
         expectedTable.addColumn("Monitor", "");
@@ -369,7 +369,7 @@ public class DefaultDistributedStatusServiceTest extends TestCase {
         m_easyMockUtils.verifyAll();
         
         SimpleWebTable expectedTable = new SimpleWebTable();
-        expectedTable.setTitle("Distributed poller view for Application 1 from Raleigh location");
+        expectedTable.setTitle("Distributed status view for Application 1 from Raleigh location");
         
         expectedTable.addColumn("Node", "");
         expectedTable.addColumn("Monitor", "");
@@ -565,7 +565,7 @@ public class DefaultDistributedStatusServiceTest extends TestCase {
         m_easyMockUtils.verifyAll();
         
         SimpleWebTable expectedTable = new SimpleWebTable();
-        expectedTable.setTitle("Distributed Poller Status Summary");
+        expectedTable.setTitle("Distributed Status Summary");
         expectedTable.addColumn("Area", "");
         expectedTable.addColumn("Location", "");
         expectedTable.addColumn("Application 1", "");
@@ -631,7 +631,7 @@ public class DefaultDistributedStatusServiceTest extends TestCase {
         m_easyMockUtils.verifyAll();
         
         SimpleWebTable expectedTable = new SimpleWebTable();
-        expectedTable.setTitle("Distributed Poller Status Summary");
+        expectedTable.setTitle("Distributed Status Summary");
         expectedTable.addColumn("Area", "");
         expectedTable.addColumn("Location", "");
         expectedTable.addColumn(app.getName(), "");
@@ -706,7 +706,7 @@ public class DefaultDistributedStatusServiceTest extends TestCase {
         m_easyMockUtils.verifyAll();
         
         SimpleWebTable expectedTable = new SimpleWebTable();
-        expectedTable.setTitle("Distributed Poller Status Summary");
+        expectedTable.setTitle("Distributed Status Summary");
         expectedTable.addColumn("Application", "");
         expectedTable.addColumn("Raleigh", "");
         expectedTable.addColumn("Durham", "");

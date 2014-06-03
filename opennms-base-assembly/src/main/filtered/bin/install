@@ -15,15 +15,5 @@ if [ -f "$OPENNMS_HOME/etc/opennms.conf" ]; then
 	. "$OPENNMS_HOME/etc/opennms.conf"
 fi
 
-# Load ~/.opennms-dev/opennms.conf if it exists, to override above configuration options.
-if [ -f "${HOME}/.opennms-dev/opennms.conf" ]; then
-	. "${HOME}/.opennms-dev/opennms.conf"
-fi
-
-app_class=org.opennms.install.Installer
-exec $OPENNMS_HOME/bin/runjava -r -- \
-	-Dopennms.home=$OPENNMS_HOME \
-	-Dopennms.manager.class=$app_class \
-	-cp "$OPENNMS_HOME/lib/opennms_bootstrap.jar:$OPENNMS_HOME/lib/opennms_install.jar" \
-	$JAVA_OPTIONS $ADDITIONAL_MANAGER_OPTIONS \
-	$app_class "$@"
+exec ${install.bin.dir}/runjava -r -- \
+     $ADDITIONAL_MANAGER_OPTIONS -Dopennms.home="$OPENNMS_HOME" -cp "$OPENNMS_HOME/lib/opennms_bootstrap.jar" org.opennms.bootstrap.InstallerBootstrap "$@"

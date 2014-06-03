@@ -28,11 +28,9 @@
 
 package org.opennms.netmgt.collectd.jdbc;
 
-import org.opennms.core.utils.TimeKeeper;
-import org.opennms.netmgt.collectd.AbstractCollectionResource;
-import org.opennms.netmgt.collectd.CollectionAgent;
-import org.opennms.netmgt.config.collector.CollectionAttributeType;
-import org.opennms.netmgt.config.collector.ServiceParameters;
+import org.opennms.netmgt.collection.api.CollectionAgent;
+import org.opennms.netmgt.collection.api.CollectionAttributeType;
+import org.opennms.netmgt.collection.support.AbstractCollectionResource;
 
 public abstract class JdbcCollectionResource extends AbstractCollectionResource {
     
@@ -40,34 +38,15 @@ public abstract class JdbcCollectionResource extends AbstractCollectionResource 
         super(agent);
     }
 
-    public boolean shouldPersist(ServiceParameters params) {
-        return true;
-    }
-
-    public boolean rescanNeeded() {
-        // A rescan is never needed for the JdbcCollector, at least on resources
-        return false;
-    }
-    
     public void setAttributeValue(CollectionAttributeType type, String value) {
-        JdbcCollectionAttribute attr = new JdbcCollectionAttribute(this, type, type.getName(), value);
+        JdbcCollectionAttribute attr = new JdbcCollectionAttribute(this, type, value);
         addAttribute(attr);
     }
 
-    public int getType() {
-        return -1; //Is this right?
-    }
-
+    @Override
     public abstract String getResourceTypeName();
 
+    @Override
     public abstract String getInstance();
-    
-    public String getParent() {
-        return m_agent.getStorageDir().toString();
-    }
-
-    public TimeKeeper getTimeKeeper() {
-        return null;
-    }
 
 }

@@ -34,11 +34,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.opennms.netmgt.collectd.AliasedResource;
-import org.opennms.netmgt.config.collector.CollectionAttribute;
-import org.opennms.netmgt.config.collector.CollectionResource;
-import org.opennms.netmgt.config.collector.ServiceParameters;
-import org.opennms.netmgt.model.RrdRepository;
+import org.opennms.netmgt.collection.api.CollectionAttribute;
+import org.opennms.netmgt.collection.api.CollectionResource;
+import org.opennms.netmgt.collection.api.ServiceParameters;
+import org.opennms.netmgt.rrd.RrdRepository;
 import org.opennms.netmgt.xml.event.Event;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>CollectorThresholdingSet class.</p>
@@ -47,7 +49,8 @@ import org.opennms.netmgt.xml.event.Event;
  * @version $Id: $
  */
 public class CollectorThresholdingSet extends ThresholdingSet {
-    
+    private static final Logger LOG = LoggerFactory.getLogger(CollectorThresholdingSet.class);
+
     // CollectionSpecification parameters
     boolean storeByIfAlias = false;
     ServiceParameters svcParams;
@@ -58,13 +61,13 @@ public class CollectorThresholdingSet extends ThresholdingSet {
      * @param nodeId a int.
      * @param hostAddress a {@link java.lang.String} object.
      * @param serviceName a {@link java.lang.String} object.
-     * @param repository a {@link org.opennms.netmgt.model.RrdRepository} object.
-     * @param svcParams a {@link org.opennms.netmgt.config.collector.ServiceParameters} object.
+     * @param repository a {@link org.opennms.netmgt.rrd.RrdRepository} object.
+     * @param svcParams a {@link org.opennms.netmgt.collection.api.ServiceParameters} object.
      */
     public CollectorThresholdingSet(int nodeId, String hostAddress, String serviceName, RrdRepository repository, ServiceParameters svcParams) {
         super(nodeId, hostAddress, serviceName, repository);
         String storeByIfAliasString = svcParams.getStoreByIfAlias();
-        storeByIfAlias = storeByIfAliasString != null && storeByIfAliasString.toLowerCase().equals("true");
+        storeByIfAlias = storeByIfAliasString != null && "true".equalsIgnoreCase(storeByIfAliasString);
         this.svcParams = svcParams;
     }
     
@@ -74,7 +77,7 @@ public class CollectorThresholdingSet extends ThresholdingSet {
     /**
      * <p>hasThresholds</p>
      *
-     * @param attribute a {@link org.opennms.netmgt.config.collector.CollectionAttribute} object.
+     * @param attribute a {@link org.opennms.netmgt.collection.api.CollectionAttribute} object.
      * @return a boolean.
      */
     public boolean hasThresholds(CollectionAttribute attribute) {
@@ -93,7 +96,7 @@ public class CollectorThresholdingSet extends ThresholdingSet {
     /** {@inheritDoc} */
     public List<Event> applyThresholds(CollectionResource resource, Map<String, CollectionAttribute> attributesMap, Date collectionTimestamp) {
         if (!isCollectionEnabled(resource)) {
-            log().debug("applyThresholds: Ignoring resource " + resource + " because data collection is disabled for this resource.");
+            LOG.debug("applyThresholds: Ignoring resource {} because data collection is disabled for this resource.", resource);
             return new LinkedList<Event>();
         }
 		CollectionResourceWrapper resourceWrapper = new CollectionResourceWrapper(
@@ -109,7 +112,7 @@ public class CollectorThresholdingSet extends ThresholdingSet {
     @Override
     protected boolean passedThresholdFilters(CollectionResourceWrapper resource, ThresholdEntity thresholdEntity) {
         if (resource.isAnInterfaceResource() && !resource.isValidInterfaceResource()) {
-            log().info("passedThresholdFilters: Could not get data interface information for '" + resource.getIfLabel() + "' or this interface has an invalid ifIndex.  Not evaluating threshold.");
+            LOG.info("passedThresholdFilters: Could not get data interface information for '{}' or this interface has an invalid ifIndex.  Not evaluating threshold.", resource.getIfLabel());
             return false;
         }
         return super.passedThresholdFilters(resource, thresholdEntity);

@@ -76,7 +76,6 @@ public class GenericURLFactory implements URLStreamHandlerFactory {
 
     /**
      * <p>initialize</p>
-     * <p/>
      * Initializing the URL Factory
      */
     public static void initialize() {
@@ -89,7 +88,6 @@ public class GenericURLFactory implements URLStreamHandlerFactory {
 
     /**
      * <p>getInstance</p>
-     * <p/>
      * Implement the GenericURLFactory as singleton
      *
      * @return a {org.opennms.core.utils.url.GenericURLFactory} object.
@@ -100,12 +98,11 @@ public class GenericURLFactory implements URLStreamHandlerFactory {
 
     /**
      * <p>addURLConnection</p>
-     * <p/>
      * Add protocol URL connection handler with specific class name
      *
      * @param protocol    name as {@link java.lang.String} object.
      * @param classname   full qualified classname as {@link java.lang.String} object.
-     * @param defaultPort the default port for given protocol as {@java.lang.int} object.
+     * @param defaultPort the default port for given protocol as {@link java.lang.Integer} object.
      */
     public void addURLConnection(String protocol, String classname, int defaultPort) {
         urlConnections.put(protocol, classname);
@@ -114,7 +111,6 @@ public class GenericURLFactory implements URLStreamHandlerFactory {
 
     /**
      * <p>addURLConnection</p>
-     * <p/>
      * Add protocol URL connection handler with specific class name
      *
      * @param protocol  name as {@link java.lang.String} object.
@@ -126,7 +122,6 @@ public class GenericURLFactory implements URLStreamHandlerFactory {
 
     /**
      * <p>removeURLConnection</p>
-     * <p/>
      * Remove a protocol URL connection handler
      *
      * @param protocol name as {@link java.lang.String} object.
@@ -141,7 +136,6 @@ public class GenericURLFactory implements URLStreamHandlerFactory {
 
     /**
      * <p>getURLConnections</p>
-     * <p/>
      * Get the map with protocol and implementation classes for customized URL connections
      *
      * @return a {@link java.util.HashMap} object
@@ -152,13 +146,13 @@ public class GenericURLFactory implements URLStreamHandlerFactory {
 
     /**
      * <p>createURLStreamHandler</p>
-     * <p/>
      * Create stream handler
      *
      * @param protocol name as {@link java.lang.String} object.
-     * @return a {@java.net.URLStreamHandler} object.
+     * @return a {@link java.net.URLStreamHandler} object.
      */
     @SuppressWarnings("unchecked")
+    @Override
     public URLStreamHandler createURLStreamHandler(String protocol) {
         Class<? extends URLConnection> c = null;
         if (!urlConnections.containsKey(protocol)) {
@@ -169,7 +163,7 @@ public class GenericURLFactory implements URLStreamHandlerFactory {
         try {
             c = (Class<? extends URLConnection>) Class.forName(urlConnections.get(protocol));
         } catch (ClassNotFoundException e) {
-            logger.error("Class not found for protocol '{}' and return null. Error message: '{}'", protocol, e.getMessage());
+            logger.warn("Class not found for protocol '{}' and return null. Error message: '{}'", protocol, e.getMessage());
             return null; // We couldn't load a class for the protocol
         }
         return new GenericURLStreamHandler(c, urlDefaultPorts.get(protocol)); // Return the stream handler for the customized protocol

@@ -42,8 +42,7 @@
         org.opennms.netmgt.config.poller.Service,
         org.opennms.netmgt.config.poller.Parameter,
         org.opennms.netmgt.model.OnmsMonitoredService,
-        org.opennms.netmgt.poller.ServiceMonitor,
-        org.opennms.web.springframework.security.Authentication
+        org.opennms.netmgt.poller.ServiceMonitor
 	"
 %>
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
@@ -66,9 +65,9 @@
     while (en.hasMoreElements()) {
         Package pkg = en.nextElement();
         if (!pkg.getRemote() &&
-            pollerCfgFactory.isServiceInPackageAndEnabled(serviceName, pkg) &&
-            pollerCfgFactory.isInterfaceInPackage(ipAddr, pkg)) {
-            lastPkg = pkg;
+    pollerCfgFactory.isServiceInPackageAndEnabled(serviceName, pkg) &&
+    pollerCfgFactory.isInterfaceInPackage(ipAddr, pkg)) {
+    lastPkg = pkg;
         }
     }
     pageContext.setAttribute("packageName", lastPkg == null ? "N/A" : lastPkg.getName());
@@ -79,9 +78,9 @@
     Map<String,String> parameters = new TreeMap<String,String>();
     Map<String,String> xmlParams  = new TreeMap<String,String>();
     if (lastPkg != null) {
-        for (Service s : lastPkg.getServiceCollection()) {
+        for (Service s : lastPkg.getServices()) {
             if (s.getName().equalsIgnoreCase(serviceName)) {
-                for (Parameter p : s.getParameterCollection()) {
+                for (Parameter p : s.getParameters()) {
                     if (p.getKey().toLowerCase().contains("password")) {
                         continue; // Hide passwords for security reasons
                     }

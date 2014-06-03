@@ -30,13 +30,13 @@ package org.opennms.netmgt.xmlrpcd;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.opennms.core.utils.LogUtils;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.capsd.CapsdDbSyncer;
 import org.opennms.netmgt.config.CapsdConfig;
@@ -50,6 +50,8 @@ import org.opennms.netmgt.config.poller.Rrd;
 import org.opennms.netmgt.config.poller.Service;
 import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.model.events.EventIpcManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>OpenNMSProvisioner class.</p>
@@ -60,6 +62,7 @@ import org.opennms.netmgt.model.events.EventIpcManager;
  * @author <a href="mailto:mhuot@opennms.org">Mike Huot</a>
  */
 public class OpenNMSProvisioner implements Provisioner {
+    private static final Logger LOG = LoggerFactory.getLogger(OpenNMSProvisioner.class);
     
     private static final String JDBC_MONITOR = "org.opennms.netmgt.poller.monitors.JDBCMonitor";
     private static final String HTTPS_MONITOR = "org.opennms.netmgt.poller.monitors.HttpsMonitor";
@@ -183,6 +186,7 @@ public class OpenNMSProvisioner implements Provisioner {
 
 
     /** {@inheritDoc} */
+    @Override
     public boolean addServiceICMP(final String serviceId, final int retry, final int timeout, final int interval, final int downTimeInterval, final int downTimeDuration) {
         validateSchedule(retry, timeout, interval, downTimeInterval, downTimeDuration);
         return addService(serviceId, retry, timeout, interval, downTimeInterval, downTimeDuration, ICMP_MONITOR, ICMP_PLUGIN);
@@ -211,10 +215,10 @@ public class OpenNMSProvisioner implements Provisioner {
         }
         
         if (m_pollerConfig.getServiceMonitor(serviceId) == null) {
-            LogUtils.debugf(this, "Adding a new monitor for %s", serviceId);
+            LOG.debug("Adding a new monitor for {}", serviceId);
             m_pollerConfig.addMonitor(serviceId, monitor);
         } else {
-            LogUtils.debugf(this, "No need to add a new monitor for %s", serviceId);
+            LOG.debug("No need to add a new monitor for {}", serviceId);
         }
         
         if (m_capsdConfig.getProtocolPlugin(serviceId) == null) {
@@ -277,9 +281,7 @@ public class OpenNMSProvisioner implements Provisioner {
      * @return a {@link org.opennms.netmgt.config.poller.Parameter} object.
      */
     public Parameter findParamterWithKey(final Service svc, final String key) {
-    	final Enumeration<Parameter> e = svc.enumerateParameter();
-        while(e.hasMoreElements()) {
-            final Parameter parameter = (Parameter)e.nextElement();
+        for (final Parameter parameter : svc.getParameters()) {
             if (key.equals(parameter.getKey())) {
                 return parameter;
             }
@@ -314,11 +316,12 @@ public class OpenNMSProvisioner implements Provisioner {
         final Downtime dt2 = new Downtime();
         dt2.setBegin(downTimeDuration);
         dt2.setInterval(interval);
-        pkg.setDowntime(new Downtime[] { dt, dt2 });
+        pkg.setDowntimes(Arrays.asList(dt, dt2));
         return pkg;
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean addServiceDNS(final String serviceId, final int retry, final int timeout, final int interval, final int downTimeInterval, final int downTimeDuration, final int port, final String lookup) {
         validateSchedule(retry, timeout, interval, downTimeInterval, downTimeDuration);
         checkPort(port);
@@ -333,6 +336,7 @@ public class OpenNMSProvisioner implements Provisioner {
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean addServiceTCP(final String serviceId, final int retry, final int timeout, final int interval, final int downTimeInterval, final int downTimeDuration, final int port, final String banner) {
         validateSchedule(retry, timeout, interval, downTimeInterval, downTimeDuration);
         checkPort(port);
@@ -347,6 +351,7 @@ public class OpenNMSProvisioner implements Provisioner {
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean addServiceHTTP(final String serviceId, final int retry, final int timeout, final int interval, final int downTimeInterval, final int downTimeDuration, final String hostName, final int port, final String response, final String responseText, final String url, final String user, final String passwd, final String agent) throws MalformedURLException {
         validateSchedule(retry, timeout, interval, downTimeInterval, downTimeDuration);
         checkHostname(hostName);
@@ -383,6 +388,7 @@ public class OpenNMSProvisioner implements Provisioner {
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean addServiceHTTPS(final String serviceId, final int retry, final int timeout, final int interval, final int downTimeInterval, final int downTimeDuration, final String hostName, final int port, final String response, final String responseText, final String url, final String user, final String passwd, final String agent) throws MalformedURLException {
         validateSchedule(retry, timeout, interval, downTimeInterval, downTimeDuration);
         checkHostname(hostName);
@@ -419,6 +425,7 @@ public class OpenNMSProvisioner implements Provisioner {
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean addServiceDatabase(final String serviceId, final int retry, final int timeout, final int interval, final int downTimeInterval, final int downTimeDuration, final String user, final String password, final String driver, final String url)   {
         validateSchedule(retry, timeout, interval, downTimeInterval, downTimeDuration);
         checkUsername(user);
@@ -437,6 +444,7 @@ public class OpenNMSProvisioner implements Provisioner {
     }
     
     /** {@inheritDoc} */
+    @Override
     public Map<String, Object> getServiceConfiguration(final String pkgName, final String serviceId) {
         if (pkgName == null) {
             throw new NullPointerException("pkgName is null");
@@ -457,10 +465,9 @@ public class OpenNMSProvisioner implements Provisioner {
         
         final Map<String, Object> m = new HashMap<String, Object>();
         m.put("serviceid", serviceId);
-        m.put("interval", Integer.valueOf((int)svc.getInterval()));
+        m.put("interval", svc.getInterval() == null? null : svc.getInterval().intValue());
         
-        for(int i = 0; i < svc.getParameterCount(); i++) {
-        	final Parameter param = svc.getParameter(i);
+        for (final Parameter param : svc.getParameters()) {
             String key = param.getKey();
             final String valStr = param.getValue();
             Object val = valStr;
@@ -498,11 +505,12 @@ public class OpenNMSProvisioner implements Provisioner {
             m.put(key, val);
         }
         
-        for(int i = 0; i < pkg.getDowntimeCount(); i++) {
-            final Downtime dt = pkg.getDowntime(i);
+        final List<Downtime> downtimes = pkg.getDowntimes();
+        for(int i = 0; i < downtimes.size(); i++) {
+            final Downtime dt = downtimes.get(i);
             final String suffix = (i == 0 ? "" : ""+i);
             if ((dt.hasEnd()) || (dt.getDelete() != null && !"false".equals(dt.getDelete()))) {
-                m.put("downtime_interval"+suffix, Integer.valueOf((int)dt.getInterval()));
+                m.put("downtime_interval"+suffix, dt.getInterval() == null? null : dt.getInterval().intValue());
                 int duration = (!dt.hasEnd() ? Integer.MAX_VALUE : (int)(dt.getEnd() - dt.getBegin()));
                 m.put("downtime_duration"+suffix, Integer.valueOf(duration));
             }   

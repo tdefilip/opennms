@@ -33,7 +33,9 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
+import java.text.DateFormat;
 import java.util.Arrays;
+import java.util.Date;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -42,7 +44,8 @@ import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
 import org.easymock.IArgumentMatcher;
-import org.opennms.netmgt.eventd.mock.EventWrapper;
+import org.opennms.netmgt.EventConstants;
+import org.opennms.netmgt.dao.mock.EventWrapper;
 import org.opennms.netmgt.mock.MockEventUtil;
 import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.model.events.EventProxy;
@@ -57,9 +60,15 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 
 public class SecurityAuthenticationEventOnmsEventBuilderTest extends TestCase {
-    private EasyMockUtils m_mocks = new EasyMockUtils();
-    private EventProxy m_eventProxy = m_mocks.createMock(EventProxy.class);
-    
+    private EasyMockUtils m_mocks;
+    private EventProxy m_eventProxy;
+
+    @Override
+    public void setUp() {
+        m_mocks = new EasyMockUtils();
+        m_eventProxy = m_mocks.createMock(EventProxy.class);
+    }
+
     public void testAuthenticationSuccessEventWithEverything() throws Exception {
         String userName = "bar";
         String ip = "1.2.3.4";
@@ -86,6 +95,9 @@ public class SecurityAuthenticationEventOnmsEventBuilderTest extends TestCase {
         eventBuilder.addParam("user", userName);
         eventBuilder.addParam("ip", ip);
         
+        Event expectedEvent = eventBuilder.getEvent();
+        // Make sure the timestamps are synchronized
+        expectedEvent.setTime(EventConstants.formatToString(new Date(authEvent.getTimestamp())));
         m_eventProxy.send(EventEquals.eqEvent(eventBuilder.getEvent()));
         
         m_mocks.replayAll();
@@ -148,6 +160,7 @@ public class SecurityAuthenticationEventOnmsEventBuilderTest extends TestCase {
             m_expected = expected;
         }
 
+        @Override
         public boolean matches(Object actual) {
             if (!(actual instanceof Event)) {
                 return false;
@@ -157,6 +170,7 @@ public class SecurityAuthenticationEventOnmsEventBuilderTest extends TestCase {
             return MockEventUtil.eventsMatchDeep(m_expected, actualEvent);
         }
 
+        @Override
         public void appendTo(StringBuffer buffer) {
             buffer.append("eqEvent(");
             buffer.append(new EventWrapper(m_expected));
@@ -190,10 +204,12 @@ public class SecurityAuthenticationEventOnmsEventBuilderTest extends TestCase {
             return m_details;
         }
 
+                @Override
         public Object getCredentials() {
             return m_credentials;
         }
 
+                @Override
         public Object getPrincipal() {
             return m_principal;
         }

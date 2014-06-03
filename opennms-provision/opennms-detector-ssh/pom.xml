@@ -3,11 +3,11 @@
   <parent>
     <artifactId>opennms-provision</artifactId>
     <groupId>org.opennms</groupId>
-    <version>1.12.8-SNAPSHOT</version>
+    <version>1.13.3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>opennms-detector-ssh</artifactId>
-  <name>OpenNMS SSH Detector</name>
+  <name>OpenNMS Provision SSH Detector</name>
   <url>http://www.opennms.org</url>
   <packaging>bundle</packaging>
   <build>
@@ -31,10 +31,6 @@
     <dependency>
       <groupId>org.opennms</groupId>
       <artifactId>opennms-provision-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>jakarta-regexp</groupId>
-      <artifactId>jakarta-regexp</artifactId>
     </dependency>
     <dependency>
       <groupId>org.opennms</groupId>

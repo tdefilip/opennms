@@ -28,61 +28,34 @@
 
 package org.opennms.netmgt.collectd.vmware.cim;
 
-import org.opennms.netmgt.collectd.AbstractCollectionAttribute;
-import org.opennms.netmgt.config.collector.CollectionAttribute;
-import org.opennms.netmgt.config.collector.CollectionAttributeType;
-import org.opennms.netmgt.config.collector.CollectionResource;
-import org.opennms.netmgt.config.collector.ServiceParameters;
+import org.opennms.netmgt.collection.api.CollectionAttributeType;
+import org.opennms.netmgt.collection.support.AbstractCollectionAttribute;
 
-public class VmwareCimCollectionAttribute extends AbstractCollectionAttribute implements CollectionAttribute {
-    private String m_alias;
-    private String m_value;
-    private VmwareCimCollectionResource m_resource;
-    private CollectionAttributeType m_attribType;
+public class VmwareCimCollectionAttribute extends AbstractCollectionAttribute {
+    private final String m_value;
 
-    public VmwareCimCollectionAttribute(final VmwareCimCollectionResource resource, final CollectionAttributeType attribType, final String alias, final String value) {
-        m_resource = resource;
-        m_attribType = attribType;
-        m_alias = alias;
+    public VmwareCimCollectionAttribute(final VmwareCimCollectionResource resource, final CollectionAttributeType attribType, final String value) {
+        super(attribType, resource);
         m_value = value;
     }
 
-    public CollectionAttributeType getAttributeType() {
-        return m_attribType;
-    }
-
-    public String getName() {
-        return m_alias;
-    }
-
+    @Override
     public String getMetricIdentifier() {
         return "VmwareCim_" + m_attribType.getName();
     }
 
+    @Override
     public String getNumericValue() {
         return m_value;
     }
 
-    public CollectionResource getResource() {
-        return m_resource;
-    }
-
+    @Override
     public String getStringValue() {
         return m_value; //Should this be null instead?
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public boolean shouldPersist(final ServiceParameters params) {
-        return true;
-    }
-
-    public String getType() {
-        return m_attribType.getType();
-    }
-
+    @Override
     public String toString() {
-        return "VmwareCimCollectionAttribute " + m_alias + "=" + m_value;
+        return "VmwareCimCollectionAttribute " + getName() + "=" + m_value;
     }
 }

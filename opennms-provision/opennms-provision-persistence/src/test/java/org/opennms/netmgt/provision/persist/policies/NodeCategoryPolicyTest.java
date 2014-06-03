@@ -36,37 +36,14 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.MockLogAppender;
-import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
-import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
-import org.opennms.core.utils.BeanUtils;
-import org.opennms.netmgt.dao.DatabasePopulator;
-import org.opennms.netmgt.dao.NodeDao;
 import org.opennms.netmgt.model.OnmsCategory;
 import org.opennms.netmgt.model.OnmsNode;
-import org.opennms.test.JUnitConfigurationEnvironment;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
-@RunWith(OpenNMSJUnit4ClassRunner.class)
-@ContextConfiguration(locations={
-        "classpath:/META-INF/opennms/applicationContext-soa.xml",
-        "classpath:/META-INF/opennms/applicationContext-dao.xml",
-        "classpath*:/META-INF/opennms/component-dao.xml",
-        "classpath:/META-INF/opennms/applicationContext-databasePopulator.xml"
-})
-@JUnitConfigurationEnvironment
-@JUnitTemporaryDatabase
 public class NodeCategoryPolicyTest implements InitializingBean {
-    @Autowired
-    private NodeDao m_nodeDao;
-
-    @Autowired
-    private DatabasePopulator m_populator;
-
     private List<OnmsNode> m_nodes;
 
     @Override
@@ -77,13 +54,17 @@ public class NodeCategoryPolicyTest implements InitializingBean {
     @Before
     public void setUp() {
         MockLogAppender.setupLogging();
-        m_populator.populateDatabase();
-        m_nodes = m_nodeDao.findAll();
+        m_nodes = new ArrayList<OnmsNode>();
+        final OnmsNode node1 = new OnmsNode();
+        node1.setNodeId("1");
+        node1.setForeignSource("a");
+        node1.setForeignId("1");
+        node1.setLabel("Node 1");
+        m_nodes.add(node1);
     }
-    
+
     @Test
     @Transactional
-    @JUnitTemporaryDatabase
     public void testMatchingLabel() {
         NodeCategorySettingPolicy p = new NodeCategorySettingPolicy();
         p.setForeignId("1");
@@ -95,7 +76,6 @@ public class NodeCategoryPolicyTest implements InitializingBean {
 
     @Test
     @Transactional
-    @JUnitTemporaryDatabase
     public void testMatchingNothing() {
         NodeCategorySettingPolicy p = new NodeCategorySettingPolicy();
         p.setLabel("~^wankerdoodle$");
@@ -109,7 +89,7 @@ public class NodeCategoryPolicyTest implements InitializingBean {
         OnmsNode o;
         List<OnmsNode> populatedNodes = new ArrayList<OnmsNode>();
         List<OnmsNode> matchedNodes = new ArrayList<OnmsNode>();
-        
+
         for (OnmsNode node : m_nodes) {
             System.err.println(node);
             o = p.apply(node);

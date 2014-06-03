@@ -37,13 +37,13 @@ import org.exolab.castor.xml.ValidationException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.test.db.MockDatabase;
 import org.opennms.core.test.db.TemporaryDatabaseAware;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgent;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgents;
-import org.opennms.core.utils.BeanUtils;
 import org.opennms.netmgt.config.CapsdConfig;
 import org.opennms.netmgt.mock.MockNetwork;
 import org.opennms.test.JUnitConfigurationEnvironment;
@@ -66,7 +66,7 @@ import org.springframework.test.context.ContextConfiguration;
         // Override the capsd config with a stripped-down version
         "classpath:/META-INF/opennms/capsdTest.xml",
         "classpath:/META-INF/opennms/applicationContext-proxy-snmp.xml",
-        "classpath:/META-INF/opennms/smallEventConfDao.xml"
+        "classpath*:/META-INF/opennms/applicationContext-minimal-conf.xml"
 })
 @JUnitConfigurationEnvironment(systemProperties="org.opennms.provisiond.enableDiscovery=false")
 @JUnitTemporaryDatabase

@@ -43,7 +43,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.commons.lang.builder.CompareToBuilder;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import org.opennms.netmgt.model.RrdRepository;
+import org.opennms.netmgt.rrd.RrdRepository;
 
 /**
  * The Class XmlDataCollectionConfig.
@@ -185,6 +185,7 @@ public class XmlDataCollectionConfig implements Serializable, Comparable<XmlData
     /* (non-Javadoc)
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
+    @Override
     public int compareTo(XmlDataCollectionConfig obj) {
         return new CompareToBuilder()
         .append(getRrdRepository(), obj.getRrdRepository())

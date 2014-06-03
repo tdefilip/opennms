@@ -40,12 +40,12 @@ import javax.annotation.Resource;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.opennms.core.utils.BeanUtils;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.utils.InetAddressUtils;
-import org.opennms.netmgt.model.PollStatus;
 import org.opennms.netmgt.poller.InetNetworkInterface;
 import org.opennms.netmgt.poller.MonitoredService;
 import org.opennms.netmgt.poller.NetworkInterface;
+import org.opennms.netmgt.poller.PollStatus;
 import org.opennms.sms.reflector.smsservice.SmsService;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,30 +78,37 @@ public class SMSPingMonitorTest implements InitializingBean {
 	public void setUp() {
 		
 		m_service = new MonitoredService() {
+                        @Override
 			public InetAddress getAddress() {
 				return InetAddressUtils.getLocalHostAddress();
 			}
 
+                        @Override
 			public String getIpAddr() {
 				return "127.0.0.1";
 			}
 
+                        @Override
 			public NetworkInterface<InetAddress> getNetInterface() {
 				return new InetNetworkInterface(getAddress());
 			}
 
+                        @Override
 			public int getNodeId() {
 				return 1;
 			}
 
+                        @Override
 			public String getNodeLabel() {
 				return "localhost";
 			}
 
+                        @Override
 			public String getSvcName() {
 				return "SMS";
 			}
 
+                        @Override
 			public String getSvcUrl() {
 			    return null;
 			}

@@ -52,10 +52,10 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
-import org.opennms.core.utils.BeanUtils;
 import org.opennms.netmgt.provision.adapters.link.config.DefaultNamespacePrefixMapper;
 import org.opennms.netmgt.provision.adapters.link.config.dao.DefaultLinkAdapterConfigurationDao;
 import org.opennms.netmgt.provision.adapters.link.config.linkadapter.LinkAdapterConfiguration;
@@ -74,7 +74,8 @@ import org.springframework.test.context.ContextConfiguration;
         "classpath:/META-INF/opennms/applicationContext-daemon.xml",
         "classpath:/META-INF/opennms/mockEventIpcManager.xml",
         "classpath*:/META-INF/opennms/provisiond-extensions.xml",
-        "classpath:/testConfigContext.xml"
+        "classpath:/testConfigContext.xml",
+        "classpath:/META-INF/opennms/applicationContext-minimal-conf.xml"
 })
 @JUnitConfigurationEnvironment
 @JUnitTemporaryDatabase
@@ -87,6 +88,7 @@ public class LinkAdapterConfigurationTest implements InitializingBean {
             m_schemaFile = schemaFile;
         }
         
+        @Override
         public Result createOutput(String namespaceUri, String suggestedFileName) throws IOException {
             return new StreamResult(m_schemaFile);
         }
@@ -144,6 +146,7 @@ public class LinkAdapterConfigurationTest implements InitializingBean {
                 sb.append(line).append("\n");
         }
         System.err.println(sb.toString());
+        br.close();
     }
 
     @Test

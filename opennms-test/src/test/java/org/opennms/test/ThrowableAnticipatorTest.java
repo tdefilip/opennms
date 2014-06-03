@@ -38,10 +38,12 @@ public class ThrowableAnticipatorTest extends TestCase {
     public ThrowableAnticipatorTest() {
     }
 
+    @Override
     protected void setUp() throws Exception {
         m_anticipator = new ThrowableAnticipator();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         m_anticipator.verifyAnticipated();
     }
@@ -151,7 +153,7 @@ public class ThrowableAnticipatorTest extends TestCase {
         
         try {
             m_anticipator.setFailFast(true);
-        } catch (AssertionFailedError e) {
+        } catch (AssertionError e) {
             if (e.getMessage().startsWith("failFast is being changed from false to true and unanticipated exceptions have been received:")) {
                 m_anticipator.reset();
                 return; // This is what we were expecting

@@ -33,6 +33,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
@@ -50,8 +51,8 @@ public class ResourceDataSource implements JRDataSource {
         private String[] m_strProps;
         
         public ResourceFilterFields(String[] fields, String[] strProps) {
-            m_fields = fields;
-            m_strProps = strProps;
+            m_fields = fields == null ? null : Arrays.copyOf(fields, fields.length);
+            m_strProps = strProps == null ? null : Arrays.copyOf(strProps, strProps.length);
         }
         
         public String getValueForField(String fieldName, String curPath) {
@@ -69,6 +70,7 @@ public class ResourceDataSource implements JRDataSource {
             File curDir = new File(curPath);
             FilenameFilter filter = new FilenameFilter() {
 
+                @Override
                 public boolean accept(File f, String name) {
                     return name.matches("strings.properties");
                 }
@@ -100,6 +102,7 @@ public class ResourceDataSource implements JRDataSource {
             File curDir = new File(curPath);
             FilenameFilter filter = new FilenameFilter() {
 
+                @Override
                 public boolean accept(File file, String name) {
                     return name.matches("ds.properties");
                 }
@@ -179,12 +182,13 @@ public class ResourceDataSource implements JRDataSource {
         System.err.println("paths: " + m_paths);
     }
 
+    @Override
     public Object getFieldValue(JRField field) throws JRException {
         return computeValueForField(field);
     }
 
     private Object computeValueForField(JRField field) {
-        if(field.getName().toLowerCase().equals("path")) {
+        if(field.getName().equalsIgnoreCase("path")) {
             String pathField = m_paths.get(m_currentRow);
             System.err.println("path field:[" + pathField + "]");
             return m_paths.get(m_currentRow);
@@ -203,6 +207,7 @@ public class ResourceDataSource implements JRDataSource {
         return m_filterFields.getValueForField(field.getName(), absolutePath);
     }
 
+    @Override
     public boolean next() throws JRException {
         m_currentRow++;
         return m_currentRow < m_paths.size();

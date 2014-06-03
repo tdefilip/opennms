@@ -31,10 +31,10 @@ package org.opennms.netmgt.config.mock;
 import java.util.Iterator;
 import java.util.List;
 
-import org.opennms.core.utils.Argument;
 import org.opennms.netmgt.config.NotificationManager;
 import org.opennms.netmgt.mock.MockNotification;
 import org.opennms.netmgt.mock.NotificationAnticipator;
+import org.opennms.netmgt.model.notifd.Argument;
 import org.opennms.netmgt.model.notifd.NotificationStrategy;
 import org.opennms.test.mock.MockUtil;
 /**
@@ -55,6 +55,7 @@ public class MockNotificationStrategy implements NotificationStrategy {
     /* (non-Javadoc)
      * @see org.opennms.netmgt.notifd.NotificationStrategy#send(java.util.List)
      */
+    @Override
     public int send(List<Argument> arguments) {
         MockUtil.println("Message sent with arguments:"+arguments);
         

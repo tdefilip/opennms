@@ -62,6 +62,7 @@ public class NodeProvisioningController extends AbstractController implements
      * client to an appropriate URL for display.
      */
     @Transactional
+    @Override
     public ModelAndView handleRequestInternal(HttpServletRequest request, HttpServletResponse response) throws Exception {
         
         String user = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -117,12 +118,26 @@ public class NodeProvisioningController extends AbstractController implements
     }
 
     /**
+     * @return the redirectView
+     */
+    public String getRedirectView() {
+        return m_redirectView;
+    }
+
+    /**
      * <p>setRedirectView</p>
      *
      * @param redirectView a {@link java.lang.String} object.
      */
     public void setRedirectView(String redirectView) {
         m_redirectView = redirectView;
+    }
+
+    /**
+     * @return the successView
+     */
+    public String getSuccessView() {
+        return m_successView;
     }
 
     /**

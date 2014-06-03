@@ -30,11 +30,11 @@ package org.opennms.netmgt.poller;
 
 import java.io.File;
 
-import org.opennms.core.utils.TimeKeeper;
-import org.opennms.netmgt.config.collector.CollectionResource;
-import org.opennms.netmgt.config.collector.CollectionSetVisitor;
-import org.opennms.netmgt.config.collector.ServiceParameters;
-import org.opennms.netmgt.model.RrdRepository;
+import org.opennms.netmgt.collection.api.CollectionResource;
+import org.opennms.netmgt.collection.api.CollectionSetVisitor;
+import org.opennms.netmgt.collection.api.ServiceParameters;
+import org.opennms.netmgt.collection.api.TimeKeeper;
+import org.opennms.netmgt.rrd.RrdRepository;
 
 /**
  * <p>LatencyCollectionResource class.</p>
@@ -44,8 +44,8 @@ import org.opennms.netmgt.model.RrdRepository;
  */
 public class LatencyCollectionResource implements CollectionResource {
     
-    private String m_serviceName;
-    private String m_ipAddress;
+    private final String m_serviceName;
+    private final String m_ipAddress;
 
     /**
      * <p>Constructor for LatencyCollectionResource.</p>
@@ -64,6 +64,7 @@ public class LatencyCollectionResource implements CollectionResource {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String getInstance() {
         return m_ipAddress + "[" + m_serviceName + "]";
     }
@@ -91,7 +92,8 @@ public class LatencyCollectionResource implements CollectionResource {
      *
      * @return a {@link java.lang.String} object.
      */
-    public String getLabel() {
+    @Override
+    public String getInterfaceLabel() {
         return m_serviceName;
     }
 
@@ -100,17 +102,9 @@ public class LatencyCollectionResource implements CollectionResource {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String getResourceTypeName() {
-        return "if";
-    }
-
-    /**
-     * <p>getType</p>
-     *
-     * @return a int.
-     */
-    public int getType() {
-        return 0;
+        return CollectionResource.RESOURCE_TYPE_IF;
     }
 
     /**
@@ -118,16 +112,19 @@ public class LatencyCollectionResource implements CollectionResource {
      *
      * @return a boolean.
      */
+    @Override
     public boolean rescanNeeded() {
         return false;
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean shouldPersist(ServiceParameters params) {
         return true;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void visit(CollectionSetVisitor visitor) {
     }
 
@@ -136,11 +133,13 @@ public class LatencyCollectionResource implements CollectionResource {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String getOwnerName() {
         return m_ipAddress;
     }
 
     /** {@inheritDoc} */
+    @Override
     public File getResourceDir(RrdRepository repository) {
         return new File(repository.getRrdBaseDir(), m_ipAddress);
     }
@@ -151,10 +150,12 @@ public class LatencyCollectionResource implements CollectionResource {
         return m_serviceName + "@" + m_ipAddress;
     }
 
+    @Override
     public String getParent() {
         return m_ipAddress;
     }
 
+    @Override
     public TimeKeeper getTimeKeeper() {
         return null;
     }

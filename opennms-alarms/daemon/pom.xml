@@ -3,11 +3,11 @@
   <parent>
     <groupId>org.opennms</groupId>
     <artifactId>opennms-alarms</artifactId>
-    <version>1.12.8-SNAPSHOT</version>
+    <version>1.13.3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>opennms-alarmd</artifactId>
-  <name>OpenNMS Alarm Daemon</name>
+  <name>OpenNMS Alarms Daemon</name>
   <packaging>jar</packaging>
   <build>
     <plugins>
@@ -89,7 +89,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>postgresql</groupId>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-dao-mock</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <scope>test</scope>
     </dependency>

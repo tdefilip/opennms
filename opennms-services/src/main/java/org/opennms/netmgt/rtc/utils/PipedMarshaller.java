@@ -37,19 +37,18 @@ import java.lang.reflect.UndeclaredThrowableException;
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.Marshaller;
 import org.exolab.castor.xml.ValidationException;
-import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.xml.rtc.EuiLevel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * The class that marshalls the object to be sent to a PipedReader
+ * The class that marshals the object to be sent to a PipedReader
  *
  * @author <A HREF="mailto:weave@oculan.com">Brian Weaver </A>
  * @author <A HREF="http://www.opennms.org">OpenNMS.org </A>
- * @author <A HREF="mailto:weave@oculan.com">Brian Weaver </A>
- * @author <A HREF="http://www.opennms.org">OpenNMS.org </A>
- * @version $Id: $
  */
 public class PipedMarshaller {
+    private static final Logger LOG = LoggerFactory.getLogger(PipedMarshaller.class);
     private EuiLevel m_objToMarshall;
 
     private class MarshalThread implements Runnable {
@@ -65,19 +64,20 @@ public class PipedMarshaller {
             m_in = new PipedReader(m_out);
         }
 
+        @Override
         public void run() {
             try {
                 Marshaller.marshal(m_obj, m_out);
                 m_out.flush();
                 m_out.close();
             } catch (MarshalException e) {
-                ThreadCategory.getInstance(this.getClass()).error("Failed to convert category to xml", e);
+                LOG.error("Failed to convert category to xml", e);
                 throw new UndeclaredThrowableException(e);
             } catch (ValidationException e) {
-                ThreadCategory.getInstance(this.getClass()).error("Failed to convert category to xml", e);
+                LOG.error("Failed to convert category to xml", e);
                 throw new UndeclaredThrowableException(e);
             } catch (IOException e) {
-                ThreadCategory.getInstance(this.getClass()).warn("Failed to convert category to xml", e);
+                LOG.warn("Failed to convert category to xml", e);
                 // don't rethrow, it just bubbles up into output.log and confuses people, the error still shows in rtc.log
                 // throw new UndeclaredThrowableException(e);
             }

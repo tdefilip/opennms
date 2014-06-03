@@ -31,45 +31,52 @@ package org.opennms.netmgt.threshd;
 import java.io.File;
 import java.util.Date;
 
-import org.opennms.core.utils.TimeKeeper;
-import org.opennms.netmgt.config.collector.CollectionResource;
-import org.opennms.netmgt.config.collector.CollectionSetVisitor;
-import org.opennms.netmgt.config.collector.ServiceParameters;
-import org.opennms.netmgt.model.RrdRepository;
+import org.opennms.netmgt.collection.api.CollectionResource;
+import org.opennms.netmgt.collection.api.CollectionSetVisitor;
+import org.opennms.netmgt.collection.api.ServiceParameters;
+import org.opennms.netmgt.collection.api.TimeKeeper;
+import org.opennms.netmgt.rrd.RrdRepository;
 
 public class MockCollectionResourceWrapper extends CollectionResourceWrapper {
 
     public MockCollectionResourceWrapper(final String instance) {
         super(new Date(), 0, null, null, null, new CollectionResource() {
+            @Override
             public String getInstance() {
                 return instance;
             }
-            public String getLabel() {
+            @Override
+            public String getInterfaceLabel() {
                 return null;
             }
+            @Override
             public String getResourceTypeName() {
                 return null;
             }
-            public int getType() {
-                return 0;
-            }
+            @Override
             public boolean rescanNeeded() {
                 return false;
             }
+            @Override
             public boolean shouldPersist(ServiceParameters params) {
                 return false;
             }
+            @Override
             public void visit(CollectionSetVisitor visitor) {
             }
+            @Override
             public String getOwnerName() {
                 return null;
             }
+            @Override
             public File getResourceDir(RrdRepository repository) {
                 return null;
             }
+            @Override
             public String getParent() {
                 return null;
             }
+            @Override
             public TimeKeeper getTimeKeeper() {
                 return null;
             }

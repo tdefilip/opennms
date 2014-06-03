@@ -113,6 +113,7 @@ public class VmwareConfigBuilder {
     private String versionInformation = "", apiVersion = "";
 
     private static class TrustAllManager implements javax.net.ssl.TrustManager, javax.net.ssl.X509TrustManager {
+        @Override
         public java.security.cert.X509Certificate[] getAcceptedIssuers() {
             return null;
         }
@@ -125,10 +126,12 @@ public class VmwareConfigBuilder {
             return true;
         }
 
+        @Override
         public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) throws java.security.cert.CertificateException {
             return;
         }
 
+        @Override
         public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) throws java.security.cert.CertificateException {
             return;
         }
@@ -296,7 +299,7 @@ public class VmwareConfigBuilder {
 
         versionInformation = buffer.toString();
 
-        String arr[] = serviceInstance.getAboutInfo().getApiVersion().split("\\.");
+        String[] arr = serviceInstance.getAboutInfo().getApiVersion().split("\\.");
 
         if (arr.length > 1) {
             apiVersion = arr[0];
@@ -474,7 +477,7 @@ public class VmwareConfigBuilder {
     }
 
 
-    public static void main(String args[]) throws ParseException {
+    public static void main(String[] args) throws ParseException {
         String hostname = null;
         String username = null;
         String password = null;
@@ -522,6 +525,7 @@ public class VmwareConfigBuilder {
         HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
 
         HostnameVerifier hv = new HostnameVerifier() {
+            @Override
             public boolean verify(String urlHostName, SSLSession session) {
                 return true;
             }

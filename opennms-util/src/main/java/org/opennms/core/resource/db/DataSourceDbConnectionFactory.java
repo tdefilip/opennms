@@ -51,30 +51,23 @@ public class DataSourceDbConnectionFactory implements DbConnectionFactory {
         m_dataSource = dataSource;
     }
     
-    /**
-     * <p>destroy</p>
-     *
-     * @throws java.sql.SQLException if any.
-     */
-    public void destroy() throws SQLException {
+    @Override
+    public void destroy() {
     }
 
-    /**
-     * <p>getConnection</p>
-     *
-     * @return a {@link java.sql.Connection} object.
-     * @throws java.sql.SQLException if any.
-     */
+    @Override
     public Connection getConnection() throws SQLException {
         return m_dataSource.getConnection();
     }
 
     /** {@inheritDoc} */
-    public void init(String dbUrl, String dbDriver, String username, String password) throws ClassNotFoundException, SQLException {
+    @Override
+    public void init(String dbUrl, String dbDriver, String username, String password) throws ClassNotFoundException {
         throw new UnsupportedOperationException("not implemented");
     }
 
     /** {@inheritDoc} */
+    @Override
     public void releaseConnection(Connection connection) throws SQLException {
         connection.close();
     }

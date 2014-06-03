@@ -104,6 +104,7 @@ class SnmpTimer extends Object {
          * used to synchronize this method
          * 
          */
+        @Override
         public void run() {
             LinkedList<Runnable> toRun = new LinkedList<Runnable>();
             while (true) {
@@ -195,9 +196,9 @@ class SnmpTimer extends Object {
                             iter.remove();
                             runner.run();
                         }
-                    } catch (NoSuchElementException err) {
+                    } catch (final NoSuchElementException err) {
                         // do nothing
-                    } catch (Throwable err) {
+                    } catch (final RuntimeException e) {
                         //
                         // Bad, Bad Runnable!
                         //

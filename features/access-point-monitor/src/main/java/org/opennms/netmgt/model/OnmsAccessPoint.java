@@ -42,7 +42,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.hibernate.annotations.Type;
-import org.opennms.core.xml.bind.InetAddressXmlAdapter;
+import org.opennms.core.network.InetAddressXmlAdapter;
 import org.springframework.core.style.ToStringCreator;
 
 /**
@@ -228,6 +228,7 @@ public class OnmsAccessPoint implements Serializable, Comparable<OnmsAccessPoint
      * 
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String toString() {
         return new ToStringCreator(this)
             .append("physAddr", getPhysAddr())
@@ -244,6 +245,7 @@ public class OnmsAccessPoint implements Serializable, Comparable<OnmsAccessPoint
      * 
      * @return a {@link java.lang.int} object.
      */
+    @Override
     public int compareTo(OnmsAccessPoint o) {
         return m_physAddr.compareTo(o.m_physAddr);
     }

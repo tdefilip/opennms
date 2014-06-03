@@ -29,23 +29,28 @@
 
 --%>
 
+<%@page import="org.opennms.web.lldp.LldpElementFactory"%>
+<%@page import="org.opennms.web.lldp.LldpElementNode"%>
 <%@page language="java"
 	contentType="text/html"
 	session="true"
 	import="
-        org.opennms.web.element.*,
-        org.opennms.netmgt.model.OnmsNode,
-		java.util.*,
-		java.net.*,
+        java.util.*,
+        java.net.*,
         java.sql.SQLException,
         org.opennms.core.soa.ServiceRegistry,
         org.opennms.core.utils.InetAddressUtils,
-        org.opennms.web.pathOutage.*,
-        org.opennms.web.springframework.security.Authentication,
-        org.opennms.web.svclayer.ResourceService,
+        org.opennms.netmgt.config.PollOutagesConfigFactory,
+        org.opennms.netmgt.config.poller.outages.Outage,
+        org.opennms.netmgt.model.OnmsNode,
+        org.opennms.netmgt.poller.PathOutageFactory,
+        org.opennms.web.api.Authentication,
         org.opennms.web.asset.Asset,
         org.opennms.web.asset.AssetModel,
+        org.opennms.web.element.*,
         org.opennms.web.navigate.*,
+        org.opennms.web.svclayer.ResourceService,
+        org.springframework.util.StringUtils,
         org.springframework.web.context.WebApplicationContext,
         org.springframework.web.context.support.WebApplicationContextUtils"
 %>
@@ -53,8 +58,7 @@
 <%@taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
 
-<%!
-    private int m_telnetServiceId;
+<%!private int m_telnetServiceId;
     private int m_sshServiceId;
     private int m_httpServiceId;
     private int m_dellServiceId;
@@ -136,11 +140,10 @@
         map.put("text", linkText);
         map.put("url", linkPrefix + ip + linkSuffix);
         return Collections.singleton(map);
-    }
-%>
+    }%>
 
 <%
-    OnmsNode node_db = ElementUtil.getNodeByParams(request, getServletContext());
+	OnmsNode node_db = ElementUtil.getNodeByParams(request, getServletContext());
     int nodeId = node_db.getId();
     
     Map<String, Object> nodeModel = new TreeMap<String, Object>();
@@ -162,9 +165,11 @@
         nodeModel.put("statusSite", asset.getBuilding());
     }
     
+    LldpElementNode lldp = LldpElementFactory.getInstance(getServletContext()).getLldpElement(nodeId);
+    nodeModel.put("lldp", lldp);
     nodeModel.put("resources", m_resourceService.findNodeChildResources(node_db));
     nodeModel.put("vlans", NetworkElementFactory.getInstance(getServletContext()).getVlansOnNode(nodeId));
-    nodeModel.put("criticalPath", PathOutageFactory.getCriticalPath(nodeId));
+    nodeModel.put("criticalPath", PathOutageFactory.getPrettyCriticalPath(nodeId));
     nodeModel.put("noCriticalPath", PathOutageFactory.NO_CRITICAL_PATH);
     nodeModel.put("admin", request.isUserInRole(Authentication.ROLE_ADMIN));
     
@@ -219,6 +224,29 @@
 	}
 	
 	pageContext.setAttribute("navEntries", renderedLinks);
+
+    final List<String> schedOutages = new ArrayList<String>();
+    PollOutagesConfigFactory f = PollOutagesConfigFactory.getInstance();
+    for (final Outage outage : f.getOutages()) {
+        if (f.isCurTimeInOutage(outage)) {
+            boolean inOutage = f.isNodeIdInOutage(nodeId, outage);
+            if (!inOutage) {
+                for (final Interface i : intfs) {
+                    if (f.isInterfaceInOutage(i.getIpAddress(), outage)) {
+                        inOutage = true;
+                        break;
+                    }
+                }
+            }
+            if (inOutage) {
+                final String name = outage.getName();
+                final String link = "<a href=\"admin/sched-outages/editoutage.jsp?name=" + name + "\">" + name + "</a>";
+                schedOutages.add(request.isUserInRole(Authentication.ROLE_ADMIN) ? link : name);
+            }
+        }
+    }
+
+	pageContext.setAttribute("schedOutages", schedOutages.isEmpty() ? null : StringUtils.collectionToDelimitedString(schedOutages, ", "));
 %>
 
 <%@page import="org.opennms.core.resource.Vault"%>
@@ -339,10 +367,22 @@
   </ul>
 </div>
 </div>
+
+<c:if test="${! empty schedOutages}">
+  <table class="o-box">
+    <tr class="CellStatus">
+      <td align="left" class="Critical">
+        <b>This node is currently affected by the following scheduled outages: </b> ${schedOutages}
+      </td>
+    </tr>
+  </table>
+</c:if>
+
 <% String showNodeStatusBar = System.getProperty("opennms.nodeStatusBar.show", "false");
    if (Boolean.parseBoolean(showNodeStatusBar)) { %>
 <jsp:include page="/includes/nodeStatus-box.jsp?nodeId=${model.id}" flush="false" />
 <% } %>
+
 <div class="TwoColLeft">
   
   
@@ -390,6 +430,29 @@
     </table>
   </c:if>
 
+  <!-- Asset box, if info available --> 
+  <c:if test="${! empty model.lldp }">
+    <h3 class="o-box">Lldp Information</h3>
+    <table class="o-box">
+      <tr>
+        <th>chassis id</th>
+        <td>${model.lldp.lldpChassisIdString}</td>
+      </tr>
+      <tr>
+        <th>sysname</th>
+        <td>${model.lldp.lldpSysName}</td>
+      </tr>
+      <tr>
+        <th>create time</th>
+        <td>${model.lldp.lldpCreateTime}</td>
+      </tr>
+      <tr>
+        <th>last poll time</th>
+        <td>${model.lldp.lldpLastPollTime}</td>
+      </tr>
+    </table>
+  </c:if>
+
   <!-- Critical Path info, if info available -->
   <c:if test="${model.criticalPath != model.noCriticalPath}">
     <h3 class="o-box">Path Outage - Critical Path</h3>
@@ -424,10 +487,10 @@
     <table class="o-box">
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Status</th>
+          <th>Vlan ID</th>
+          <th>Vlan Name</th>
+          <th>Vlan Type</th>
+          <th>Vlan Status</th>
           <th>Status</th>
           <th>Last Poll Time</th>
         </tr>

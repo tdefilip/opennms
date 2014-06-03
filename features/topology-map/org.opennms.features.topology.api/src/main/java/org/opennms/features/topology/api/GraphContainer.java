@@ -28,42 +28,65 @@
 
 package org.opennms.features.topology.api;
 
-import java.util.Collection;
-
-import org.opennms.features.topology.api.topo.Criteria;
-import org.opennms.features.topology.api.topo.GraphProvider;
-import org.opennms.features.topology.api.topo.StatusProvider;
-import org.opennms.features.topology.api.topo.VertexRef;
-
 import com.vaadin.data.Property;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
+import org.opennms.features.topology.api.topo.*;
 
 public interface GraphContainer extends DisplayState {
 
-	public interface ChangeListener {
-		public void graphChanged(GraphContainer graphContainer);
-	}
+    public interface ChangeListener {
+        public void graphChanged(GraphContainer graphContainer);
+    }
 
-	GraphProvider getBaseTopology();
+    GraphProvider getBaseTopology();
 
-	void setBaseTopology(GraphProvider graphProvider);
+    void setBaseTopology(GraphProvider graphProvider);
 
-	Criteria getCriteria(String namespace);
+    Criteria[] getCriteria();
 
-	void setCriteria(Criteria critiera);
+    void addCriteria(Criteria criteria);
 
-	void addChangeListener(ChangeListener listener);
+    void removeCriteria(Criteria criteria);
 
-	void removeChangeListener(ChangeListener listener);
+    // clears all criteria which are currently sets
+    void clearCriteria();
 
-	Graph getGraph();
+    void addChangeListener(ChangeListener listener);
 
-	Collection<VertexRef> getVertexRefForest(Collection<VertexRef> vertexRefs);
+    void removeChangeListener(ChangeListener listener);
+
+    SelectionManager getSelectionManager();
+
+    void setSelectionManager(SelectionManager selectionManager);
+
+    Graph getGraph();
+
+    AutoRefreshSupport getAutoRefreshSupport();
+
+    boolean hasAutoRefreshSupport();
+
+    Collection<VertexRef> getVertexRefForest(Collection<VertexRef> vertexRefs);
     
-	MapViewManager getMapViewManager();
+    MapViewManager getMapViewManager();
 
-	Property getScaleProperty();
+    Property<Double> getScaleProperty();
 
-    StatusProvider getStatusProvider();
+    StatusProvider getVertexStatusProvider();
 
-    void setStatusProvider(StatusProvider statusProvider);
+    void setVertexStatusProvider(StatusProvider statusProvider);
+
+    Set<EdgeStatusProvider> getEdgeStatusProviders();
+
+    // TODO move to another location. This should not be stored here! (maybe VaadinApplicationContext is the right place)
+    String getSessionId();
+
+    // TODO move to another location. This should not be stored here! (maybe VaadinApplicationContext is the right place)
+    void setSessionId(String sessionId);
+
+    void setDirty(boolean dirty);
+    
+    void fireGraphChanged();
 }

@@ -49,7 +49,7 @@ public class Querier extends JDBCTemplate implements RowProcessor {
      *
      * @param db a {@link javax.sql.DataSource} object.
      * @param sql a {@link java.lang.String} object.
-     * @param rowProcessor a {@link org.opennms.netmgt.utils.RowProcessor} object.
+     * @param rowProcessor a {@link org.opennms.core.utils.RowProcessor} object.
      */
     public Querier(DataSource db, String sql, RowProcessor rowProcessor) {
         super(db, sql);
@@ -80,6 +80,7 @@ public class Querier extends JDBCTemplate implements RowProcessor {
     }
      
     /** {@inheritDoc} */
+    @Override
     protected void executeStmt(PreparedStatement stmt) throws SQLException {
         final DBUtils d = new DBUtils(getClass());
         try {
@@ -96,6 +97,7 @@ public class Querier extends JDBCTemplate implements RowProcessor {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void processRow(ResultSet rs) throws SQLException {
     }
 

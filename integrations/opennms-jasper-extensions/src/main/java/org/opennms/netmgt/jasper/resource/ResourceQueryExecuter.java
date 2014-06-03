@@ -37,18 +37,21 @@ import net.sf.jasperreports.engine.query.JRAbstractQueryExecuter;
 
 public class ResourceQueryExecuter extends JRAbstractQueryExecuter {
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     protected ResourceQueryExecuter(JRDataset dataset, Map parametersMap) {
         super(dataset, parametersMap);
         parseQuery();
     }
 
+    @Override
     public boolean cancelQuery() throws JRException {
         return false;
     }
 
+    @Override
     public void close() {}
 
+    @Override
     public JRDataSource createDatasource() throws JRException {
         return new ResourceQueryCommand().executeCommand(getQueryString());
     }

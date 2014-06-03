@@ -32,37 +32,38 @@ import java.util.List;
 import org.opennms.features.vaadin.api.OnmsBeanContainer;
 import org.opennms.netmgt.config.DataCollectionConfigDao;
 
-import com.vaadin.data.Item;
 import com.vaadin.data.Property;
-import com.vaadin.data.util.BeanItem;
+import com.vaadin.data.fieldgroup.BeanFieldGroup;
+import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.Field;
-import com.vaadin.ui.Form;
-import com.vaadin.ui.FormFieldFactory;
+import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.vaadin.ui.themes.Runo;
 
 /**
  * The Include Collection Field.
  * 
  * @author <a href="mailto:agalue@opennms.org">Alejandro Galue</a> 
  */
+// FIXME: What about exclude fields ?
 @SuppressWarnings("serial")
 public abstract class IncludeCollectionWindow extends Window implements Button.ClickListener {
 
-    /** The Include Field Form. */
-    private final Form form = new Form();
-
+    /** The form layout. */
+    private final FormLayout formLayout = new FormLayout();
+    
+    /** The form editor. */
+    private final BeanFieldGroup<IncludeCollectionWrapper> formEditor = new BeanFieldGroup<IncludeCollectionWrapper>(IncludeCollectionWrapper.class);
+    
     /** The OK button. */
-    private final Button okButton;
+    private final Button okButton = new Button("Update", this);
 
     /** The CANCEL button. */
-    private final Button cancelButton;
+    private final Button cancelButton = new Button("Cancel", this);
 
     /**
      * Instantiates a new include collection window.
@@ -78,15 +79,10 @@ public abstract class IncludeCollectionWindow extends Window implements Button.C
         setCaption("Include SystemDef/DataCollectionGroup");
         setModal(true);
         setWidth("400px");
-        setHeight("180px");
+        setHeight("2000px");
         setResizable(false);
         setClosable(false);
-        addStyleName(Runo.WINDOW_DIALOG);
-
-        form.setImmediate(true);
-        form.setWidth("100%");
-        form.setWriteThrough(false);
-        form.getLayout().setMargin(true);
+        addStyleName("dialog");
 
         final ComboBox valueField = new ComboBox("Value");
         valueField.setEnabled(false);
@@ -102,7 +98,7 @@ public abstract class IncludeCollectionWindow extends Window implements Button.C
         typeField.setNullSelectionAllowed(false);
         typeField.addItem(IncludeCollectionWrapper.DC_GROUP);
         typeField.addItem(IncludeCollectionWrapper.SYSTEM_DEF);
-        typeField.addListener(new Property.ValueChangeListener() {
+        typeField.addValueChangeListener(new Property.ValueChangeListener() {
             @Override
             public void valueChange(Property.ValueChangeEvent event) {
                 String selected = (String) typeField.getValue();
@@ -114,8 +110,7 @@ public abstract class IncludeCollectionWindow extends Window implements Button.C
                 List<String> values = selected.equals(IncludeCollectionWrapper.SYSTEM_DEF) ? dataCollectionConfigDao.getAvailableSystemDefs()
                     : dataCollectionConfigDao.getAvailableDataCollectionGroups();
                 // Remove already selected
-                for (Object itemId : container.getItemIds()) {
-                    IncludeCollectionWrapper obj = container.getItem(itemId).getBean();
+                for (IncludeCollectionWrapper obj : container.getOnmsBeans()) {
                     if (obj.getType().equals(selected)) {
                         values.remove(obj.getValue());
                     }
@@ -132,49 +127,46 @@ public abstract class IncludeCollectionWindow extends Window implements Button.C
             }
         });
 
-        form.setFormFieldFactory(new FormFieldFactory() {
-            @Override
-            public Field createField(Item item, Object propertyId, Component uiContext) {
-                if (propertyId.equals("type"))
-                    return typeField;
-                if (propertyId.equals("value"))
-                    return valueField;
-                return null;
-            }
-        });
+        formLayout.setImmediate(true);
+        formLayout.setWidth("100%");
+        formLayout.addComponent(typeField);
+        formLayout.addComponent(valueField);
 
-        okButton = new Button("Update");
-        okButton.addListener(this);
+        formEditor.bind(typeField, "type");
+        formEditor.bind(valueField, "value");
+        formEditor.setItemDataSource(wrapper);
 
-        cancelButton = new Button("Cancel");
-        cancelButton.addListener(this);
-
-        HorizontalLayout toolbar = new HorizontalLayout();
+        final HorizontalLayout toolbar = new HorizontalLayout();
         toolbar.addComponent(okButton);
         toolbar.addComponent(cancelButton);
 
-        addComponent(form);
-        addComponent(toolbar);
-
-        ((VerticalLayout) getContent()).setComponentAlignment(toolbar, Alignment.BOTTOM_RIGHT);
-
-        form.setItemDataSource(new BeanItem<IncludeCollectionWrapper>(wrapper));
+        final VerticalLayout layout = new VerticalLayout();
+        layout.addComponent(formLayout);
+        layout.addComponent(toolbar);
+        layout.setComponentAlignment(toolbar, Alignment.BOTTOM_RIGHT);
+        layout.setMargin(true);
+        setContent(layout);
     }
 
     /* (non-Javadoc)
      * @see com.vaadin.ui.Button.ClickListener#buttonClick(com.vaadin.ui.Button.ClickEvent)
      */
+    @Override
     public void buttonClick(Button.ClickEvent event) {
         final Button btn = event.getButton();
         if (btn == okButton) {
-            form.commit();
-            fieldChanged();
+            try {
+                formEditor.commit();
+                fieldChanged();
+            } catch (CommitException e) {
+                Notification.show("Can't save include collection because " + e.getMessage(), Notification.Type.ERROR_MESSAGE);
+            }
         }
         close();
     }
 
     /**
-     * Fired when the field has been chaned.
+     * Fired when the field has been changed.
      */
     public abstract void fieldChanged();
 

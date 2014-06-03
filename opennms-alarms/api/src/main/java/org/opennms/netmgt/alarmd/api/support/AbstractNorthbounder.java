@@ -53,7 +53,6 @@ public abstract class AbstractNorthbounder implements Northbounder, Runnable, St
     private final String m_name;
     private final AlarmQueue<NorthboundAlarm> m_queue;
 
-    private Thread m_thread;
     private volatile boolean m_stopped = true;
 
     private long m_retryInterval = 1000;
@@ -63,6 +62,7 @@ public abstract class AbstractNorthbounder implements Northbounder, Runnable, St
     	m_queue = new AlarmQueue<NorthboundAlarm>(this);
     }
 
+    @Override
     public String getName() {
         return m_name;
     }
@@ -95,8 +95,8 @@ public abstract class AbstractNorthbounder implements Northbounder, Runnable, St
         this.onPreStart();
         m_stopped = false;
         m_queue.init();
-        m_thread = new Thread(this, getName()+"-Thread");
-        m_thread.start();
+        Thread thread = new Thread(this, getName()+"-Thread");
+        thread.start();
         this.onPostStart();
     }
     
@@ -122,11 +122,13 @@ public abstract class AbstractNorthbounder implements Northbounder, Runnable, St
     protected void onStop() {
     }
 
+    @Override
     public final void stop() throws NorthbounderException {
         this.onStop();
         m_stopped = true;
     }
     
+    @Override
     public void run() {
         
         try {

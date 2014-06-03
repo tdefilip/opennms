@@ -64,19 +64,8 @@ public class SnmpGetNodesServlet extends HttpServlet {
 
     private static final String NODE_QUERY = "SELECT nodeid, nodelabel FROM node WHERE nodeid IN (SELECT nodeid FROM ifservices WHERE serviceid = ? ) AND nodeid IN (SELECT nodeid FROM ipinterface Where ismanaged != 'D') ORDER BY nodelabel, nodeid";
 
-    /**
-     * <p>init</p>
-     *
-     * @throws javax.servlet.ServletException if any.
-     */
-    public void init() throws ServletException {
-        try {
-            DataSourceFactory.init();
-        } catch (Throwable e) {
-        }
-    }
-
     /** {@inheritDoc} */
+    @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession user = request.getSession(true);
 

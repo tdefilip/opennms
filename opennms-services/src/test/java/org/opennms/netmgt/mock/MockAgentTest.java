@@ -65,6 +65,7 @@ public class MockAgentTest extends TestCase {
     private MockNetwork m_network;
     private MockProxy m_proxy;
 
+    @Override
     protected void setUp() throws Exception {
         MockUtil.println("------------ Begin Test "+getName()+" --------------------------");
         MockLogAppender.setupLogging();
@@ -106,6 +107,7 @@ public class MockAgentTest extends TestCase {
 
     }
 
+    @Override
     protected void tearDown() throws Exception {
         m_proxy.stop();
         
@@ -128,7 +130,7 @@ public class MockAgentTest extends TestCase {
         target.setRetries(3);
         
         // Implements snmp4j API
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings("rawtypes")
         List results = walker.getTable(target, new OID[] {new OID("1.3.6.1.2.1.1")}, null, null);
         
         assertNotNull(results);

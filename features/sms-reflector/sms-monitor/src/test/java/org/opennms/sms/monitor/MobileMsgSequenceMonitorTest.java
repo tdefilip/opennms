@@ -41,10 +41,10 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.opennms.core.utils.InetAddressUtils;
-import org.opennms.netmgt.model.PollStatus;
 import org.opennms.netmgt.poller.InetNetworkInterface;
 import org.opennms.netmgt.poller.MonitoredService;
 import org.opennms.netmgt.poller.NetworkInterface;
+import org.opennms.netmgt.poller.PollStatus;
 
 public class MobileMsgSequenceMonitorTest {
 
@@ -54,30 +54,37 @@ public class MobileMsgSequenceMonitorTest {
 	@Before
 	public void setUp() {
 		m_service = new MonitoredService() {
+                        @Override
 			public InetAddress getAddress() {
 				return InetAddressUtils.getLocalHostAddress();
 			}
 
+                        @Override
 			public String getIpAddr() {
 				return "127.0.0.1";
 			}
 
+                        @Override
 			public NetworkInterface<InetAddress> getNetInterface() {
 				return new InetNetworkInterface(getAddress());
 			}
 
+                        @Override
 			public int getNodeId() {
 				return 1;
 			}
 
+                        @Override
 			public String getNodeLabel() {
 				return "localhost";
 			}
 
+                        @Override
 			public String getSvcName() {
 				return "SMS";
 			}
 
+                        @Override
 			public String getSvcUrl() {
 			    return null;
 			}

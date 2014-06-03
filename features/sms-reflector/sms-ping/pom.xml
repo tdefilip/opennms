@@ -4,12 +4,12 @@
     <relativePath>../poms/compiled/</relativePath>
     <groupId>org.opennms.features.sms-reflector.build</groupId>
     <artifactId>compiled-bundle-settings</artifactId>
-    <version>1.12.8-SNAPSHOT</version>
+    <version>1.13.3-SNAPSHOT</version>
   </parent>
   <properties>
     <bundle.symbolicName>org.opennms.features.sms-reflector.sms-ping</bundle.symbolicName>
     <bundle.namespace>org.opennms.sms.ping</bundle.namespace>
-    <spring.maven.artifact.version>3.0.7.RELEASE</spring.maven.artifact.version>
+    <spring.maven.artifact.version>3.2.4.RELEASE</spring.maven.artifact.version>
   </properties>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features.sms-reflector</groupId>
@@ -45,39 +45,35 @@
     <dependency>
       <groupId>org.opennms.features.sms-reflector</groupId>
       <artifactId>sms-service</artifactId>
-      <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.opennms.smslib</groupId>
-      <artifactId>smslib</artifactId>
-      <version>3.4.3-20100302</version>
+      <groupId>org.opennms.dependencies</groupId>
+      <artifactId>smslib-dependencies</artifactId>
+      <type>pom</type>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.opennms.dependencies</groupId>
       <artifactId>spring-dependencies</artifactId>
-      <version>${project.version}</version>
       <type>pom</type>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.opennms.features.poller</groupId>
       <artifactId>org.opennms.features.poller.api</artifactId>
-      <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.opennms.core</groupId>
       <artifactId>org.opennms.core.soa</artifactId>
-      <version>${project.version}</version>
       <scope>provided</scope>
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <scope>compile</scope>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 </project>

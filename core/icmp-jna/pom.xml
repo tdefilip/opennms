@@ -3,11 +3,12 @@
   <parent>
     <groupId>org.opennms</groupId>
     <artifactId>org.opennms.core</artifactId>
-    <version>1.12.8-SNAPSHOT</version>
+    <version>1.13.3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.core</groupId>
   <artifactId>org.opennms.core.icmp-jna</artifactId>
+	<name>OpenNMS Core ICMP JNA</name>
   <packaging>bundle</packaging>
   <build>
     <plugins>
@@ -43,6 +44,10 @@
       <groupId>org.opennms.dependencies</groupId>
       <artifactId>jna-dependencies</artifactId>
       <type>pom</type>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

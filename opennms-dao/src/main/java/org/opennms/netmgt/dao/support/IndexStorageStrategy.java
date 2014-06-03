@@ -1,8 +1,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2007-2012 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2012 The OpenNMS Group, Inc.
+ * Copyright (C) 2007-2013 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2013 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -28,71 +28,9 @@
 
 package org.opennms.netmgt.dao.support;
 
-import java.io.File;
-import java.util.List;
-
-import org.opennms.core.utils.ThreadCategory;
-import org.opennms.netmgt.config.StorageStrategy;
-import org.opennms.netmgt.config.StorageStrategyService;
-import org.opennms.netmgt.config.collector.CollectionResource;
-import org.opennms.netmgt.config.datacollection.Parameter;
-
-public class IndexStorageStrategy implements StorageStrategy {
-    private String m_resourceTypeName;
-    protected StorageStrategyService m_storageStrategyService;
-
-    /** {@inheritDoc} */
-    public String getRelativePathForAttribute(String resourceParent, String resource,
-            String attribute) {
-        StringBuffer buffer = new StringBuffer();
-        buffer.append(resourceParent);
-        buffer.append(File.separator);
-        buffer.append(m_resourceTypeName);
-        buffer.append(File.separator);
-        buffer.append(resource);
-        if (attribute != null) {
-            buffer.append(File.separator);
-            buffer.append(attribute);
-            buffer.append(RrdFileConstants.getRrdSuffix());
-        }
-        return buffer.toString();
-    }
-
-    /** {@inheritDoc} */
-    public void setResourceTypeName(String name) {
-        m_resourceTypeName = name;
-    }
-
-    /**
-     * <p>getResourceTypeName</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getResourceTypeName() {
-        return m_resourceTypeName;
-    }
-
-    /** {@inheritDoc} */
-    public String getResourceNameFromIndex(CollectionResource resource) {
-        return resource.getInstance();
-    }
-
-    /** {@inheritDoc} */
-    public void setStorageStrategyService(StorageStrategyService agent) {
-        m_storageStrategyService = agent;
-    }
-
-    /** {@inheritDoc} */
-    public void setParameters(List<Parameter> parameterCollection) throws IllegalArgumentException {
-        // Empty method, this strategy takes no parameters
-    }
-    
-    /**
-     * <p>log</p>
-     *
-     * @return a {@link org.opennms.core.utils.ThreadCategory} object.
-     */
-    protected ThreadCategory log() {
-        return ThreadCategory.getInstance(getClass());
-    }
+/**
+ * @deprecated Stop using this class and use the {@link org.opennms.netmgt.collection.support.IndexStorageStrategy}
+ * copy instead. Most of the data collection configuration files will need to be updated when you make this change.
+ */
+public class IndexStorageStrategy extends org.opennms.netmgt.collection.support.IndexStorageStrategy {
 }

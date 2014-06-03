@@ -28,9 +28,7 @@
 
 package org.opennms.netmgt.linkd.snmp;
 
-import java.net.InetAddress;
-
-import org.opennms.netmgt.capsd.snmp.NamedSnmpVar;
+import org.opennms.netmgt.snmp.NamedSnmpVar;
 
 /**
  *<p>The {@link IpCidrRouteTableEntry} class is designed to hold all the MIB-II
@@ -226,6 +224,7 @@ public final class IpCidrRouteTableEntry extends IpRouteCollectorEntry
          * able to generate and recognize this value.
          */
         new NamedSnmpVar(NamedSnmpVar.SNMPOBJECTID,        IP_ROUTE_INFO,      TABLE_OID + ".9",  13),
+        new NamedSnmpVar(NamedSnmpVar.SNMPOBJECTID,        IP_ROUTE_STATUS,    TABLE_OID + ".16", 14),
     };
       
     /**
@@ -243,80 +242,5 @@ public final class IpCidrRouteTableEntry extends IpRouteCollectorEntry
         super(ms_elemList);
     }
 
-    public InetAddress getIpCidrRouteDest() {
-        return getIPAddress(IpCidrRouteTableEntry.IP_ROUTE_DEST); 
-    }
-
-    public int getIpCidrRouteIfIndex() {
-        final Integer val = getInt32(IpCidrRouteTableEntry.IP_ROUTE_IFINDEX);
-        if (val == null) return -1;
-        return val;
-    }
-
-    public int getIpCidrRouteMetric1() {
-        final Integer val = getInt32(IpCidrRouteTableEntry.IP_ROUTE_METRIC1);
-        if (val == null) return -1;
-        return val;
-    }
-
-    public int getIpCidrRouteMetric2() {
-        final Integer val = getInt32(IpCidrRouteTableEntry.IP_ROUTE_METRIC2);
-        if (val == null) return -1;
-        return val;
-
-    }
-
-    public int getIpCidrRouteMetric3() {
-        final Integer val = getInt32(IpCidrRouteTableEntry.IP_ROUTE_METRIC3);
-        if (val == null) return -1;
-        return val;
-
-    }
-
-    public int getIpCidrRouteMetric4() {
-        final Integer val = getInt32(IpCidrRouteTableEntry.IP_ROUTE_METRIC4);
-        if (val == null) return -1;
-        return val;
-
-    }
-
-    public InetAddress getIpCidrRouteNextHop() {
-        return getIPAddress(IpCidrRouteTableEntry.IP_ROUTE_NXTHOP);
-    }
-
-    public int getIpCidrRouteType() {
-        final Integer val = getInt32(IpCidrRouteTableEntry.IP_ROUTE_TYPE);
-        if (val == null) return -1;
-        return val;
-
-    }
-
-    public int getIpCidrRouteProto() {
-        final Integer val = getInt32(IpCidrRouteTableEntry.IP_ROUTE_PROTO);
-        if (val == null) return -1;
-        return val;
-
-    }
-
-    public int getIpCidrRouteAge() {
-        final Integer val = getInt32(IpCidrRouteTableEntry.IP_ROUTE_AGE);
-        if (val == null) return -1;
-        return val;
-
-    }
-
-    public InetAddress getIpCidrRouteMask() {
-        return getIPAddress(IpCidrRouteTableEntry.IP_ROUTE_MASK);
-    }
-
-    public int getIpCidrRouteMetric5() {
-        final Integer val = getInt32(IpCidrRouteTableEntry.IP_ROUTE_METRIC5);
-        if (val == null) return -1;
-        return val;
-
-    }
-
-    public String getIpCidrRouteInfo() {
-        return getObjectID(IpCidrRouteTableEntry.IP_ROUTE_INFO);
-    }
 }
+

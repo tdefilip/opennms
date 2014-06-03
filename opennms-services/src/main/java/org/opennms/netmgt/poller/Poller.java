@@ -32,7 +32,6 @@ import java.lang.reflect.UndeclaredThrowableException;
 import java.net.InetAddress;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -40,16 +39,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.sql.DataSource;
 
 import org.opennms.core.utils.InetAddressUtils;
-import org.opennms.core.utils.LogUtils;
 import org.opennms.core.utils.Querier;
-import org.opennms.core.utils.ThreadCategory;
-import org.opennms.core.utils.Updater;
 import org.opennms.netmgt.config.OpennmsServerConfigFactory;
 import org.opennms.netmgt.config.PollOutagesConfig;
 import org.opennms.netmgt.config.PollerConfig;
 import org.opennms.netmgt.config.poller.Package;
 import org.opennms.netmgt.daemon.AbstractServiceDaemon;
-import org.opennms.netmgt.model.PollStatus;
 import org.opennms.netmgt.model.events.EventIpcManager;
 import org.opennms.netmgt.poller.pollables.DbPollEvent;
 import org.opennms.netmgt.poller.pollables.PollEvent;
@@ -62,6 +57,9 @@ import org.opennms.netmgt.poller.pollables.PollableVisitorAdaptor;
 import org.opennms.netmgt.scheduler.LegacyScheduler;
 import org.opennms.netmgt.scheduler.Schedule;
 import org.opennms.netmgt.scheduler.Scheduler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * <p>Poller class.</p>
@@ -70,8 +68,10 @@ import org.opennms.netmgt.scheduler.Scheduler;
  * @version $Id: $
  */
 public class Poller extends AbstractServiceDaemon {
+    
+    private final static Logger LOG = LoggerFactory.getLogger(Poller.class);
 
-    private final static Poller m_singleton = new Poller();
+    private final static String LOG4J_CATEGORY = "poller";
 
     private boolean m_initialized = false;
 
@@ -81,21 +81,24 @@ public class Poller extends AbstractServiceDaemon {
 
     private PollableNetwork m_network;
 
+    @Autowired
     private QueryManager m_queryManager;
 
     private PollerConfig m_pollerConfig;
 
     private PollOutagesConfig m_pollOutagesConfig;
 
+    @Autowired
     private EventIpcManager m_eventMgr;
 
+    @Autowired
     private DataSource m_dataSource;
 
     /**
      * <p>Constructor for Poller.</p>
      */
     public Poller() {
-    	super("OpenNMS.Poller");
+        super(LOG4J_CATEGORY);
     }
 
     /* Getters/Setters used for dependency injection */
@@ -104,7 +107,7 @@ public class Poller extends AbstractServiceDaemon {
      *
      * @param dataSource a {@link javax.sql.DataSource} object.
      */
-    public void setDataSource(DataSource dataSource) {
+    void setDataSource(DataSource dataSource) {
         m_dataSource = dataSource;
     }
 
@@ -122,7 +125,7 @@ public class Poller extends AbstractServiceDaemon {
      *
      * @param eventMgr a {@link org.opennms.netmgt.model.events.EventIpcManager} object.
      */
-    public void setEventManager(EventIpcManager eventMgr) {
+    void setEventManager(EventIpcManager eventMgr) {
         m_eventMgr = eventMgr;
     }
 
@@ -167,7 +170,7 @@ public class Poller extends AbstractServiceDaemon {
      *
      * @param queryManager a {@link org.opennms.netmgt.poller.QueryManager} object.
      */
-    public void setQueryManager(QueryManager queryManager) {
+    void setQueryManager(QueryManager queryManager) {
         m_queryManager = queryManager;
     }
 
@@ -237,30 +240,31 @@ public class Poller extends AbstractServiceDaemon {
     /**
      * <p>onInit</p>
      */
+    @Override
     protected void onInit() {
         
         // serviceUnresponsive behavior enabled/disabled?
-        log().debug("init: serviceUnresponsive behavior: " + (getPollerConfig().isServiceUnresponsiveEnabled() ? "enabled" : "disabled"));
+        LOG.debug("init: serviceUnresponsive behavior: {}", (getPollerConfig().isServiceUnresponsiveEnabled() ? "enabled" : "disabled"));
 
         createScheduler();
         
         try {
-            log().debug("init: Closing outages for unmanaged services");
+            LOG.debug("init: Closing outages for unmanaged services");
             
-            closeOutagesForUnmanagedServices();
+            m_queryManager.closeOutagesForUnmanagedServices();
         } catch (Throwable e) {
-            log().error("init: Failed to close ouates for unmanage services", e);
+            LOG.error("init: Failed to close ouates for unmanage services", e);
         }
         
 
         // Schedule the interfaces currently in the database
         //
         try {
-            log().debug("start: Scheduling existing interfaces");
+            LOG.debug("start: Scheduling existing interfaces");
 
             scheduleExistingServices();
         } catch (Throwable sqlE) {
-            log().error("start: Failed to schedule existing interfaces", sqlE);
+            LOG.error("start: Failed to schedule existing interfaces", sqlE);
         }
 
         // Create an event receiver. The receiver will
@@ -268,11 +272,11 @@ public class Poller extends AbstractServiceDaemon {
         // interfaces, and schedulers them.
         //
         try {
-            log().debug("start: Creating event broadcast event processor");
+            LOG.debug("start: Creating event broadcast event processor");
 
             setEventProcessor(new PollerEventProcessor(this));
         } catch (Throwable t) {
-            log().fatal("start: Failed to initialized the broadcast event receiver", t);
+            LOG.error("start: Failed to initialized the broadcast event receiver", t);
 
             throw new UndeclaredThrowableException(t);
         }
@@ -281,80 +285,16 @@ public class Poller extends AbstractServiceDaemon {
 
     }
 
-    /**
-     * 
-     */
-    private void closeOutagesForUnmanagedServices() {
-        Timestamp closeTime = new Timestamp((new java.util.Date()).getTime());
-
-        final String DB_CLOSE_OUTAGES_FOR_UNMANAGED_SERVICES = "UPDATE outages set ifregainedservice = ? where outageid in (select outages.outageid from outages, ifservices where ((outages.nodeid = ifservices.nodeid) AND (outages.ipaddr = ifservices.ipaddr) AND (outages.serviceid = ifservices.serviceid) AND ((ifservices.status = 'D') OR (ifservices.status = 'F') OR (ifservices.status = 'U')) AND (outages.ifregainedservice IS NULL)))";
-        Updater svcUpdater = new Updater(m_dataSource, DB_CLOSE_OUTAGES_FOR_UNMANAGED_SERVICES);
-        svcUpdater.execute(closeTime);
-        
-        final String DB_CLOSE_OUTAGES_FOR_UNMANAGED_INTERFACES = "UPDATE outages set ifregainedservice = ? where outageid in (select outages.outageid from outages, ipinterface where ((outages.nodeid = ipinterface.nodeid) AND (outages.ipaddr = ipinterface.ipaddr) AND ((ipinterface.ismanaged = 'F') OR (ipinterface.ismanaged = 'U')) AND (outages.ifregainedservice IS NULL)))";
-        Updater ifUpdater = new Updater(m_dataSource, DB_CLOSE_OUTAGES_FOR_UNMANAGED_INTERFACES);
-        ifUpdater.execute(closeTime);
-        
-
-
-    }
-    
-    /**
-     * <p>closeOutagesForNode</p>
-     *
-     * @param closeDate a {@link java.util.Date} object.
-     * @param eventId a int.
-     * @param nodeId a int.
-     */
-    public void closeOutagesForNode(Date closeDate, int eventId, int nodeId) {
-        Timestamp closeTime = new Timestamp(closeDate.getTime());
-        final String DB_CLOSE_OUTAGES_FOR_NODE = "UPDATE outages set ifregainedservice = ?, svcRegainedEventId = ? where outages.nodeId = ? AND (outages.ifregainedservice IS NULL)";
-        Updater svcUpdater = new Updater(m_dataSource, DB_CLOSE_OUTAGES_FOR_NODE);
-        svcUpdater.execute(closeTime, Integer.valueOf(eventId), Integer.valueOf(nodeId));
-    }
-    
-    /**
-     * <p>closeOutagesForInterface</p>
-     *
-     * @param closeDate a {@link java.util.Date} object.
-     * @param eventId a int.
-     * @param nodeId a int.
-     * @param ipAddr a {@link java.lang.String} object.
-     */
-    public void closeOutagesForInterface(Date closeDate, int eventId, int nodeId, String ipAddr) {
-        Timestamp closeTime = new Timestamp(closeDate.getTime());
-        final String DB_CLOSE_OUTAGES_FOR_IFACE = "UPDATE outages set ifregainedservice = ?, svcRegainedEventId = ? where outages.nodeId = ? AND outages.ipAddr = ? AND (outages.ifregainedservice IS NULL)";
-        Updater svcUpdater = new Updater(m_dataSource, DB_CLOSE_OUTAGES_FOR_IFACE);
-        svcUpdater.execute(closeTime, Integer.valueOf(eventId), Integer.valueOf(nodeId), ipAddr);
-    }
-    
-    /**
-     * <p>closeOutagesForService</p>
-     *
-     * @param closeDate a {@link java.util.Date} object.
-     * @param eventId a int.
-     * @param nodeId a int.
-     * @param ipAddr a {@link java.lang.String} object.
-     * @param serviceName a {@link java.lang.String} object.
-     */
-    public void closeOutagesForService(Date closeDate, int eventId, int nodeId, String ipAddr, String serviceName) {
-        Timestamp closeTime = new Timestamp(closeDate.getTime());
-        final String DB_CLOSE_OUTAGES_FOR_SERVICE = "UPDATE outages set ifregainedservice = ?, svcRegainedEventId = ? where outageid in (select outages.outageid from outages, service where outages.nodeid = ? AND outages.ipaddr = ? AND outages.serviceid = service.serviceId AND service.servicename = ? AND outages.ifregainedservice IS NULL)";
-        Updater svcUpdater = new Updater(m_dataSource, DB_CLOSE_OUTAGES_FOR_SERVICE);
-        svcUpdater.execute(closeTime, Integer.valueOf(eventId), Integer.valueOf(nodeId), ipAddr, serviceName);
-    }
-
     private void createScheduler() {
 
-        ThreadCategory log = ThreadCategory.getInstance(getClass());
         // Create a scheduler
         //
         try {
-            log.debug("init: Creating poller scheduler");
+            LOG.debug("init: Creating poller scheduler");
 
             setScheduler(new LegacyScheduler("Poller", getPollerConfig().getThreads()));
         } catch (RuntimeException e) {
-            log.fatal("init: Failed to create poller scheduler", e);
+            LOG.error("init: Failed to create poller scheduler", e);
             throw e;
         }
     }
@@ -362,18 +302,18 @@ public class Poller extends AbstractServiceDaemon {
     /**
      * <p>onStart</p>
      */
+    @Override
     protected void onStart() {
 		// get the category logger
         // start the scheduler
         //
         try {
-            if (log().isDebugEnabled())
-                log().debug("start: Starting poller scheduler");
+            if (LOG.isDebugEnabled())
+                LOG.debug("start: Starting poller scheduler");
 
             getScheduler().start();
         } catch (RuntimeException e) {
-            if (log().isEnabledFor(ThreadCategory.Level.FATAL))
-                log().fatal("start: Failed to start scheduler", e);
+            LOG.error("start: Failed to start scheduler", e);
             throw e;
         }
 	}
@@ -381,6 +321,7 @@ public class Poller extends AbstractServiceDaemon {
     /**
      * <p>onStop</p>
      */
+    @Override
     protected void onStop() {
         if(getScheduler()!=null) {
             getScheduler().stop();
@@ -400,6 +341,7 @@ public class Poller extends AbstractServiceDaemon {
 	/**
 	 * <p>onPause</p>
 	 */
+    @Override
 	protected void onPause() {
 		getScheduler().pause();
 	}
@@ -407,18 +349,10 @@ public class Poller extends AbstractServiceDaemon {
     /**
      * <p>onResume</p>
      */
+    @Override
     protected void onResume() {
 		getScheduler().resume();
 	}
-
-    /**
-     * <p>getInstance</p>
-     *
-     * @return a {@link org.opennms.netmgt.poller.Poller} object.
-     */
-    public static Poller getInstance() {
-        return m_singleton;
-    }
 
     /**
      * <p>getServiceMonitor</p>
@@ -431,8 +365,6 @@ public class Poller extends AbstractServiceDaemon {
     }
 
     private void scheduleExistingServices() throws Exception {
-        ThreadCategory log = ThreadCategory.getInstance(getClass());
-        
         scheduleMatchingServices(null);
         
         getNetwork().recalculateStatus();
@@ -442,10 +374,9 @@ public class Poller extends AbstractServiceDaemon {
         
         // Debug dump pollable network
         //
-        if (log.isDebugEnabled()) {
-            log.debug("scheduleExistingServices: dumping content of pollable network: ");
-            getNetwork().dump();
-        }
+        LOG.debug("scheduleExistingServices: dumping content of pollable network: ");
+        getNetwork().dump();
+
         
 
     }
@@ -475,23 +406,30 @@ public class Poller extends AbstractServiceDaemon {
 
             final PollableNode svcNode = node;
             final Runnable r = new Runnable() {
+                @Override
                 public void run() {
 					final int matchCount = scheduleMatchingServices("ifServices.nodeId = "+nodeId+" AND ifServices.ipAddr = '"+normalizedAddress+"' AND service.serviceName = '"+svcName+"'");
                     if (matchCount > 0) {
                         svcNode.recalculateStatus();
                         svcNode.processStatusChange(new Date());
                     } else {
-                        LogUtils.warnf(this, "Attempt to schedule service %d/%s/%s found no active service", nodeId, normalizedAddress, svcName);
+                        LOG.warn("Attempt to schedule service {}/{}/{} found no active service", nodeId, normalizedAddress, svcName);
                     }
                 }
             };
             node.withTreeLock(r);
 
         } catch (final Throwable e) {
-        	LogUtils.errorf(this, e, "Unable to schedule service %d/%s/%s", nodeId, normalizedAddress, svcName);
+            LOG.error("Unable to schedule service {}/{}/{}", nodeId, normalizedAddress, svcName);
         }
     }
     
+    /**
+     * @deprecated Rewrite this function using the DAO calls instead of SQL.
+     * 
+     * @param criteria
+     * @return
+     */
     private int scheduleMatchingServices(String criteria) {
         String sql = "SELECT ifServices.nodeId AS nodeId, node.nodeLabel AS nodeLabel, ifServices.ipAddr AS ipAddr, " +
                 "ifServices.serviceId AS serviceId, service.serviceName AS serviceName, ifServices.status as status, " +
@@ -513,6 +451,7 @@ public class Poller extends AbstractServiceDaemon {
         final AtomicInteger count = new AtomicInteger(0);
         
         Querier querier = new Querier(m_dataSource, sql) {
+            @Override
             public void processRow(ResultSet rs) throws SQLException {
                 if (scheduleService(rs.getInt("nodeId"), rs.getString("nodeLabel"), rs.getString("ipAddr"), rs.getString("serviceName"), 
                                 "A".equals(rs.getString("status")), (Number)rs.getObject("svcLostEventId"), rs.getTimestamp("ifLostService"), 
@@ -528,19 +467,7 @@ public class Poller extends AbstractServiceDaemon {
 
     }
     
-    private void updateServiceStatus(int nodeId, String ipAddr, String serviceName, String status) {
-        final String sql = "UPDATE ifservices SET status = ? WHERE id " +
-        		" IN (SELECT ifs.id FROM ifservices AS ifs JOIN service AS svc ON ifs.serviceid = svc.serviceid " +
-        		" WHERE ifs.nodeId = ? AND ifs.ipAddr = ? AND svc.servicename = ?)"; 
-
-        Updater updater = new Updater(m_dataSource, sql);
-        updater.execute(status, nodeId, ipAddr, serviceName);
-        
-    }
-
     private boolean scheduleService(int nodeId, String nodeLabel, String ipAddr, String serviceName, boolean active, Number svcLostEventId, Date date, String svcLostUei) {
-        ThreadCategory log = ThreadCategory.getInstance(getClass());
-
         // We don't want to adjust the management state of the service if we're
         // on a machine that uses multiple servers with access to the same database
         // so check the value of OpennmsServerConfigFactory.getInstance().verifyServer()
@@ -548,25 +475,25 @@ public class Poller extends AbstractServiceDaemon {
         Package pkg = findPackageForService(ipAddr, serviceName);
         if (pkg == null) {
             if(active && !OpennmsServerConfigFactory.getInstance().verifyServer()){
-                log.warn("Active service "+serviceName+" on "+ipAddr+" not configured for any package. Marking as Not Polled.");
-                updateServiceStatus(nodeId, ipAddr, serviceName, "N");
+                LOG.warn("Active service {} on {} not configured for any package. Marking as Not Polled.", serviceName, ipAddr);
+                m_queryManager.updateServiceStatus(nodeId, ipAddr, serviceName, "N");
             }
             return false;
         } else if (!active && !OpennmsServerConfigFactory.getInstance().verifyServer()) {
-            log.info("Active service "+serviceName+" on "+ipAddr+" is now configured for any package. Marking as active.");
-            updateServiceStatus(nodeId, ipAddr, serviceName, "A");
+            LOG.info("Active service {} on {} is now configured for any package. Marking as active.", serviceName, ipAddr);
+            m_queryManager.updateServiceStatus(nodeId, ipAddr, serviceName, "A");
         }
 
         ServiceMonitor monitor = m_pollerConfig.getServiceMonitor(serviceName);
         if (monitor == null) {
-            log.info("Could not find service monitor associated with service "+serviceName);
+            LOG.info("Could not find service monitor associated with service {}", serviceName);
             return false;
         }
         
         InetAddress addr;
         addr = InetAddressUtils.addr(ipAddr);
         if (addr == null) {
-            log.error("Could not convert "+ipAddr+" as an InetAddress "+ipAddr);
+            LOG.error("Could not convert {} as an InetAddress {}", ipAddr, ipAddr);
             return false;
         }
         
@@ -625,7 +552,7 @@ public class Poller extends AbstractServiceDaemon {
     protected boolean pollableServiceInPackage(String ipAddr, String serviceName, Package pkg) {
         
         if (pkg.getRemote()) {
-            log().debug("pollableServiceInPackage: this package: "+pkg.getName()+", is a remote monitor package.");
+            LOG.debug("pollableServiceInPackage: this package: {}, is a remote monitor package.", pkg.getName());
             return false;
         }
         
@@ -652,11 +579,8 @@ public class Poller extends AbstractServiceDaemon {
      * @return a boolean.
      */
     public boolean packageIncludesIfAndSvc(Package pkg, String ipAddr, String svcName) {
-        ThreadCategory log = ThreadCategory.getInstance(getClass());
-
         if (!getPollerConfig().isServiceInPackageAndEnabled(svcName, pkg)) {
-            if (log.isDebugEnabled())
-                log.debug("packageIncludesIfAndSvc: address/service: " + ipAddr + "/" + svcName + " not scheduled, service is not enabled or does not exist in package: " + pkg.getName());
+            LOG.debug("packageIncludesIfAndSvc: address/service: {}/{} not scheduled, service is not enabled or does not exist in package: {}", ipAddr, svcName, pkg.getName());
             return false;
         }
 
@@ -667,13 +591,11 @@ public class Poller extends AbstractServiceDaemon {
             if (m_initialized) {
                 getPollerConfig().rebuildPackageIpListMap();
                 if (!getPollerConfig().isInterfaceInPackage(ipAddr, pkg)) {
-                    if (log.isDebugEnabled())
-                        log.debug("packageIncludesIfAndSvc: interface " + ipAddr + " gained service " + svcName + ", but the interface was not in package: " + pkg.getName());
+                    LOG.debug("packageIncludesIfAndSvc: interface {} gained service {}, but the interface was not in package: {}", ipAddr, svcName, pkg.getName());
                     return false;
                 }
             } else {
-                if (log.isDebugEnabled())
-                    log.debug("packageIncludesIfAndSvc: address/service: " + ipAddr + "/" + svcName + " not scheduled, interface does not belong to package: " + pkg.getName());
+                LOG.debug("packageIncludesIfAndSvc: address/service: {}/{} not scheduled, interface does not belong to package: {}", ipAddr, svcName, pkg.getName());
                 return false;
             }
         }
@@ -685,6 +607,7 @@ public class Poller extends AbstractServiceDaemon {
      */
     public void refreshServicePackages() {
         PollableVisitor visitor = new PollableVisitorAdaptor() {
+            @Override
             public void visitService(PollableService service) {
                 service.refreshConfig();
             }
@@ -697,6 +620,7 @@ public class Poller extends AbstractServiceDaemon {
      */
     public void refreshServiceThresholds() {
         PollableVisitor visitor = new PollableVisitorAdaptor() {
+            @Override
             public void visitService(PollableService service) {
                 service.refreshThresholds();
             }
@@ -704,4 +628,20 @@ public class Poller extends AbstractServiceDaemon {
         getNetwork().visit(visitor);
     }
 
+    /**
+     * Returns the number of polls that have been executed so far.
+     *
+     * @return the number of polls that have been executed
+     */
+    public long getNumPolls() {
+        if (m_scheduler != null) {
+            return m_scheduler.getNumTasksExecuted();
+        } else {
+            return 0L;
+        }
+    }
+
+    public static String getLoggingCategory() {
+        return LOG4J_CATEGORY;
+	}
 }    

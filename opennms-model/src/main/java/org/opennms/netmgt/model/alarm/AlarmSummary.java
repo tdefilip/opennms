@@ -105,6 +105,7 @@ public class AlarmSummary implements Comparable<AlarmSummary>, Serializable {
         return minLastEventDate == null ? "N/A" : FuzzyDateFormatter.calculateDifference(this.minLastEventDate, new Date());
     }
 
+    @Override
     public String toString() {
         final StringBuffer buffer = new StringBuffer();
         buffer.append("[AlarmSummary: ");
@@ -123,6 +124,7 @@ public class AlarmSummary implements Comparable<AlarmSummary>, Serializable {
      * The alarm summaries will be ordered by the oldest one first
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
+    @Override
     public int compareTo(final AlarmSummary that) {
         return new CompareToBuilder()
         .append(this.getMinLastEventDate(), that.getMinLastEventDate())
