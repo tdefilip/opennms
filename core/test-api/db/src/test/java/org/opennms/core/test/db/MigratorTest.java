@@ -54,7 +54,8 @@ import org.opennms.core.schema.Migrator;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
-import org.opennms.core.utils.LogUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
@@ -67,6 +68,7 @@ import org.springframework.test.context.ContextConfiguration;
 })
 @JUnitTemporaryDatabase
 public class MigratorTest {
+    private static final Logger LOG = LoggerFactory.getLogger(MigratorTest.class);
 
     @Autowired
     DataSource m_dataSource;
@@ -106,7 +108,7 @@ public class MigratorTest {
         migration.setChangeLog("changelog.xml");
         migration.setAccessor(new ExistingResourceAccessor(aResource));
 
-        LogUtils.infof(this, "Running migration on database: %s", migration.toString());
+        LOG.info("Running migration on database: {}", migration);
 
         final Migrator m = new Migrator();
         m.setDataSource(m_dataSource);
@@ -118,7 +120,7 @@ public class MigratorTest {
         m.prepareDatabase(migration);
         m.migrate(migration);
 
-        LogUtils.infof(this, "Migration complete: %s", migration.toString());
+        LOG.info("Migration complete: {}", migration);
 
         tables = getTables();
         assertTrue("must contain table 'schematest'", tables.contains("schematest"));
@@ -147,7 +149,7 @@ public class MigratorTest {
         // from the classpath
         for (final Resource resource : getTestResources()) {
             if (!resource.getURI().toString().contains("test-api.schema")) continue;
-            LogUtils.infof(this, "=== found resource: " + resource + " ===");
+            LOG.info("=== found resource: {} ===", resource);
             migration.setAccessor(new ExistingResourceAccessor(resource));
             m.migrate(migration);
         }

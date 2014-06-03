@@ -41,7 +41,7 @@ import java.net.InetAddress;
  * @see SnmpSession
  * @see SnmpPeer
  * 
- * @author <a href="mailto:weave@oculan.com>Brian Weaver </a>
+ * @author Brian Weaver
  * @version 1.1.1.1
  * 
  */
@@ -287,6 +287,7 @@ public class SnmpPeer extends Object implements Cloneable {
      * @return A duplicate peer object.
      * 
      */
+    @Override
     public Object clone() {
         return new SnmpPeer(this);
     }

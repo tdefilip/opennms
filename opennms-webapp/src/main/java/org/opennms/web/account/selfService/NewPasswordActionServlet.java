@@ -41,7 +41,7 @@ import org.opennms.netmgt.config.UserFactory;
 import org.opennms.netmgt.config.UserManager;
 import org.opennms.netmgt.config.users.Password;
 import org.opennms.netmgt.config.users.User;
-import org.opennms.web.springframework.security.Authentication;
+import org.opennms.web.api.Authentication;
 
 /**
  * A servlet that handles changing a user's password
@@ -57,6 +57,7 @@ public class NewPasswordActionServlet extends HttpServlet {
     private static final long serialVersionUID = 6803675433403988004L;
 
     /** {@inheritDoc} */
+    @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             UserFactory.init();

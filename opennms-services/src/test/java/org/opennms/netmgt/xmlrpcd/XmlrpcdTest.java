@@ -36,9 +36,10 @@ import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Date;
 import java.util.Hashtable;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
 import org.exolab.castor.xml.ValidationException;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.config.OpennmsServerConfigFactory;
@@ -49,8 +50,8 @@ import org.opennms.netmgt.xml.event.Event;
 import org.opennms.test.ThrowableAnticipator;
 
 public class XmlrpcdTest extends OpenNMSTestCase {
-    private static final int m_port1 = 9000;
-    private static final int m_port2 = 9001;
+    private static final int m_port1 = 59000;
+    private static final int m_port2 = 59001;
     
     private Xmlrpcd m_xmlrpcd;
     private XmlrpcAnticipator m_anticipator1;
@@ -154,7 +155,9 @@ public class XmlrpcdTest extends OpenNMSTestCase {
             ("<local-server server-name=\"nms1\" verify-server=\"false\">\n" +
             "</local-server>\n").getBytes());
     
-    protected void setUp() throws Exception {
+    @Before
+    @Override
+    public void setUp() throws Exception {
         super.setUp();
         
         m_anticipator1 = new XmlrpcAnticipator(m_port1, false);
@@ -179,14 +182,13 @@ public class XmlrpcdTest extends OpenNMSTestCase {
          * XXX This is a workaround until OpenNMSTestCase.tearDown() no longer
          * calls MockLogAppender.assertNoWarningsOrGreater().
          */
-        try {
-            MockLogAppender.assertNoWarningsOrGreater();
-        } finally {
-            MockLogAppender.resetEvents();
-        }
+        MockLogAppender.resetLogLevel();
+        MockLogAppender.resetEvents();
     }
 
-    protected void tearDown() throws Exception {
+    @After
+    @Override
+    public void tearDown() throws Exception {
         if (m_anticipator1 != null) {
             m_anticipator1.shutdown();
         }
@@ -200,11 +202,13 @@ public class XmlrpcdTest extends OpenNMSTestCase {
         anticipator.anticipateCall("notifyReceivedEvent", "0", EventConstants.XMLRPC_NOTIFICATION_EVENT_UEI, "test connection");
     }
 
+    @Test
     public void testDoNothing() {
         super.testDoNothing();
         finishUp();
     }
     
+    @Test
     public void testStart() throws Exception {
         anticipateNotifyReceivedEvent(m_anticipator1);
         m_xmlrpcd.init();
@@ -216,6 +220,7 @@ public class XmlrpcdTest extends OpenNMSTestCase {
         finishUp();
     }
     
+    @Test
     public void testQueueing() throws Exception {
         Date date = new Date();
         anticipateNotifyReceivedEvent(m_anticipator1);
@@ -253,37 +258,6 @@ public class XmlrpcdTest extends OpenNMSTestCase {
         m_xmlrpcd.stop();
         Thread.sleep(2000);
         
-        LoggingEvent[] errors = MockLogAppender.getEventsGreaterOrEqual(Level.ERROR);
-        /*
-         * XXX Hack Reset the events now, otherwise any failures below are
-         * masked when MockLogAppender.assertNoWarningsOrGreater() is called in
-         * OpenNMSTestCase.
-         */
-        MockLogAppender.resetEvents();
-
-        if (errors.length == 0) {
-            fail("No errors received by log4j, however some errors "
-                    + "should have been received while the XML-RPC"
-                    + "anticipator was down");
-        }
-        
-        for (int i = 0; i < errors.length; i++) {
-            String message = errors[i].getMessage().toString();
-            if (("Failed to send message to XMLRPC server: http://localhost:" + m_port1).equals(message)) {
-                continue;
-            }
-            if (("Could not successfully communicate with XMLRPC server 'http://localhost:" + m_port1 + "' after 1 tries").equals(message)) {
-                continue;
-            }
-            if ("Can not set up communication with any XMLRPC server".equals(message)) {
-                continue;
-            }
-            fail("Unexpected error logged: [" + errors[i].getLevel().toString() + "] "
-                    + errors[i].getLoggerName() +": " + errors[i].getMessage());
-        }
-
-        MockLogAppender.resetEvents();
-
         finishUp();
     }
 
@@ -295,6 +269,7 @@ public class XmlrpcdTest extends OpenNMSTestCase {
         anticipator.anticipateCall(method, "Router", "192.168.1.1", "ICMP", "Not Available", "null", EventConstants.formatToString(date));
     }
 
+    @Test
     public void testSerialFailover() throws Exception {
         XmlrpcdConfigFactory.setInstance(new XmlrpcdConfigFactory(m_configTwo));
         
@@ -325,40 +300,6 @@ public class XmlrpcdTest extends OpenNMSTestCase {
         m_xmlrpcd.stop();
         Thread.sleep(2000);
         
-        LoggingEvent[] errors = MockLogAppender.getEventsGreaterOrEqual(Level.ERROR);
-        /*
-         * XXX Hack Reset the events now, otherwise any failures below are
-         * masked when MockLogAppender.assertNoWarningsOrGreater() is called in
-         * OpenNMSTestCase.
-         */
-        MockLogAppender.resetEvents();
-
-        if (errors.length == 0) {
-            fail("No errors received by log4j, however some errors "
-                    + "should have been received while the XML-RPC"
-                    + "anticipator was down");
-        }
-        
-        for (int i = 0; i < errors.length; i++) {
-            String message = errors[i].getMessage().toString();
-            if (("Failed to send message to XMLRPC server: http://localhost:" + m_port1).equals(message)) {
-                continue;
-            }
-            if (("Could not successfully communicate with XMLRPC server 'http://localhost:" + m_port1 + "' after 1 tries").equals(message)) {
-                continue;
-            }
-            if (("Failed to send message to XMLRPC server http://localhost:" + m_port1).equals(message)) {
-                continue;
-            }
-            if ("Can not set up communication with any XMLRPC server".equals(message)) {
-                continue;
-            }
-            fail("Unexpected error logged: [" + errors[i].getLevel().toString() + "] "
-                    + errors[i].getLoggerName() +": " + errors[i].getMessage());
-        }
-
-        MockLogAppender.resetEvents();
-
         finishUp();
     }
 
@@ -406,46 +347,6 @@ public class XmlrpcdTest extends OpenNMSTestCase {
         m_xmlrpcd.stop();
         Thread.sleep(2000);
         
-        LoggingEvent[] errors = MockLogAppender.getEventsGreaterOrEqual(Level.ERROR);
-        /*
-         * XXX Hack Reset the events now, otherwise any failures below are
-         * masked when MockLogAppender.assertNoWarningsOrGreater() is called in
-         * OpenNMSTestCase.
-         */
-        MockLogAppender.resetEvents();
-
-        if (errors.length == 0) {
-            fail("No errors received by log4j, however some errors "
-                    + "should have been received while the XML-RPC"
-                    + "anticipator was down");
-        }
-        
-        for (int i = 0; i < errors.length; i++) {
-            String message = errors[i].getMessage().toString();
-            if (("Failed to send message to XMLRPC server: http://localhost:" + m_port1).equals(message)) {
-                continue;
-            }
-            if (("Failed to send message to XMLRPC server: http://localhost:" + m_port2).equals(message)) {
-                continue;
-            }
-            if (("Could not successfully communicate with XMLRPC server 'http://localhost:" + m_port1 + "' after 1 tries").equals(message)) {
-                continue;
-            }
-            if (("Could not successfully communicate with XMLRPC server 'http://localhost:" + m_port2 + "' after 1 tries").equals(message)) {
-                continue;
-            }
-            if (("Failed to send message to XMLRPC server http://localhost:" + m_port1).equals(message)) {
-                continue;
-            }
-            if ("Can not set up communication with any XMLRPC server".equals(message)) {
-                continue;
-            }
-            fail("Unexpected error logged: [" + errors[i].getLevel().toString() + "] "
-                    + errors[i].getLoggerName() +": " + errors[i].getMessage());
-        }
-
-        MockLogAppender.resetEvents();
-
         finishUp();
     }
 
@@ -472,6 +373,7 @@ public class XmlrpcdTest extends OpenNMSTestCase {
         finishUp();
     }
 
+    @Test
     public void testMultipleServersDifferentEvents() throws Exception {
         XmlrpcdConfigFactory.setInstance(new XmlrpcdConfigFactory(m_configParallelDifferent));
         
@@ -499,6 +401,7 @@ public class XmlrpcdTest extends OpenNMSTestCase {
         finishUp();
     }
 
+    @Test
     public void testEventGeneric() throws Exception {
         XmlrpcdConfigFactory.setInstance(new XmlrpcdConfigFactory(m_configGeneric));
         
@@ -535,6 +438,7 @@ public class XmlrpcdTest extends OpenNMSTestCase {
     }
     
     /** Unless we are in generic mode, we shouldn't be seeing general traps */ 
+    @Test
     public void testSendTrapSimpleNonGeneric() throws Exception {
         Date date = new Date();
         String enterpriseId = ".1.3.6.4.1.1.1";
@@ -552,6 +456,7 @@ public class XmlrpcdTest extends OpenNMSTestCase {
         finishUp();
     }
 
+    @Test
     public void testSendTrapSimple() throws Exception {
         XmlrpcdConfigFactory.setInstance(new XmlrpcdConfigFactory(m_configGeneric));
 
@@ -592,6 +497,7 @@ public class XmlrpcdTest extends OpenNMSTestCase {
         finishUp();
     }
     
+    @Test
     public void testServiceDownEvent() throws Exception {
         Date date = new Date();
         anticipateNotifyReceivedEvent(m_anticipator1);
@@ -610,6 +516,7 @@ public class XmlrpcdTest extends OpenNMSTestCase {
         finishUp();
     }
 
+    @Test
     public void testServiceUpEvent() throws Exception {
         Date date = new Date();
         anticipateNotifyReceivedEvent(m_anticipator1);
@@ -628,6 +535,7 @@ public class XmlrpcdTest extends OpenNMSTestCase {
         finishUp();
     }
 
+    @Test
     public void testInterfaceDownEvent() throws Exception {
         Date date = new Date();
         anticipateNotifyReceivedEvent(m_anticipator1);
@@ -646,6 +554,7 @@ public class XmlrpcdTest extends OpenNMSTestCase {
         finishUp();
     }
 
+    @Test
     public void testInterfaceUpEvent() throws Exception {
         Date date = new Date();
         anticipateNotifyReceivedEvent(m_anticipator1);
@@ -664,6 +573,7 @@ public class XmlrpcdTest extends OpenNMSTestCase {
         finishUp();
     }
 
+    @Test
     public void testNodeDownEvent() throws Exception {
         Date date = new Date();
         anticipateNotifyReceivedEvent(m_anticipator1);
@@ -682,6 +592,7 @@ public class XmlrpcdTest extends OpenNMSTestCase {
         finishUp();
     }
 
+    @Test
     public void testNodeUpEvent() throws Exception {
         Date date = new Date();
         anticipateNotifyReceivedEvent(m_anticipator1);
@@ -702,6 +613,7 @@ public class XmlrpcdTest extends OpenNMSTestCase {
 
     
     
+    @Test
     public void testBadConfig() throws Exception {
         XmlrpcdConfigFactory.setInstance(new XmlrpcdConfigFactory(m_configBad));
         ThrowableAnticipator ta = new ThrowableAnticipator();
@@ -714,34 +626,6 @@ public class XmlrpcdTest extends OpenNMSTestCase {
         }
         
         ta.verifyAnticipated();
-
-        LoggingEvent[] errors = MockLogAppender.getEventsGreaterOrEqual(Level.ERROR);
-        /*
-         * XXX Hack Reset the events now, otherwise any failures below are
-         * masked when MockLogAppender.assertNoWarningsOrGreater() is called in
-         * OpenNMSTestCase.
-         */
-        MockLogAppender.resetEvents();
-
-        if (errors.length == 0) {
-            fail("No errors received by log4j, however some errors "
-                    + "should have been received while the XML-RPC"
-                    + "anticipator was down");
-        }
-        
-        for (int i = 0; i < errors.length; i++) {
-            String message = errors[i].getMessage().toString();
-            if ("serverSubscription element baseEventsBlah references a subscription that does not exist".equals(message)) {
-                continue;
-            }
-            if ("Failed to load configuration".equals(message)) {
-                continue;
-            }
-            fail("Unexpected error logged: [" + errors[i].getLevel().toString() + "] "
-                    + errors[i].getLoggerName() +": " + errors[i].getMessage());
-        }
-
-        MockLogAppender.resetEvents();
 
         finishUp();
     }

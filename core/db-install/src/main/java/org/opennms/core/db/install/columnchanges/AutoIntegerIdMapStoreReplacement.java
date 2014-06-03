@@ -58,10 +58,11 @@ public class AutoIntegerIdMapStoreReplacement implements ColumnChangeReplacement
      */
     public AutoIntegerIdMapStoreReplacement(int initialValue, String[] indexColumns) {
         m_value = initialValue;
-        m_indexColumns = indexColumns;
+        m_indexColumns = indexColumns == null? null : indexColumns.clone();
     }
     
     /** {@inheritDoc} */
+    @Override
     public Integer getColumnReplacement(ResultSet rs, Map<String, ColumnChange> columnChanges) throws SQLException {
         MultiColumnKey key = getKeyForColumns(rs, columnChanges, m_indexColumns);
         Integer newInteger = m_value++;
@@ -74,6 +75,7 @@ public class AutoIntegerIdMapStoreReplacement implements ColumnChangeReplacement
      *
      * @return a boolean.
      */
+    @Override
     public boolean addColumnIfColumnIsNew() {
         return true;
     }
@@ -118,7 +120,7 @@ public class AutoIntegerIdMapStoreReplacement implements ColumnChangeReplacement
         private final Object[] m_keys;
         
         public MultiColumnKey(Object[] keys) {
-            m_keys = keys;
+            m_keys = keys == null? null : keys.clone();
         }
         
         @Override
@@ -168,6 +170,7 @@ public class AutoIntegerIdMapStoreReplacement implements ColumnChangeReplacement
     /**
      * <p>close</p>
      */
+    @Override
     public void close() {
     }
 }

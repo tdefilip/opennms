@@ -41,6 +41,11 @@ public class DefaultSelectionManager implements SelectionManager {
 	}
 
 	@Override
+	public Collection<EdgeRef> getSelectedEdgeRefs() {
+		return m_context.getSelectedEdgeRefs();
+	}
+
+	@Override
 	public boolean isEdgeRefSelected(EdgeRef edgeRef) {
 		return m_context.isEdgeRefSelected(edgeRef);
 	}
@@ -79,7 +84,9 @@ public class DefaultSelectionManager implements SelectionManager {
 
 	@Override
 	public void addSelectionListener(SelectionListener listener) {
-		m_addedListeners.add(listener);
+		if (listener != null) {
+			m_addedListeners.add(listener);
+		}
 	}
 	
 	@Override
@@ -99,11 +106,11 @@ public class DefaultSelectionManager implements SelectionManager {
 	@Override
 	public void selectionChanged(SelectionContext selectionContext) {
 		for(SelectionListener listener : m_listeners) {
-			LoggerFactory.getLogger(this.getClass()).debug("Invoking selectionChanged() on {}", listener);
+			LoggerFactory.getLogger(this.getClass()).debug("Invoking selectionChanged() on: {}, {}", listener.getClass().getName(), listener);
 			listener.selectionChanged(selectionContext);
 		}
 		for(SelectionListener listener : m_addedListeners) {
-			LoggerFactory.getLogger(this.getClass()).debug("Invoking selectionChanged() on {}", listener);
+			LoggerFactory.getLogger(this.getClass()).debug("Invoking selectionChanged() on: {}, {}", listener.getClass().getName(), listener);
 			listener.selectionChanged(selectionContext);
 		}
 	}

@@ -35,16 +35,16 @@ import java.util.Locale;
 
 import javax.annotation.Resource;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
-import org.opennms.core.utils.BeanUtils;
 import org.opennms.netmgt.config.CategoryFactory;
 import org.opennms.netmgt.mock.MockCategoryFactory;
 import org.opennms.test.JUnitConfigurationEnvironment;
@@ -57,9 +57,10 @@ import org.springframework.test.context.ContextConfiguration;
         "classpath:/META-INF/opennms/applicationContext-soa.xml",
         "classpath:/META-INF/opennms/applicationContext-dao.xml",
         "classpath*:/META-INF/opennms/component-dao.xml",
-        "classpath:/META-INF/opennms/applicationContext-reportingAvailability.xml",
         "classpath:/META-INF/opennms/applicationContext-reportingCore.xml",
-        "classpath:/META-INF/opennms/applicationContext-availabilityDatabasePopulator.xml"
+        "classpath*:/META-INF/opennms/component-reporting.xml",
+        "classpath:/META-INF/opennms/applicationContext-availabilityDatabasePopulator.xml",
+        "classpath:/META-INF/opennms/applicationContext-minimal-conf.xml"
 })
 @JUnitConfigurationEnvironment
 @JUnitTemporaryDatabase
@@ -143,7 +144,6 @@ public class AvailabilityReportIntegrationTest implements InitializingBean {
         try {
             classicAvailabilityCalculator.setPeriodEndDate(m_calendar.getTime());
             classicAvailabilityCalculator.setLogoURL("wahtever");
-            classicAvailabilityCalculator.setCalendar(m_calendar);
             classicAvailabilityCalculator.setReportFormat("PDF");
             classicAvailabilityCalculator.setMonthFormat("classic");
             classicAvailabilityCalculator.setCategoryName("Network Interfaces");
@@ -188,7 +188,6 @@ public class AvailabilityReportIntegrationTest implements InitializingBean {
         try {
             calendarAvailabilityCalculator.setPeriodEndDate(m_calendar.getTime());
             calendarAvailabilityCalculator.setLogoURL("wahtever");
-            calendarAvailabilityCalculator.setCalendar(m_calendar);
             calendarAvailabilityCalculator.setReportFormat("PDF");
             calendarAvailabilityCalculator.setMonthFormat("calendar");
             calendarAvailabilityCalculator.setCategoryName("Network Interfaces");

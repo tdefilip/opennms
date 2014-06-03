@@ -206,8 +206,7 @@ public class EventReceipt implements Serializable {
      */
     public boolean removeUuid(
             final java.lang.String vUuid) {
-        boolean removed = _uuidList.remove(vUuid);
-        return removed;
+        return _uuidList.remove(vUuid);
     }
 
     /**
@@ -218,8 +217,7 @@ public class EventReceipt implements Serializable {
      */
     public java.lang.String removeUuidAt(
             final int index) {
-        java.lang.Object obj = this._uuidList.remove(index);
-        return (java.lang.String) obj;
+        return this._uuidList.remove(index);
     }
 
     /**
@@ -283,6 +281,7 @@ public class EventReceipt implements Serializable {
         this._uuidList = uuidList;
     }
 
+        @Override
     public String toString() {
     	return new ToStringBuilder(this)
     		.append("uuid", _uuidList)

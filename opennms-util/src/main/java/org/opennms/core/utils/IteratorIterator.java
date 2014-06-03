@@ -42,7 +42,6 @@ public class IteratorIterator<T> implements Iterator<T>, Iterable<T> {
      * <p>Constructor for IteratorIterator.</p>
      *
      * @param iterators a {@link java.util.Iterator} object.
-     * @param <T> a T object.
      */
     public IteratorIterator(Iterator<T>... iterators) {
         /*
@@ -70,6 +69,7 @@ public class IteratorIterator<T> implements Iterator<T>, Iterable<T> {
      *
      * @return a boolean.
      */
+    @Override
     public boolean hasNext() {
         while ((m_currentIter == null || !m_currentIter.hasNext())
                 && m_iterIter.hasNext()) {
@@ -77,7 +77,7 @@ public class IteratorIterator<T> implements Iterator<T>, Iterable<T> {
             m_iterIter.remove();
         }
         
-        return (m_currentIter == null ? false : m_currentIter.hasNext());
+        return (m_currentIter != null && m_currentIter.hasNext());
     }
     
     /**
@@ -85,6 +85,7 @@ public class IteratorIterator<T> implements Iterator<T>, Iterable<T> {
      *
      * @return a T object.
      */
+    @Override
     public T next() {
         if (m_currentIter == null) {
             m_currentIter = m_iterIter.next();
@@ -95,6 +96,7 @@ public class IteratorIterator<T> implements Iterator<T>, Iterable<T> {
     /**
      * <p>remove</p>
      */
+    @Override
     public void remove() {
         m_currentIter.remove();
     }
@@ -104,6 +106,7 @@ public class IteratorIterator<T> implements Iterator<T>, Iterable<T> {
      *
      * @return a {@link java.util.Iterator} object.
      */
+    @Override
     public Iterator<T> iterator() {
         return this;
     }

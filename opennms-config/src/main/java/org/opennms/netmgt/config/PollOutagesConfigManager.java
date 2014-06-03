@@ -35,11 +35,11 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.opennms.core.xml.AbstractJaxbConfigDao;
-import org.opennms.netmgt.config.poller.Interface;
-import org.opennms.netmgt.config.poller.Node;
-import org.opennms.netmgt.config.poller.Outage;
-import org.opennms.netmgt.config.poller.Outages;
-import org.opennms.netmgt.config.poller.Time;
+import org.opennms.netmgt.config.poller.outages.Interface;
+import org.opennms.netmgt.config.poller.outages.Node;
+import org.opennms.netmgt.config.poller.outages.Outage;
+import org.opennms.netmgt.config.poller.outages.Outages;
+import org.opennms.netmgt.config.poller.outages.Time;
 import org.springframework.dao.DataAccessException;
 import org.springframework.util.Assert;
 
@@ -67,12 +67,6 @@ abstract public class PollOutagesConfigManager extends AbstractJaxbConfigDao<Out
 
     /** {@inheritDoc} */
     @Override
-    protected String createLoadedLogMessage(final Outages config, final long diffTime) {
-        return "Loaded " + getDescription() + " with " + config.getOutageCount() + " outages in " + diffTime + "ms";
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public void afterPropertiesSet() throws DataAccessException {
         /**
          * It sucks to duplicate this first test from AbstractCastorConfigDao,
@@ -84,6 +78,7 @@ abstract public class PollOutagesConfigManager extends AbstractJaxbConfigDao<Out
         super.afterPropertiesSet();
     }
 
+    @Override
     protected Outages translateConfig(final Outages outages) {
         return outages;
     }
@@ -182,6 +177,7 @@ abstract public class PollOutagesConfigManager extends AbstractJaxbConfigDao<Out
      *
      * Return if interfaces is part of specified outage.
      */
+    @Override
     public boolean isInterfaceInOutage(final String linterface, final String outName) {
         final Outage out = getOutage(outName);
         if (out == null) return false;
@@ -226,6 +222,7 @@ abstract public class PollOutagesConfigManager extends AbstractJaxbConfigDao<Out
      *
      * Return if time is part of specified outage.
      */
+    @Override
     public boolean isTimeInOutage(final long time, final String outName) {
         final Outage out = getOutage(outName);
         if (out == null) return false;
@@ -254,6 +251,7 @@ abstract public class PollOutagesConfigManager extends AbstractJaxbConfigDao<Out
      *
      * Return if current time is part of specified outage.
      */
+    @Override
     public boolean isCurTimeInOutage(final String outName) {
         return isTimeInOutage(new GregorianCalendar(), outName);
     }
@@ -272,7 +270,7 @@ abstract public class PollOutagesConfigManager extends AbstractJaxbConfigDao<Out
     /**
      * <p>addOutage</p>
      *
-     * @param getOutageSchedule(newOutage) a {@link org.opennms.netmgt.config.poller.Outage} object.
+     * @param getOutageSchedule(newOutage) a {@link org.opennms.netmgt.config.poller.outages.Outage} object.
      */
     public void addOutage(final Outage newOutage) {
         getWriteLock().lock();
@@ -300,7 +298,7 @@ abstract public class PollOutagesConfigManager extends AbstractJaxbConfigDao<Out
     /**
      * <p>removeOutage</p>
      *
-     * @param getOutageSchedule(outageToRemove) a {@link org.opennms.netmgt.config.poller.Outage} object.
+     * @param getOutageSchedule(outageToRemove) a {@link org.opennms.netmgt.config.poller.outages.Outage} object.
      */
     public void removeOutage(final Outage outageToRemove) {
         getWriteLock().lock();
@@ -314,8 +312,8 @@ abstract public class PollOutagesConfigManager extends AbstractJaxbConfigDao<Out
     /**
      * <p>replaceOutage</p>
      *
-     * @param getOutageSchedule(oldOutage) a {@link org.opennms.netmgt.config.poller.Outage} object.
-     * @param getOutageSchedule(newOutage) a {@link org.opennms.netmgt.config.poller.Outage} object.
+     * @param getOutageSchedule(oldOutage) a {@link org.opennms.netmgt.config.poller.outages.Outage} object.
+     * @param getOutageSchedule(newOutage) a {@link org.opennms.netmgt.config.poller.outages.Outage} object.
      */
     public void replaceOutage(final Outage oldOutage, final Outage newOutage) {
         getWriteLock().lock();
@@ -343,7 +341,7 @@ abstract public class PollOutagesConfigManager extends AbstractJaxbConfigDao<Out
      * <p>getNodeIds</p>
      *
      * @param name a {@link java.lang.String} object.
-     * @return an array of {@link org.opennms.netmgt.config.poller.Node} objects.
+     * @return an array of {@link org.opennms.netmgt.config.poller.outages.Node} objects.
      */
     public Node[] getNodeIds(final String name) {
         final Outage out = getOutage(name);
@@ -358,6 +356,7 @@ abstract public class PollOutagesConfigManager extends AbstractJaxbConfigDao<Out
      * Return if nodeid is part of specified outage
      * </p>
      */
+    @Override
     public boolean isNodeIdInOutage(final long lnodeid, final String outName) {
         final Outage out = getOutage(outName);
         if (out == null) return false;
@@ -383,7 +382,7 @@ abstract public class PollOutagesConfigManager extends AbstractJaxbConfigDao<Out
      * FIXME: This code is almost identical to isTimeInOutage... We need to fix
      * it
      *
-     * @param getOutageSchedule(out) a {@link org.opennms.netmgt.config.poller.Outage} object.
+     * @param getOutageSchedule(out) a {@link org.opennms.netmgt.config.poller.outages.Outage} object.
      * @return a {@link java.util.Calendar} object.
      */
     public static Calendar getEndOfOutage(final Outage out) {
@@ -399,7 +398,7 @@ abstract public class PollOutagesConfigManager extends AbstractJaxbConfigDao<Out
      * @param lnodeid
      *            the nodeid to be looked up
      * @return the node iis part of the specified outage
-     * @param getOutageSchedule(out) a {@link org.opennms.netmgt.config.poller.Outage} object.
+     * @param getOutageSchedule(out) a {@link org.opennms.netmgt.config.poller.outages.Outage} object.
      */
     public boolean isNodeIdInOutage(final long lnodeid, final Outage out) {
         if (out == null) return false;

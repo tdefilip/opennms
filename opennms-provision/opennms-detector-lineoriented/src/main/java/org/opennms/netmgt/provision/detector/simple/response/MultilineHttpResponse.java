@@ -85,6 +85,7 @@ public class MultilineHttpResponse extends MultilineOrientedResponse {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String toString() {
         return getResponseList().isEmpty() ? "MultilineHttpResponse" : String.format("Response: %s", getResponseListAsString(getResponseList().toArray()));
     }
@@ -96,14 +97,4 @@ public class MultilineHttpResponse extends MultilineOrientedResponse {
         }
         return retVal.toString();
     }
-
-    /**
-     * <p>getResponse</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    protected String getResponse() {
-        return getResponseList().toArray().toString();
-    }
-    
 }

@@ -30,12 +30,11 @@ package org.opennms.features.vaadin.events;
 import java.io.File;
 
 import org.opennms.features.vaadin.api.Logger;
-import org.opennms.netmgt.config.EventConfDao;
+import org.opennms.netmgt.config.api.EventConfDao;
 import org.opennms.netmgt.model.events.EventProxy;
 import org.opennms.netmgt.xml.eventconf.Events;
 
 import com.vaadin.ui.Window;
-import com.vaadin.ui.themes.Runo;
 
 /**
  * The Class Event Window.
@@ -57,12 +56,11 @@ public class EventWindow extends Window {
      */
     public EventWindow(final EventConfDao eventConfDao, final EventProxy eventProxy, final File eventFile, final Events events, final Logger logger) throws Exception {
         super(eventFile.getAbsolutePath()); // Using fileName for as the window's name.
-        setScrollable(true);
         setModal(false);
         setClosable(false);
         setDraggable(false);
         setResizable(false);
-        addStyleName(Runo.WINDOW_DIALOG);
+        addStyleName("dialog");
         setSizeFull();
         setContent(new EventPanel(eventConfDao, eventProxy, eventFile, events, logger) {
             @Override
@@ -74,7 +72,7 @@ public class EventWindow extends Window {
                 close();
             }
             @Override
-            public void failure() {
+            public void failure(String reason) {
                 close();
             }
         });

@@ -44,7 +44,7 @@ public class Pollerd extends AbstractSpringContextJmxServiceDaemon<org.opennms.n
     /** {@inheritDoc} */
     @Override
     protected String getLoggingPrefix() {
-        return "OpenNMS.Poller";
+        return org.opennms.netmgt.poller.Poller.getLoggingCategory();
     }
 
     /** {@inheritDoc} */
@@ -85,6 +85,10 @@ public class Pollerd extends AbstractSpringContextJmxServiceDaemon<org.opennms.n
 
     /** {@inheritDoc} */
     @Override
+    public long getNumPolls() {
+        return getDaemon().getNumPolls();
+    }
+
     public double getTaskCompletionRatio() {
         if (getThreadPoolStatsStatus()) {
             if (getExecutor().getTaskCount() > 0) {
@@ -126,4 +130,3 @@ public class Pollerd extends AbstractSpringContextJmxServiceDaemon<org.opennms.n
         return (getDaemon().getScheduler() instanceof LegacyScheduler);
     }
 }
-

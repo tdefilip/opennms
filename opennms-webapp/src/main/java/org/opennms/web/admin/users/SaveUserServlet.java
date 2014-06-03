@@ -40,7 +40,7 @@ import javax.servlet.http.HttpSession;
 import org.opennms.netmgt.config.UserFactory;
 import org.opennms.netmgt.config.UserManager;
 import org.opennms.netmgt.config.users.User;
-import org.opennms.web.springframework.security.Authentication;
+import org.opennms.web.api.Authentication;
 
 /**
  * A servlet that handles saving the user stored in the web user's HTTP session.
@@ -56,6 +56,7 @@ public class SaveUserServlet extends HttpServlet {
     private static final long serialVersionUID = -2138716651602916013L;
 
     /** {@inheritDoc} */
+    @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession user = request.getSession(false);
 

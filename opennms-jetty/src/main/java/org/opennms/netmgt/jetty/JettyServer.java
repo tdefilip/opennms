@@ -32,11 +32,14 @@ import java.io.File;
 import java.io.InputStream;
 
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.NCSARequestLog;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.eclipse.jetty.xml.XmlConfiguration;
 import org.opennms.netmgt.daemon.AbstractServiceDaemon;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implements Web Application within OpenNMS as a Service Daemon.
@@ -45,18 +48,22 @@ import org.opennms.netmgt.daemon.AbstractServiceDaemon;
  * @author <a href="mailto:david@opennms.org">David Hustace</a>
  */
 public class JettyServer extends AbstractServiceDaemon {
-    
+
+    private static final Logger LOG = LoggerFactory.getLogger(JettyServer.class);
+
+    private static final String LOG4J_CATEGORY = "jetty-server";
+
     int m_port = 8080;
 
     private Server m_server;
-        
+
     /**
      * <p>Constructor for JettyServer.</p>
      */
     protected JettyServer() {
-        super("OpenNMS.JettyServer");
+        super(LOG4J_CATEGORY);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected void onInit() {
@@ -87,8 +94,8 @@ public class JettyServer extends AbstractServiceDaemon {
     protected void onStart() {
         try {
             m_server.start();
-        } catch (Throwable e) {
-            log().error("Error starting Jetty Server", e);
+        } catch (final Throwable t) {
+            LOG.error("Error starting Jetty Server", t);
         }
     }
 
@@ -97,9 +104,13 @@ public class JettyServer extends AbstractServiceDaemon {
     protected void onStop() {
         try {
             m_server.stop();
-        } catch (Throwable e) {
-            log().error("Error stopping Jetty Server", e);
+        } catch (final Throwable t) {
+            LOG.error("Error stopping Jetty Server", t);
         }
+    }
+
+    public static String getLoggingCategory() {
+        return LOG4J_CATEGORY;
     }
     
     public long getHttpsConnectionsTotal() {

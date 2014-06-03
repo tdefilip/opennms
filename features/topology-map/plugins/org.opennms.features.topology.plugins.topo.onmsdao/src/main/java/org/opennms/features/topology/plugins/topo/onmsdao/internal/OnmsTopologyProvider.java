@@ -30,17 +30,17 @@ package org.opennms.features.topology.plugins.topo.onmsdao.internal;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.opennms.features.topology.api.topo.AbstractTopologyProvider;
+import org.opennms.features.topology.api.topo.Criteria;
 import org.opennms.features.topology.api.topo.Edge;
 import org.opennms.features.topology.api.topo.GraphProvider;
 import org.opennms.features.topology.api.topo.SimpleGroup;
 import org.opennms.features.topology.api.topo.SimpleLeafVertex;
 import org.opennms.features.topology.api.topo.Vertex;
 import org.opennms.features.topology.api.topo.VertexRef;
-import org.opennms.netmgt.dao.DataLinkInterfaceDao;
-import org.opennms.netmgt.dao.OnmsMapDao;
-import org.opennms.netmgt.dao.OnmsMapElementDao;
+import org.opennms.netmgt.dao.api.DataLinkInterfaceDao;
+import org.opennms.netmgt.dao.api.OnmsMapDao;
+import org.opennms.netmgt.dao.api.OnmsMapElementDao;
 import org.opennms.netmgt.model.DataLinkInterface;
 import org.opennms.netmgt.model.OnmsMap;
 import org.opennms.netmgt.model.OnmsMapElement;
@@ -130,6 +130,11 @@ public class OnmsTopologyProvider extends AbstractTopologyProvider implements Gr
     @Override
     public void refresh() {
         // Do nothing
+    }
+
+    @Override
+    public Criteria getDefaultCriteria() {
+        return null;  //not supported yet
     }
 
     @Override

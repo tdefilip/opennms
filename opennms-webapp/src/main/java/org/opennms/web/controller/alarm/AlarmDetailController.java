@@ -28,14 +28,17 @@
 
 package org.opennms.web.controller.alarm;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+import org.opennms.netmgt.dao.api.AlarmRepository;
 import org.opennms.netmgt.model.OnmsAcknowledgment;
-import org.opennms.web.alarm.Alarm;
+import org.opennms.netmgt.model.OnmsAlarm;
 import org.opennms.web.alarm.AlarmIdNotFoundException;
-import org.opennms.web.alarm.WebAlarmRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -57,12 +60,7 @@ public class AlarmDetailController extends MultiActionController {
     /**
      * OpenNMS alarm repository
      */
-    private WebAlarmRepository m_webAlarmRepository;
-
-    /**
-     * Alarm to display
-     */
-    private Alarm m_alarm;
+    private AlarmRepository m_webAlarmRepository;
 
     /**
      * Logging
@@ -72,10 +70,10 @@ public class AlarmDetailController extends MultiActionController {
     /**
      * <p>setWebAlarmRepository</p>
      *
-     * @param webAlarmRepository a {@link org.opennms.web.alarm.WebAlarmRepository}
+     * @param webAlarmRepository a {@link org.opennms.netmgt.dao.api.AlarmRepository}
      * object.
      */
-    public void setWebAlarmRepository(WebAlarmRepository webAlarmRepository) {
+    public void setAlarmRepository(AlarmRepository webAlarmRepository) {
         m_webAlarmRepository = webAlarmRepository;
     }
 
@@ -103,15 +101,16 @@ public class AlarmDetailController extends MultiActionController {
      * Display alarm detail page
      */
     public ModelAndView detail(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
-        int alarmId;
+
+        OnmsAlarm m_alarm = null;
         XssRequestWrapper safeRequest = new XssRequestWrapper(httpServletRequest);
         String alarmIdString = "";
-        List<OnmsAcknowledgment> acknowledgments = null;
+        List<OnmsAcknowledgment> acknowledgments = Collections.emptyList();
 
         // Try to parse alarm ID as string to integer
         try {
             alarmIdString = safeRequest.getParameter("id");
-            alarmId = Integer.parseInt(alarmIdString);
+            int alarmId = Integer.parseInt(alarmIdString);
             acknowledgments = m_webAlarmRepository.getAcknowledgments(alarmId);
 
             // Get alarm by ID
@@ -135,7 +134,7 @@ public class AlarmDetailController extends MultiActionController {
         return mv;
     }
 
-    public ModelAndView clearSticky(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
+    public ModelAndView removeStickyMemo(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
         int alarmId;
         String alarmIdString = "";
 
@@ -152,7 +151,7 @@ public class AlarmDetailController extends MultiActionController {
         }
     }
 
-    public ModelAndView saveSticky(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
+    public ModelAndView saveStickyMemo(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
         int alarmId;
         String alarmIdString = "";
 
@@ -162,7 +161,6 @@ public class AlarmDetailController extends MultiActionController {
             alarmId = Integer.parseInt(alarmIdString);
             String stickyMemoBody = httpServletRequest.getParameter("stickyMemoBody");
             m_webAlarmRepository.updateStickyMemo(alarmId, stickyMemoBody, httpServletRequest.getRemoteUser());
-
             return new ModelAndView(new RedirectView("detail.htm", true), "id", alarmId);
         } catch (NumberFormatException e) {
             logger.error("Could not parse alarm ID '{}' to integer.", httpServletRequest.getParameter("alarmId"));
@@ -170,7 +168,7 @@ public class AlarmDetailController extends MultiActionController {
         }
     }
 
-    public ModelAndView clearJournal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
+    public ModelAndView removeJournalMemo(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
         int alarmId;
         String alarmIdString = "";
 
@@ -187,7 +185,7 @@ public class AlarmDetailController extends MultiActionController {
         }
     }
 
-    public ModelAndView saveJournal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
+    public ModelAndView saveJournalMemo(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
         int alarmId;
         String alarmIdString = "";
 

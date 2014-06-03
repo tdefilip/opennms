@@ -31,7 +31,7 @@ package org.opennms.netmgt.threshd;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.junit.After;
 import org.junit.Before;
@@ -131,19 +131,19 @@ public class ExpressionConfigWrapperTest {
         Assert.assertEquals(1, wrapper.getRequiredDatasources().size());
         Map<String, Double> values = new HashMap<String,Double>();
         values.put("jnxOperatingState", 1.0);
-        Assert.assertEquals(0.0, wrapper.evaluate(values));
+        Assert.assertEquals(0.0, wrapper.evaluate(values), 0.0);
         values.put("jnxOperatingState", 2.0);
-        Assert.assertEquals(1.0, wrapper.evaluate(values));
+        Assert.assertEquals(1.0, wrapper.evaluate(values), 0.0);
         values.put("jnxOperatingState", 3.0);
-        Assert.assertEquals(1.0, wrapper.evaluate(values));
+        Assert.assertEquals(1.0, wrapper.evaluate(values), 0.0);
         values.put("jnxOperatingState", 4.0);
-        Assert.assertEquals(0.0, wrapper.evaluate(values));
+        Assert.assertEquals(0.0, wrapper.evaluate(values), 0.0);
         values.put("jnxOperatingState", 5.0);
-        Assert.assertEquals(0.0, wrapper.evaluate(values));
+        Assert.assertEquals(0.0, wrapper.evaluate(values), 0.0);
         values.put("jnxOperatingState", 6.0);
-        Assert.assertEquals(0.0, wrapper.evaluate(values));
+        Assert.assertEquals(0.0, wrapper.evaluate(values), 0.0);
         values.put("jnxOperatingState", 7.0);
-        Assert.assertEquals(1.0, wrapper.evaluate(values));
+        Assert.assertEquals(1.0, wrapper.evaluate(values), 0.0);
     }
 
     /* See NMS-5019 */
@@ -156,7 +156,7 @@ public class ExpressionConfigWrapperTest {
         Map<String, Double> values = new HashMap<String,Double>();
         values.put("ns-dskTotal", 100.0);
         values.put("ns-dskUsed", 40.0);
-        Assert.assertEquals(60.0, wrapper.evaluate(values));
+        Assert.assertEquals(60.0, wrapper.evaluate(values), 0.0);
     }
 
     @Test
@@ -169,6 +169,6 @@ public class ExpressionConfigWrapperTest {
         values.put("ifInOctets", 100.0);
         values.put("ifOutOctets", 200.0);
         values.put("ifSpeed", 10.0);
-        Assert.assertEquals(160.0, wrapper.evaluate(values));
+        Assert.assertEquals(160.0, wrapper.evaluate(values), 0.0);
     }
 }

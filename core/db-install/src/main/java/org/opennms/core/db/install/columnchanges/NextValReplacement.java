@@ -46,7 +46,6 @@ import org.opennms.core.db.install.ColumnChange;
 import org.opennms.core.db.install.ColumnChangeReplacement;
 
 public class NextValReplacement implements ColumnChangeReplacement {
-        private final String m_sequence;
         
         private final Connection m_connection;
         private final PreparedStatement m_statement;
@@ -59,42 +58,18 @@ public class NextValReplacement implements ColumnChangeReplacement {
          * @throws java.sql.SQLException if any.
          */
         public NextValReplacement(String sequence, DataSource dataSource) throws SQLException {
-            m_sequence = sequence;
-//            m_dataSource = dataSource;
             m_connection = dataSource.getConnection();
             m_statement = m_connection.prepareStatement("SELECT nextval('"
-                                                        + m_sequence
+                                                        + sequence
                                                         + "')");
         }
         
         private PreparedStatement getStatement() {
-            /*
-            if (m_statement == null) {
-                createStatement();
-            }
-            */
             return m_statement;
         }
-
-        /*
-        private void createStatement() throws SQLException {
-            m_statement = getConnection().prepareStatement("SELECT nextval('" + m_sequence + "')");
-        }
         
-        private Connection getConnection() throws SQLException {
-            if (m_connection == null) {
-                createConnection();
-            }
-            
-            return m_connection;
-        }
-        
-        private void createConnection() throws SQLException {
-            m_connection = m_dataSource.getConnection();
-        }
-        */
-
         /** {@inheritDoc} */
+        @Override
         public Integer getColumnReplacement(ResultSet rs, Map<String, ColumnChange> columnChanges) throws SQLException {
             ResultSet r = getStatement().executeQuery();
             
@@ -113,6 +88,7 @@ public class NextValReplacement implements ColumnChangeReplacement {
          *
          * @return a boolean.
          */
+        @Override
         public boolean addColumnIfColumnIsNew() {
             return true;
         }
@@ -122,8 +98,14 @@ public class NextValReplacement implements ColumnChangeReplacement {
          *
          * @throws java.sql.SQLException if any.
          */
+        @Override
         public void close() throws SQLException {
-            finalize();
+            if (m_statement != null) {
+                m_statement.close();
+            }
+            if (m_connection != null) {
+                m_connection.close();
+            }
         }
         
         /**
@@ -131,12 +113,9 @@ public class NextValReplacement implements ColumnChangeReplacement {
          *
          * @throws java.sql.SQLException if any.
          */
-        protected void finalize() throws SQLException {
-            if (m_statement != null) {
-                m_statement.close();
-            }
-            if (m_connection != null) {
-                m_connection.close();
-            }
+        @Override
+        protected void finalize() throws Throwable {
+            close();
+            super.finalize();
         }
     }

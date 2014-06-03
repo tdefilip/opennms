@@ -35,7 +35,8 @@ import java.util.Set;
 
 import javax.servlet.ServletContext;
 
-import org.opennms.netmgt.dao.NodeDao;
+import org.opennms.netmgt.dao.api.NodeDao;
+import org.opennms.web.api.Authentication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -90,6 +91,7 @@ public abstract class AclUtils {
      */
     private static class NonFilteringNodeAccessChecker implements NodeAccessChecker {
 
+        @Override
         public boolean isNodeAccessible(int nodeId) {
             return true;
         }
@@ -103,6 +105,7 @@ public abstract class AclUtils {
             m_nodeIds = nodeIds == null ? Collections.<Integer>emptySet() : new HashSet<Integer>(nodeIds);
         }
         
+        @Override
         public boolean isNodeAccessible(int nodeId) {
             return m_nodeIds.contains(nodeId);
         }

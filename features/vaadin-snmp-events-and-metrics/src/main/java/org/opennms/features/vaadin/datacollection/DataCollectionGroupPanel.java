@@ -30,41 +30,41 @@ package org.opennms.features.vaadin.datacollection;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import org.opennms.core.utils.ConfigFileConstants;
 import org.opennms.core.xml.JaxbUtils;
 import org.opennms.features.vaadin.api.Logger;
 import org.opennms.netmgt.config.DataCollectionConfigDao;
 import org.opennms.netmgt.config.datacollection.DatacollectionGroup;
+import org.vaadin.dialogs.ConfirmDialog;
 
 import com.vaadin.data.util.ObjectProperty;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TabSheet;
-import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
 import com.vaadin.ui.TabSheet.Tab;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.themes.Runo;
-
-import de.steinwedel.vaadin.MessageBox;
-import de.steinwedel.vaadin.MessageBox.ButtonType;
-import de.steinwedel.vaadin.MessageBox.EventListener;
 
 /**
  * The Class DataCollectionGroupPanel.
  * 
  * @author <a href="mailto:agalue@opennms.org">Alejandro Galue</a> 
  */
-// TODO When renaming a group, all the SNMP collections must be updated.
+// FIXME: When renaming a datacollection-group, all the SNMP collections must be updated.
+// FIXME: When a different group is selected and the current one is being edited, warn about discard the changes or save them before continue
 @SuppressWarnings("serial")
 public abstract class DataCollectionGroupPanel extends Panel implements TabSheet.SelectedTabChangeListener {
 
     /** The group name. */
-    private final TextField groupName;
+    private final TextField groupName = new TextField("Data Collection Group Name");
 
     /** The resource types. */
     private final ResourceTypePanel resourceTypes;
@@ -84,11 +84,10 @@ public abstract class DataCollectionGroupPanel extends Panel implements TabSheet
      */
     public DataCollectionGroupPanel(final DataCollectionConfigDao dataCollectionConfigDao, final DatacollectionGroup group, final Logger logger) {
         setCaption("Data Collection");
-        addStyleName(Runo.PANEL_LIGHT);
+        addStyleName("light");
 
         // Data Collection Group - Main Fields
 
-        groupName = new TextField("Data Collection Group Name");
         groupName.setPropertyDataSource(new ObjectProperty<String>(group.getName()));
         groupName.setNullSettingAllowed(false);
         groupName.setImmediate(true);
@@ -101,11 +100,13 @@ public abstract class DataCollectionGroupPanel extends Panel implements TabSheet
 
         final HorizontalLayout toolbar = new HorizontalLayout();
         toolbar.addComponent(new Button("Save Data Collection File", new Button.ClickListener() {
+            @Override
             public void buttonClick(ClickEvent event) {
                 processDataCollection(dataCollectionConfigDao, logger);
             }
         }));
         toolbar.addComponent(new Button("Cancel", new Button.ClickListener() {
+            @Override
             public void buttonClick(Button.ClickEvent event) {
                 cancel();
                 logger.info("Data collection processing has been canceled");
@@ -115,7 +116,7 @@ public abstract class DataCollectionGroupPanel extends Panel implements TabSheet
         // Tab Panel
 
         final TabSheet tabs = new TabSheet();
-        tabs.setStyleName(Runo.TABSHEET_SMALL);
+        tabs.addStyleName("light");
         tabs.setSizeFull();
         tabs.addTab(resourceTypes, "Resource Types");
         tabs.addTab(groups, "MIB Groups");
@@ -136,11 +137,12 @@ public abstract class DataCollectionGroupPanel extends Panel implements TabSheet
     /* (non-Javadoc)
      * @see com.vaadin.ui.TabSheet.SelectedTabChangeListener#selectedTabChange(com.vaadin.ui.TabSheet.SelectedTabChangeEvent)
      */
+    @Override
     public void selectedTabChange(SelectedTabChangeEvent event) {
         TabSheet tabsheet = event.getTabSheet();
         Tab tab = tabsheet.getTab(tabsheet.getSelectedTab());
         if (tab != null) {
-            getWindow().showNotification("Selected tab: " + tab.getCaption());
+            Notification.show("Selected tab: " + tab.getCaption());
         }
     }    
 
@@ -150,12 +152,12 @@ public abstract class DataCollectionGroupPanel extends Panel implements TabSheet
      * @return the OpenNMS data collection group
      */
     public DatacollectionGroup getOnmsDataCollection() {
-        final DatacollectionGroup dto = new DatacollectionGroup();
-        dto.setName((String) groupName.getValue());
-        dto.getGroupCollection().addAll(groups.getGroups());
-        dto.getResourceTypeCollection().addAll(resourceTypes.getResourceTypes());
-        dto.getSystemDefCollection().addAll(systemDefs.getSystemDefinitions());
-        return dto;
+        final DatacollectionGroup group = new DatacollectionGroup();
+        group.setName((String) groupName.getValue());
+        group.setGroups(groups.getGroups());
+        group.setResourceTypes(resourceTypes.getResourceTypes());
+        group.setSystemDefs(systemDefs.getSystemDefs());
+        return group;
     }
 
     /**
@@ -170,8 +172,10 @@ public abstract class DataCollectionGroupPanel extends Panel implements TabSheet
 
     /**
      * Failure.
+     *
+     * @param reason the reason
      */
-    public abstract void failure();
+    public abstract void failure(String reason);
 
     /**
      * Process data collection.
@@ -181,26 +185,24 @@ public abstract class DataCollectionGroupPanel extends Panel implements TabSheet
      */
     private void processDataCollection(final DataCollectionConfigDao dataCollectionConfigDao, final Logger logger) {
         final DatacollectionGroup dcGroup = getOnmsDataCollection();
-        final File configDir = new File(ConfigFileConstants.getHome(), "etc/datacollection/");
+        final File configDir = new File(ConfigFileConstants.getHome(), "etc" + File.separatorChar + "datacollection");
         final File file = new File(configDir, dcGroup.getName().replaceAll(" ", "_") + ".xml");
         if (file.exists()) {
-            MessageBox mb = new MessageBox(getApplication().getMainWindow(),
-                                           "Are you sure?",
-                                           MessageBox.Icon.QUESTION,
-                                           "Do you really want to override the existig file?<br/>All current information will be lost.",
-                                           new MessageBox.ButtonConfig(MessageBox.ButtonType.YES, "Yes"),
-                                           new MessageBox.ButtonConfig(MessageBox.ButtonType.NO, "No"));
-            mb.addStyleName(Runo.WINDOW_DIALOG);
-            mb.show(new EventListener() {
-                public void buttonClicked(ButtonType buttonType) {
-                    if (buttonType == MessageBox.ButtonType.YES) {
+            ConfirmDialog.show(getUI(),
+                               "Are you sure?",
+                               "Do you really want to override the existig file?\nAll current information will be lost.",
+                               "Yes",
+                               "No",
+                               new ConfirmDialog.Listener() {
+                public void onClose(ConfirmDialog dialog) {
+                    if (dialog.isConfirmed()) {
                         saveFile(file, dcGroup, logger);
                     }
                 }
             });
         } else {
             if (dataCollectionConfigDao.getAvailableDataCollectionGroups().contains(dcGroup.getName())) {
-                getApplication().getMainWindow().showNotification("There is a group with the same name, please pick another one.");
+                Notification.show("There is a group with the same name, please pick another one.");
             } else {
                 saveFile(file, dcGroup, logger);
             }
@@ -229,8 +231,14 @@ public abstract class DataCollectionGroupPanel extends Panel implements TabSheet
             }
             success();
         } catch (Exception e) {
-            logger.error(e.getMessage());
-            failure();
+            logger.error(e.getClass() + ": " + (e.getMessage() == null ? "[No Details]" : e.getMessage()));
+            if (e.getMessage() == null) {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                e.printStackTrace(pw);
+                logger.error(sw.toString());
+            }
+            failure(e.getMessage());
         }
     }
 }

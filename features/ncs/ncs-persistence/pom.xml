@@ -2,13 +2,13 @@
   <parent>
     <groupId>org.opennms.features</groupId>
     <artifactId>org.opennms.features.ncs</artifactId>
-    <version>1.12.8-SNAPSHOT</version>
+    <version>1.13.3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features.ncs</groupId>
   <artifactId>ncs-persistence</artifactId>
   <packaging>bundle</packaging>
-  <name>OpenNMS NCS Persistence</name>
+  <name>OpenNMS Features NCS Persistence</name>
   <build>
     <plugins>
       <plugin>
@@ -94,7 +94,12 @@
       <artifactId>org.opennms.tests.mock-elements</artifactId>
       <scope>test</scope>
     </dependency>
-  </dependencies>
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-dao-mock</artifactId>
+      <scope>test</scope>
+    </dependency>
+    </dependencies>
   
   <repositories>
     <repository>

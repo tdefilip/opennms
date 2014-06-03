@@ -64,7 +64,7 @@ import javax.net.ssl.X509TrustManager;
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
 
-import org.opennms.core.utils.BeanUtils;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.netmgt.collectd.vmware.vijava.VmwarePerformanceValues;
 import org.opennms.netmgt.config.vmware.VmwareServer;
 import org.opennms.netmgt.dao.VmwareConfigDao;
@@ -279,6 +279,7 @@ public class VmwareViJavaAccess {
         }
 
         HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
+            @Override
             public boolean verify(String s, SSLSession sslSession) {
                 return true;
             }
@@ -606,7 +607,7 @@ public class VmwareViJavaAccess {
         if (m_serviceInstance != null) {
             String apiVersion = m_serviceInstance.getAboutInfo().getApiVersion();
 
-            String arr[] = apiVersion.split("\\.");
+            String[] arr = apiVersion.split("\\.");
 
             if (arr.length > 1) {
                 int apiMajorVersion = Integer.valueOf(arr[0]);

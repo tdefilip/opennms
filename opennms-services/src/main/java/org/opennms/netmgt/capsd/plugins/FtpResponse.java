@@ -32,6 +32,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.util.StringUtils;
@@ -59,7 +60,7 @@ public class FtpResponse {
      */
     public FtpResponse(int code, String[] response) {
         m_code = code;
-        m_response = response;
+        m_response = Arrays.copyOf(response, response.length);
     }
 
     /**
@@ -121,6 +122,7 @@ public class FtpResponse {
      *
      * @return FTP response as would be sent over FTP
      */
+    @Override
     public String toString() {
         StringBuffer sb = new StringBuffer();
         int i;

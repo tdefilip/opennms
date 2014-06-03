@@ -1,8 +1,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2012 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2012 The OpenNMS Group, Inc.
+ * Copyright (C) 2013 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2013 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -26,6 +26,9 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
+/**
+ * This class was original generated with Castor, but is no longer.
+ */
 package org.opennms.netmgt.config.ami;
 
 import java.net.InetAddress;
@@ -93,6 +96,7 @@ public class AmiAgentConfig {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String toString() {
         StringBuffer buff = new StringBuffer("AgentConfig[");
         buff.append("Address: "+m_address);

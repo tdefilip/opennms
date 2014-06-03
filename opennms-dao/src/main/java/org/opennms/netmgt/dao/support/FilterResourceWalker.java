@@ -31,15 +31,14 @@ package org.opennms.netmgt.dao.support;
 import java.util.Collections;
 import java.util.SortedMap;
 
-import org.opennms.netmgt.dao.NodeDao;
-import org.opennms.netmgt.dao.ResourceDao;
+import org.opennms.netmgt.dao.api.NodeDao;
+import org.opennms.netmgt.dao.api.ResourceDao;
 import org.opennms.netmgt.filter.FilterDao;
 import org.opennms.netmgt.model.AbstractEntityVisitor;
 import org.opennms.netmgt.model.EntityVisitor;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsResource;
 import org.opennms.netmgt.model.ResourceVisitor;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 
 /**
@@ -48,7 +47,7 @@ import org.springframework.util.Assert;
  * @author <a href="mailto:dj@opennms.org">DJ Gregor</a>
  * @version $Id: $
  */
-public class FilterResourceWalker implements InitializingBean {
+public class FilterResourceWalker implements ResourceWalker {
 
     private NodeDao m_nodeDao;
     private FilterDao m_filterDao;
@@ -120,7 +119,7 @@ public class FilterResourceWalker implements InitializingBean {
     /**
      * <p>getResourceDao</p>
      *
-     * @return a {@link org.opennms.netmgt.dao.ResourceDao} object.
+     * @return a {@link org.opennms.netmgt.dao.api.ResourceDao} object.
      */
     public ResourceDao getResourceDao() {
         return m_resourceDao;
@@ -129,7 +128,7 @@ public class FilterResourceWalker implements InitializingBean {
     /**
      * <p>setResourceDao</p>
      *
-     * @param resourceDao a {@link org.opennms.netmgt.dao.ResourceDao} object.
+     * @param resourceDao a {@link org.opennms.netmgt.dao.api.ResourceDao} object.
      */
     public void setResourceDao(ResourceDao resourceDao) {
         m_resourceDao = resourceDao;

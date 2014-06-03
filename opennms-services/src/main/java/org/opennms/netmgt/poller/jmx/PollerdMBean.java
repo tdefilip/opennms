@@ -38,6 +38,13 @@ import org.opennms.netmgt.daemon.BaseOnmsMBean;
  */
 public interface PollerdMBean extends BaseOnmsMBean {
     /**
+     * Returns the number of polls that have been executed so far (counter).
+     *
+     * @return the number of polls that have been executed
+     */
+    public long getNumPolls();
+
+    /**
      * @return The number of currently active poller threads
      */
     public long getActiveThreads();

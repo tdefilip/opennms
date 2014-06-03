@@ -3,14 +3,15 @@
   <parent>
     <groupId>org.opennms</groupId>
     <artifactId>org.opennms.features</artifactId>
-    <version>1.12.8-SNAPSHOT</version>
+    <version>1.13.3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features</groupId>
   <artifactId>org.opennms.features.juniper-tca-collector</artifactId>
-  <name>OpenNMS Juniper TCA Collector</name>
+  <name>OpenNMS Features Juniper TCA Collector</name>
   <build>
     <plugins>
+<!--
       <plugin>
         <groupId>com.sun.tools.jxc.maven2</groupId>
         <artifactId>maven-jaxb-schemagen-plugin</artifactId>
@@ -38,6 +39,7 @@
           </execution>
         </executions>
       </plugin>
+-->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
@@ -103,6 +105,11 @@
     <dependency>
       <groupId>org.opennms.core.test-api</groupId>
       <artifactId>org.opennms.core.test-api.db</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opennms.core.test-api</groupId>
+      <artifactId>org.opennms.core.test-api.services</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

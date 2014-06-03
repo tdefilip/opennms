@@ -45,7 +45,6 @@ import org.opennms.netmgt.config.PollerConfig;
 import org.opennms.netmgt.config.PollerConfigFactory;
 import org.opennms.netmgt.config.poller.Parameter;
 import org.opennms.netmgt.config.poller.Service;
-import org.opennms.netmgt.model.PollStatus;
 import org.opennms.netmgt.poller.InetNetworkInterface;
 import org.opennms.netmgt.poller.MonitoredService;
 import org.opennms.netmgt.poller.NetworkInterface;
@@ -169,7 +168,7 @@ public class MonitorTester {
         System.out.printf("Monitor: %s\n", monitor.getClass().getName());
 
         if (config.isPolledLocally(ipAddress, serviceName)) {
-            for (Parameter p : svc.getParameterCollection()) {
+            for (Parameter p : svc.getParameters()) {
                 if (!parameters.containsKey(p.getKey())) {
                     parameters.put(p.getKey(), p.getValue());
                 }

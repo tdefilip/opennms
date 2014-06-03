@@ -41,19 +41,20 @@ import java.util.Map;
 
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.core.utils.ParameterMap;
-import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.config.PollerConfig;
 import org.opennms.netmgt.config.poller.Package;
-import org.opennms.netmgt.model.PollStatus;
-import org.opennms.netmgt.model.RrdRepository;
 import org.opennms.netmgt.poller.MonitoredService;
+import org.opennms.netmgt.poller.PollStatus;
 import org.opennms.netmgt.poller.ServiceMonitor;
 import org.opennms.netmgt.rrd.RrdDataSource;
 import org.opennms.netmgt.rrd.RrdException;
+import org.opennms.netmgt.rrd.RrdRepository;
 import org.opennms.netmgt.rrd.RrdUtils;
 import org.opennms.netmgt.threshd.LatencyThresholdingSet;
 import org.opennms.netmgt.threshd.ThresholdingEventProxy;
 import org.opennms.netmgt.xml.event.Event;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>LatencyStoringServiceMonitorAdaptor class.</p>
@@ -63,6 +64,9 @@ import org.opennms.netmgt.xml.event.Event;
  */
 public class LatencyStoringServiceMonitorAdaptor implements ServiceMonitor {
 
+    
+    private static final Logger LOG = LoggerFactory.getLogger(LatencyStoringServiceMonitorAdaptor.class);
+    
     /** Constant <code>DEFAULT_BASENAME="response-time"</code> */
     public static final String DEFAULT_BASENAME = "response-time";
 
@@ -86,6 +90,7 @@ public class LatencyStoringServiceMonitorAdaptor implements ServiceMonitor {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void initialize(Map<String, Object> parameters) {
         m_serviceMonitor.initialize(parameters);
     }
@@ -95,11 +100,13 @@ public class LatencyStoringServiceMonitorAdaptor implements ServiceMonitor {
      *
      * @param svc a {@link org.opennms.netmgt.poller.MonitoredService} object.
      */
+    @Override
     public void initialize(MonitoredService svc) {
         m_serviceMonitor.initialize(svc);
     }
 
     /** {@inheritDoc} */
+    @Override
     public PollStatus poll(MonitoredService svc, Map<String, Object> parameters) {
         PollStatus status = m_serviceMonitor.poll(svc, parameters);
 
@@ -128,14 +135,14 @@ public class LatencyStoringServiceMonitorAdaptor implements ServiceMonitor {
             entries.remove(DEFAULT_BASENAME);
         }
 
-        if (thresholds.toLowerCase().equals("true")) {
+        if (thresholds.equalsIgnoreCase("true")) {
             applyThresholds(rrdPath, svc, dsName, entries);
         } else {
-            log().debug("storeResponseTime: Thresholds processing is not enabled. Check thresholding-enabled parameter on service definition");
+            LOG.debug("storeResponseTime: Thresholds processing is not enabled. Check thresholding-enabled parameter on service definition");
         }
 
         if (rrdPath == null) {
-            log().debug("storeResponseTime: RRD repository not specified in parameters, latency data will not be stored.");
+            LOG.debug("storeResponseTime: RRD repository not specified in parameters, latency data will not be stored.");
             return;
         }
 
@@ -159,7 +166,7 @@ public class LatencyStoringServiceMonitorAdaptor implements ServiceMonitor {
                 }
             }
             if (m_thresholdingSet.isNodeInOutage()) {
-                log().info("applyThresholds: the threshold processing will be skipped because the service " + service + " is on a scheduled outage.");
+                LOG.info("applyThresholds: the threshold processing will be skipped because the service {} is on a scheduled outage.", service);
             } else if (m_thresholdingSet.hasThresholds(attributes)) {
                 List<Event> events = m_thresholdingSet.applyThresholds(dsName, attributes);
                 if (events.size() > 0) {
@@ -169,7 +176,7 @@ public class LatencyStoringServiceMonitorAdaptor implements ServiceMonitor {
                 }
             }
 	} catch(Throwable e) {
-	    log().error("Failed to threshold on " + service + " for " + dsName + " because of an exception", e);
+	    LOG.error("Failed to threshold on {} for {} because of an exception", service, dsName, e);
 	}
     }
 
@@ -238,11 +245,9 @@ public class LatencyStoringServiceMonitorAdaptor implements ServiceMonitor {
             RrdUtils.updateRRD(hostAddress, path, rrdBaseName, value.toString());
 
         } catch (RrdException e) {
-            if (log().isEnabledFor(ThreadCategory.Level.ERROR)) {
-                String msg = e.getMessage();
-                log().error(msg);
-                throw new RuntimeException(msg, e);
-            }
+            String msg = e.getMessage();
+            LOG.error(msg);
+            throw new RuntimeException(msg, e);
         }
     }
 
@@ -289,18 +294,16 @@ public class LatencyStoringServiceMonitorAdaptor implements ServiceMonitor {
 
     }
 
-    private ThreadCategory log() {
-        return ThreadCategory.getInstance(getClass());
-    }
-
     /**
      * <p>release</p>
      */
+    @Override
     public void release() {
         m_serviceMonitor.release();
     }
 
     /** {@inheritDoc} */
+    @Override
     public void release(MonitoredService svc) {
         m_serviceMonitor.release(svc);
     }

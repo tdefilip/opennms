@@ -31,9 +31,10 @@ package org.opennms.report.render;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.opennms.core.utils.ThreadCategory;
 import org.opennms.reporting.availability.render.ReportRenderException;
 import org.opennms.reporting.availability.render.ReportRenderer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 
 /**
@@ -43,8 +44,9 @@ import org.springframework.core.io.Resource;
  * @version $Id: $
  */
 public class NullReportRenderer implements ReportRenderer {
+    private static final Logger LOG = LoggerFactory.getLogger(NullReportRenderer.class);
 
-    private static final String LOG4J_CATEGORY = "OpenNMS.Report";
+    private static final String LOG4J_CATEGORY = "reports";
 
     private String m_outputFileName;
     
@@ -60,21 +62,19 @@ public class NullReportRenderer implements ReportRenderer {
      *
      * @throws org.opennms.reporting.availability.render.ReportRenderException if any.
      */
+    @Override
     public void render() throws ReportRenderException {
-        String oldPrefix = ThreadCategory.getPrefix();
-        ThreadCategory.setPrefix(LOG4J_CATEGORY);
-        ThreadCategory log = ThreadCategory.getInstance(NullReportRenderer.class);
-        log.debug("Do nothing");
         m_outputFileName = m_inputFileName;
-        ThreadCategory.setPrefix(oldPrefix);
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setXsltResource(Resource xsltResource) {
         this.m_xsltResource = xsltResource;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setOutputFileName(String outputFileName) {
         this.m_outputFileName = outputFileName;
     }
@@ -84,16 +84,19 @@ public class NullReportRenderer implements ReportRenderer {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String getOutputFileName() {
         return m_outputFileName;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setInputFileName(String intputFileName) {
         this.m_inputFileName = intputFileName;
     }
     
     /** {@inheritDoc} */
+    @Override
     public void setBaseDir(String baseDir){
         this.m_baseDir = baseDir;
     }
@@ -103,29 +106,34 @@ public class NullReportRenderer implements ReportRenderer {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String getBaseDir(){
        return m_baseDir;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void render(String inputFileName, String outputFileName,
             Resource xlstResource)
             throws org.opennms.reporting.availability.render.ReportRenderException {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void render(String inputFileName, OutputStream outputStream,
             Resource xsltResource)
             throws org.opennms.reporting.availability.render.ReportRenderException {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void render(InputStream inputStream, OutputStream outputStream,
             Resource xsltResource)
             throws org.opennms.reporting.availability.render.ReportRenderException {
     }
 
     /** {@inheritDoc} */
+    @Override
     public byte[] render(String inputFileName, Resource xsltResource)
             throws org.opennms.reporting.availability.render.ReportRenderException {
         return new byte[0];

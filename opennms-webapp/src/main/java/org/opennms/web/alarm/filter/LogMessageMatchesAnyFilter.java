@@ -55,6 +55,7 @@ public class LogMessageMatchesAnyFilter extends SubstringFilter {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String getTextDescription() {
         StringBuffer buffer = new StringBuffer("message containing \"");
         buffer.append(getValue());
@@ -68,12 +69,16 @@ public class LogMessageMatchesAnyFilter extends SubstringFilter {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String toString() {
         return "<LogMessageMatchesAnyFilter: " + this.getDescription() + ">";
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean equals(Object obj) {
+        if (obj == null) return false;
+        if (!(obj instanceof LogMessageMatchesAnyFilter)) return false;
         return this.toString().equals(obj.toString());
     }
 

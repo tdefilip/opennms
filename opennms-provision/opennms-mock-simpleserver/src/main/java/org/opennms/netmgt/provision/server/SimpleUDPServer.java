@@ -34,6 +34,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.opennms.core.utils.InetAddressUtils;
@@ -66,6 +67,7 @@ public class SimpleUDPServer {
             m_requestMatcher = requestMatcher;
         }
         
+        @Override
         public boolean processRequest(DatagramSocket socket) throws IOException {
             byte[] data = new byte[512];
             DatagramPacket packet = new DatagramPacket(data, data.length, socket.getLocalAddress(), socket.getLocalPort());
@@ -77,6 +79,7 @@ public class SimpleUDPServer {
             return m_requestMatcher.matches(packet);
         }
 
+        @Override
         public boolean sendReply(DatagramSocket socket) throws IOException {
             DatagramPacket packet = new DatagramPacket(m_response, m_response.length, getResponseAddress(), getResponsePort());
             socket.send(packet);
@@ -159,6 +162,7 @@ public class SimpleUDPServer {
     public Runnable getRunnable() throws Exception{
         return new Runnable(){
             
+            @Override
             public void run(){
                 try{
                     m_socket = new DatagramSocket(getPort(), getInetAddress());
@@ -238,7 +242,7 @@ public class SimpleUDPServer {
      * @param response an array of byte.
      */
     protected void addRequestResponse(DatagramPacket request, byte[] response){
-        m_conversation.add(new SimpleServerExchange(recievedPacket(request), response));
+        m_conversation.add(new SimpleServerExchange(recievedPacket(request), Arrays.copyOf(response, response.length)));
     }
     
     /**
@@ -250,6 +254,7 @@ public class SimpleUDPServer {
     protected RequestMatcher recievedPacket(final DatagramPacket request) {
         return new RequestMatcher() {
 
+            @Override
             public boolean matches(DatagramPacket packet) {
                 return packet != null ? true : false;
             }

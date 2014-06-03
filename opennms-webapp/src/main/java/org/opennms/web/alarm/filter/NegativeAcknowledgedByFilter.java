@@ -56,6 +56,7 @@ public class NegativeAcknowledgedByFilter extends NotEqualOrNullFilter<String> {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String getTextDescription() {
         return "not acknowledged by " + getValue();
     }
@@ -65,6 +66,7 @@ public class NegativeAcknowledgedByFilter extends NotEqualOrNullFilter<String> {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String toString() {
         return ("<AlarmFactory.NegativeAcknowledgedByFilter: " + this.getDescription() + ">");
     }
@@ -79,7 +81,10 @@ public class NegativeAcknowledgedByFilter extends NotEqualOrNullFilter<String> {
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean equals(Object obj) {
+        if (obj == null) return false;
+        if (!(obj instanceof NegativeAcknowledgedByFilter)) return false;
         return (this.toString().equals(obj.toString()));
     }
 }

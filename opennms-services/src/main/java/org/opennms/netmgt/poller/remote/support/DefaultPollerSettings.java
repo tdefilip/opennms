@@ -48,7 +48,7 @@ import org.springframework.util.Assert;
  */
 public class DefaultPollerSettings implements InitializingBean, PollerSettings {
     
-    private final String MONITOR_ID_KEY = "locationMonitorId";
+    private static final String MONITOR_ID_KEY = "locationMonitorId";
     
     private Resource m_configResource;
     
@@ -59,12 +59,14 @@ public class DefaultPollerSettings implements InitializingBean, PollerSettings {
      *
      * @return a {@link java.lang.Integer} object.
      */
+    @Override
     public Integer getMonitorId() {
         String monIdStr = m_settings.getProperty(MONITOR_ID_KEY);
         return (monIdStr == null ? null : Integer.decode(monIdStr));
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setMonitorId(Integer monitorId) {
         if (monitorId == null)
             m_settings.remove(MONITOR_ID_KEY);

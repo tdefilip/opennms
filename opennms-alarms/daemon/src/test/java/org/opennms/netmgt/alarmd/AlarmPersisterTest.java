@@ -30,12 +30,12 @@ package org.opennms.netmgt.alarmd;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
-import org.opennms.core.utils.BeanUtils;
-import org.opennms.netmgt.dao.AlarmDao;
-import org.opennms.netmgt.dao.EventDao;
-import org.opennms.netmgt.eventd.mock.MockEventIpcManager;
+import org.opennms.netmgt.dao.api.AlarmDao;
+import org.opennms.netmgt.dao.api.EventDao;
+import org.opennms.netmgt.dao.mock.MockEventIpcManager;
 import org.opennms.test.JUnitConfigurationEnvironment;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,15 +60,12 @@ import org.springframework.test.context.ContextConfiguration;
 public class AlarmPersisterTest implements InitializingBean {
 
     @Autowired
-    @SuppressWarnings("unused")
     private MockEventIpcManager m_mockEventIpcManager;
     
     @Autowired
-    @SuppressWarnings("unused")
     private AlarmDao m_alarmDao;
     
     @Autowired
-    @SuppressWarnings("unused")
     private EventDao m_eventDao;
 
     @Override

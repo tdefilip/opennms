@@ -117,8 +117,6 @@ public class Snmp4JAgentConfig {
 
     /**
      * Returns a string representation of the SNMP4J version constant
-     * @param version
-     * @return
      */
     public String getVersionString() {
         switch (getVersion()) {
@@ -137,6 +135,7 @@ public class Snmp4JAgentConfig {
         return m_config.getWriteCommunity();
     }
 
+    @Override
     public String toString() {
         return m_config.toString();
     }
@@ -148,7 +147,7 @@ public class Snmp4JAgentConfig {
      * TODO: This needs to be updated when the protocol flag is added to the SNMP Config
      * so that UDP or TCP can be used in v3 operations.
      */
-    private Address convertAddress(InetAddress address, int port) {
+    private static Address convertAddress(InetAddress address, int port) {
         String transportAddress = address.getHostAddress();
         transportAddress += "/" + port;
         Address targetAddress = new UdpAddress(transportAddress);
@@ -173,7 +172,7 @@ public class Snmp4JAgentConfig {
         }
     }
 
-    private OctetString createOctetString(String s) {
+    private static OctetString createOctetString(String s) {
         
         if (StringUtils.isBlank(s)) {
             return null;
@@ -229,11 +228,11 @@ public class Snmp4JAgentConfig {
      * @param agentConfig
      * @return
      */
-    private OctetString convertCommunity(String community) {
+    private static OctetString convertCommunity(String community) {
         return new OctetString(community);
     }
 
-    private OID convertAuthProtocol(String authProtocol) {
+    private static OID convertAuthProtocol(String authProtocol) {
         /*
          * Returning null here is okay because the SNMP4J library supports
          * this value as null when creating the SNMP session.

@@ -58,11 +58,6 @@ public class NotificationFactory extends NotificationManager {
     private static NotificationFactory instance;
 
     /**
-     * Configuration file handle
-     */
-    protected File m_notifConfFile;
-
-    /**
      * Boolean indicating if the init() method has been called
      */
     private static boolean initialized = false;
@@ -109,7 +104,6 @@ public class NotificationFactory extends NotificationManager {
      */
     public static synchronized void init() throws IOException, FileNotFoundException, MarshalException, ValidationException, ClassNotFoundException, SQLException, PropertyVetoException  {
         if (!initialized) {
-            DataSourceFactory.init();
             instance = new NotificationFactory();
             instance.reload();
             initialized = true;
@@ -139,6 +133,7 @@ public class NotificationFactory extends NotificationManager {
     }
 
     /** {@inheritDoc} */
+    @Override
     protected void saveXML(String xmlString) throws IOException {
         if (xmlString != null) {
             Writer fileWriter = new OutputStreamWriter(new FileOutputStream(m_noticeConfFile), "UTF-8");
@@ -155,6 +150,7 @@ public class NotificationFactory extends NotificationManager {
      * @throws org.exolab.castor.xml.MarshalException if any.
      * @throws org.exolab.castor.xml.ValidationException if any.
      */
+    @Override
     public void update() throws IOException, MarshalException, ValidationException {
         if (m_lastModified != m_noticeConfFile.lastModified()) {
             reload();

@@ -28,7 +28,8 @@
 
 package org.opennms.netmgt.collectd.vmware.vijava;
 
-import org.opennms.netmgt.collectd.CollectionAgent;
+import org.opennms.netmgt.collection.api.CollectionAgent;
+import org.opennms.netmgt.collection.api.CollectionResource;
 
 public class VmwareSingleInstanceCollectionResource extends VmwareCollectionResource {
 
@@ -36,14 +37,17 @@ public class VmwareSingleInstanceCollectionResource extends VmwareCollectionReso
         super(agent);
     }
 
+    @Override
     public String getResourceTypeName() {
-        return "node";
+        return CollectionResource.RESOURCE_TYPE_NODE;
     }
 
+    @Override
     public String getInstance() {
         return null;
     }
 
+    @Override
     public String toString() {
         return "Node[" + m_agent.getNodeId() + "]/type[node]";
     }

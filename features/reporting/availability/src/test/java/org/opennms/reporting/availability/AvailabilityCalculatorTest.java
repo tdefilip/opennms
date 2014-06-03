@@ -55,6 +55,7 @@ public class AvailabilityCalculatorTest extends TestCase {
 
     protected MockCategoryFactory m_catFactory;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         Locale.setDefault(Locale.US);
@@ -207,7 +208,6 @@ public class AvailabilityCalculatorTest extends TestCase {
             calculator.setAvailabilityData(data);
             calculator.setPeriodEndDate(m_calendar.getTime());
             calculator.setLogoURL("wahtever");
-            calculator.setCalendar(calendar);
             calculator.setReportFormat("PDF");
             calculator.setMonthFormat(calFormat);
             calculator.setCategoryName("Network Interfaces");
@@ -338,6 +338,7 @@ public class AvailabilityCalculatorTest extends TestCase {
         
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }

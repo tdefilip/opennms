@@ -39,7 +39,8 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.opennms.core.utils.PropertiesCache;
-import org.opennms.core.utils.ThreadCategory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -68,14 +69,34 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  * </pre>
  */
 public abstract class RrdUtils {
+    private static final Logger LOG = LoggerFactory.getLogger(RrdUtils.class);
     private static PropertiesCache s_cache = new PropertiesCache();
 
     private static RrdStrategy<?, ?> m_rrdStrategy = null;
 
-    private static BeanFactory m_context = new ClassPathXmlApplicationContext(new String[]{
-            // Default RRD configuration context
-            "org/opennms/netmgt/rrd/rrd-configuration.xml"
-    });
+    /**
+     * Use the {@link ClassPathXmlApplicationContext#ClassPathXmlApplicationContext(String[], Class)}
+     * constructor so that we make sure to load the XML resources from the same classloader as the
+     * class itself so that classloading works under OSGi.
+     */
+    private static final BeanFactory m_context;
+
+    static {
+        ClassLoader old = null;
+        try {
+            old = Thread.currentThread().getContextClassLoader();
+            Thread.currentThread().setContextClassLoader(RrdUtils.class.getClassLoader());
+            m_context = new ClassPathXmlApplicationContext(new String[]{
+                // Default RRD configuration context
+                //
+                // Use an absolute path, otherwise Spring will try to resolve the resource relative
+                // to the RrdUtils class package.
+                "/org/opennms/netmgt/rrd/rrd-configuration.xml"
+            }, RrdUtils.class);
+        } finally {
+            Thread.currentThread().setContextClassLoader(old);
+        }
+    }
 
     /**
      * Writes a file with the attribute to rrd track mapping next to the rrd file.
@@ -98,7 +119,7 @@ public abstract class RrdUtils {
                 s_cache.saveProperties(metaFile, attributeMappings);
             }
         } catch (final IOException e) {
-            log().error("Failed to save metadata file " + metaFile, e);
+            LOG.error("Failed to save metadata file {}", metaFile, e);
         }
     }
 
@@ -114,7 +135,7 @@ public abstract class RrdUtils {
             }
             return ret;
         } catch (final IOException e) {
-            log().warn("Failed to retrieve metadata from " + metaFile, e);
+            LOG.warn("Failed to retrieve metadata from {}", metaFile, e);
         }
 
         return Collections.emptyMap();
@@ -270,13 +291,9 @@ public abstract class RrdUtils {
             return true;
         } catch (Throwable e) {
             String path = directory + File.separator + rrdName + getStrategy().getDefaultFileExtension();
-            log().error("createRRD: An error occured creating rrdfile " + path + ": " + e, e);
-            throw new org.opennms.netmgt.rrd.RrdException("An error occured creating rrdfile " + path + ": " + e, e);
+            LOG.error("createRRD: An error occurred creating rrdfile {}", path, e);
+            throw new org.opennms.netmgt.rrd.RrdException("An error occurred creating rrdfile " + path + ": " + e, e);
         }
-    }
-
-    private static ThreadCategory log() {
-        return ThreadCategory.getInstance(RrdUtils.class);
     }
 
     /**
@@ -313,14 +330,14 @@ public abstract class RrdUtils {
 
         String updateVal = Long.toString(time) + ":" + val;
 
-        log().info("updateRRD: updating RRD file " + rrdFile + " with values '" + updateVal + "'");
+        LOG.info("updateRRD: updating RRD file {} with values '{}'", rrdFile, updateVal);
 
         Object rrd = null;
         try {
             rrd = getStrategy().openFile(rrdFile);
             getStrategy().updateFile(rrd, owner, updateVal);
         } catch (Throwable e) {
-            log().error("updateRRD: Error updating RRD file " + rrdFile + " with values '" + updateVal + "': " + e, e);
+            LOG.error("updateRRD: Error updating RRD file {} with values '{}'", rrdFile, updateVal, e);
             throw new org.opennms.netmgt.rrd.RrdException("Error updating RRD file " + rrdFile + " with values '" + updateVal + "': " + e, e);
         } finally {
             try {
@@ -328,14 +345,12 @@ public abstract class RrdUtils {
                     getStrategy().closeFile(rrd);
                 }
             } catch (Throwable e) {
-                log().error("updateRRD: Exception closing RRD file " + rrdFile + ": " + e, e);
+                LOG.error("updateRRD: Exception closing RRD file {}", rrdFile, e);
                 throw new org.opennms.netmgt.rrd.RrdException("Exception closing RRD file " + rrdFile + ": " + e, e);
             }
         }
 
-        if (log().isDebugEnabled()) {
-            log().debug("updateRRD: RRD update command completed.");
-        }
+        LOG.debug("updateRRD: RRD update command completed.");
     }
 
     /**

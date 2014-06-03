@@ -458,8 +458,8 @@ public interface NetworkElementFactoryInterface {
 	 * <p>getNodesWithCategories</p>
 	 *
 	 * @param transTemplate a {@link org.springframework.transaction.support.TransactionTemplate} object.
-	 * @param nodeDao a {@link org.opennms.netmgt.dao.NodeDao} object.
-	 * @param categoryDao a {@link org.opennms.netmgt.dao.CategoryDao} object.
+	 * @param nodeDao a {@link org.opennms.netmgt.dao.api.NodeDao} object.
+	 * @param categoryDao a {@link org.opennms.netmgt.dao.api.CategoryDao} object.
 	 * @param categories1 an array of {@link java.lang.String} objects.
 	 * @param onlyNodesWithDownAggregateStatus a boolean.
 	 * @return an array of {@link OnmsNode} objects.
@@ -471,8 +471,8 @@ public interface NetworkElementFactoryInterface {
 	/**
 	 * <p>getNodesWithCategories</p>
 	 *
-	 * @param nodeDao a {@link org.opennms.netmgt.dao.NodeDao} object.
-	 * @param categoryDao a {@link org.opennms.netmgt.dao.CategoryDao} object.
+	 * @param nodeDao a {@link org.opennms.netmgt.dao.api.NodeDao} object.
+	 * @param categoryDao a {@link org.opennms.netmgt.dao.api.CategoryDao} object.
 	 * @param categories1 an array of {@link java.lang.String} objects.
 	 * @param onlyNodesWithDownAggregateStatus a boolean.
 	 * @return an array of {@link OnmsNode} objects.
@@ -484,8 +484,8 @@ public interface NetworkElementFactoryInterface {
 	 * <p>getNodesWithCategories</p>
 	 *
 	 * @param transTemplate a {@link org.springframework.transaction.support.TransactionTemplate} object.
-	 * @param nodeDao a {@link org.opennms.netmgt.dao.NodeDao} object.
-	 * @param categoryDao a {@link org.opennms.netmgt.dao.CategoryDao} object.
+	 * @param nodeDao a {@link org.opennms.netmgt.dao.api.NodeDao} object.
+	 * @param categoryDao a {@link org.opennms.netmgt.dao.api.CategoryDao} object.
 	 * @param categories1 an array of {@link java.lang.String} objects.
 	 * @param categories2 an array of {@link java.lang.String} objects.
 	 * @param onlyNodesWithDownAggregateStatus a boolean.
@@ -499,8 +499,8 @@ public interface NetworkElementFactoryInterface {
 	/**
 	 * <p>getNodesWithCategories</p>
 	 *
-	 * @param nodeDao a {@link org.opennms.netmgt.dao.NodeDao} object.
-	 * @param categoryDao a {@link org.opennms.netmgt.dao.CategoryDao} object.
+	 * @param nodeDao a {@link org.opennms.netmgt.dao.api.NodeDao} object.
+	 * @param categoryDao a {@link org.opennms.netmgt.dao.api.CategoryDao} object.
 	 * @param categories1 an array of {@link java.lang.String} objects.
 	 * @param categories2 an array of {@link java.lang.String} objects.
 	 * @param onlyNodesWithDownAggregateStatus a boolean.

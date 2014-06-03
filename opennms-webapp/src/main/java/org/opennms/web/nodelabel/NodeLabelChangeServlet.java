@@ -38,8 +38,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.opennms.core.utils.WebSecurityUtils;
 import org.opennms.netmgt.EventConstants;
-import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.model.OnmsNode.NodeLabelSource;
+import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.model.events.EventProxy;
 import org.opennms.netmgt.model.events.EventProxyException;
 import org.opennms.netmgt.provision.persist.requisition.RequisitionNode;
@@ -75,6 +76,7 @@ public class NodeLabelChangeServlet extends HttpServlet {
      *
      * @throws javax.servlet.ServletException if any.
      */
+    @Override
     public void init() throws ServletException {
         try {
             this.proxy = Util.createEventProxy();
@@ -84,6 +86,7 @@ public class NodeLabelChangeServlet extends HttpServlet {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String nodeIdString = request.getParameter("node");
         String labelType = request.getParameter("labeltype");
@@ -108,7 +111,7 @@ public class NodeLabelChangeServlet extends HttpServlet {
             if (labelType.equals("auto")) {
                 newLabel = NodeLabel.computeLabel(nodeId);
             } else if (labelType.equals("user")) {
-                newLabel = new NodeLabel(userLabel, NodeLabel.SOURCE_USERDEFINED);
+                newLabel = new NodeLabel(userLabel, NodeLabelSource.USER);
             } else {
                 throw new ServletException("Unexpected labeltype value: " + labelType);
             }
@@ -120,6 +123,7 @@ public class NodeLabelChangeServlet extends HttpServlet {
                 final TransactionTemplate transactionTemplate = beanFactory.getBean(TransactionTemplate.class);
                 final RequisitionAccessService requisitionService = beanFactory.getBean(RequisitionAccessService.class);
                 transactionTemplate.execute(new TransactionCallback<RequisitionNode>() {
+                    @Override
                     public RequisitionNode doInTransaction(TransactionStatus status) {
                         MultivaluedMapImpl params = new MultivaluedMapImpl();
                         params.putSingle("node-label", newNodeLabel);
@@ -161,12 +165,16 @@ public class NodeLabelChangeServlet extends HttpServlet {
 
         if (oldNodeLabel != null) {
             bldr.addParam(EventConstants.PARM_OLD_NODE_LABEL, oldNodeLabel.getLabel());
-            bldr.addParam(EventConstants.PARM_OLD_NODE_LABEL_SOURCE,oldNodeLabel.getSource() );
+            if (oldNodeLabel.getSource() != null) {
+                bldr.addParam(EventConstants.PARM_OLD_NODE_LABEL_SOURCE, oldNodeLabel.getSource().toString());
+            }
         }
 
         if (newNodeLabel != null) {
             bldr.addParam(EventConstants.PARM_NEW_NODE_LABEL, newNodeLabel.getLabel());
-            bldr.addParam(EventConstants.PARM_NEW_NODE_LABEL_SOURCE, newNodeLabel.getSource());
+            if (newNodeLabel.getSource() != null) {
+                bldr.addParam(EventConstants.PARM_NEW_NODE_LABEL_SOURCE, newNodeLabel.getSource().toString());
+            }
         }
 
         this.proxy.send(bldr.getEvent());

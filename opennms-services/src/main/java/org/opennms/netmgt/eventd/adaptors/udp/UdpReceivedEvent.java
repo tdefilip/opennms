@@ -34,6 +34,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.exolab.castor.xml.MarshalException;
@@ -122,7 +123,7 @@ final class UdpReceivedEvent {
         UdpReceivedEvent e = new UdpReceivedEvent();
         e.m_sender = addr;
         e.m_port = port;
-        e.m_eventXML = new String(data, 0, len, "US-ASCII");
+        e.m_eventXML = new String(Arrays.copyOf(data, data.length), 0, len, "US-ASCII");
         e.m_ackEvents = new ArrayList<Event>(16);
         e.m_log = null;
         return e;
@@ -198,6 +199,7 @@ final class UdpReceivedEvent {
      * agent's address &amp; port. If the passed instance is from the same agent
      * then it is considered equal.
      */
+    @Override
     public boolean equals(Object o) {
         if (o != null && o instanceof UdpReceivedEvent) {
             UdpReceivedEvent e = (UdpReceivedEvent) o;
@@ -213,6 +215,7 @@ final class UdpReceivedEvent {
      *
      * @return The 32-bit has code for the instance.
      */
+    @Override
     public int hashCode() {
         return (m_port ^ m_sender.hashCode());
     }

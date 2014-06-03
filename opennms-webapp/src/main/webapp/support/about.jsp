@@ -32,8 +32,10 @@
 <%@page language="java"
 	contentType="text/html"
 	session="true"
-	import="org.opennms.web.springframework.security.Authentication,
+	import="org.opennms.web.api.Authentication,
+		org.opennms.core.db.DataSourceFactory,
 		org.opennms.core.resource.Vault,
+		org.opennms.core.utils.WebSecurityUtils,
 		org.opennms.core.utils.DBUtils,
 		java.sql.Connection
 	"
@@ -46,7 +48,7 @@
     String dbName;
     String dbVersion;
     try {
-      Connection conn = Vault.getDbConnection();
+      Connection conn = DataSourceFactory.getInstance().getConnection();
       d.watch(conn);
       dbName = conn.getMetaData().getDatabaseProductName();
       dbVersion = conn.getMetaData().getDatabaseProductVersion();
@@ -99,7 +101,7 @@
   </tr>
   <tr>
     <td class="standardheader">User Agent:</td>
-    <td class="standard"><%=request.getHeader( "User-Agent" )%></td>
+    <td class="standard"><%=WebSecurityUtils.sanitizeString(request.getHeader( "User-Agent" ), false)%></td>
   </tr>
   <tr>
     <td class="standardheader">Database Type:</td>

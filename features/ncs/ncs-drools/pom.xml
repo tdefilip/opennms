@@ -34,12 +34,12 @@
   <parent>
     <groupId>org.opennms.features</groupId>
     <artifactId>org.opennms.features.ncs</artifactId>
-    <version>1.12.8-SNAPSHOT</version>
+    <version>1.13.3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features.ncs</groupId>
   <artifactId>ncs-drools</artifactId>
-  <name>OpenNMS NCS Correlation Rules</name>
+  <name>OpenNMS Features NCS Correlation Rules</name>
   <url>http://maven.apache.org</url>
   <packaging>bundle</packaging>
   <build>
@@ -112,6 +112,12 @@
     <dependency>
       <groupId>org.opennms.tests</groupId>
       <artifactId>org.opennms.tests.mock-elements</artifactId>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.opennms</groupId>
+      <artifactId>opennms-dao-mock</artifactId>
       <scope>test</scope>
     </dependency>
     

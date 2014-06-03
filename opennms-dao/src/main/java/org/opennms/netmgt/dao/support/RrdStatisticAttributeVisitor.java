@@ -28,12 +28,13 @@
 
 package org.opennms.netmgt.dao.support;
 
-import org.opennms.core.utils.LogUtils;
-import org.opennms.netmgt.dao.RrdDao;
+import org.opennms.netmgt.dao.api.RrdDao;
 import org.opennms.netmgt.model.AttributeStatisticVisitor;
 import org.opennms.netmgt.model.AttributeVisitor;
 import org.opennms.netmgt.model.OnmsAttribute;
 import org.opennms.netmgt.model.RrdGraphAttribute;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 
@@ -44,6 +45,7 @@ import org.springframework.util.Assert;
  * @version $Id: $
  */
 public class RrdStatisticAttributeVisitor implements AttributeVisitor, InitializingBean {
+    private static final Logger LOG = LoggerFactory.getLogger(RrdStatisticAttributeVisitor.class);
     private RrdDao m_rrdDao;
     private String m_consolidationFunction;
     private Long m_startTime;
@@ -51,6 +53,7 @@ public class RrdStatisticAttributeVisitor implements AttributeVisitor, Initializ
     private AttributeStatisticVisitor m_statisticVisitor;
     
     /** {@inheritDoc} */
+    @Override
     public void visit(OnmsAttribute attribute) {
         if (!RrdGraphAttribute.class.isAssignableFrom(attribute.getClass())) {
             // Nothing to do if we can't cast to an RrdGraphAttribute
@@ -59,7 +62,7 @@ public class RrdStatisticAttributeVisitor implements AttributeVisitor, Initializ
         
         double statistic = m_rrdDao.getPrintValue(attribute, m_consolidationFunction, m_startTime, m_endTime);
         
-        LogUtils.debugf(this, "The value of %s is %s", attribute, statistic);
+        LOG.debug("The value of {} is {}", attribute, statistic);
         
         /*
          * We don't want to do anything with NaN data, since
@@ -93,7 +96,7 @@ public class RrdStatisticAttributeVisitor implements AttributeVisitor, Initializ
     /**
      * <p>getRrdDao</p>
      *
-     * @return a {@link org.opennms.netmgt.dao.RrdDao} object.
+     * @return a {@link org.opennms.netmgt.dao.api.RrdDao} object.
      */
     public RrdDao getRrdDao() {
         return m_rrdDao;
@@ -102,7 +105,7 @@ public class RrdStatisticAttributeVisitor implements AttributeVisitor, Initializ
     /**
      * <p>setRrdDao</p>
      *
-     * @param rrdDao a {@link org.opennms.netmgt.dao.RrdDao} object.
+     * @param rrdDao a {@link org.opennms.netmgt.dao.api.RrdDao} object.
      */
     public void setRrdDao(RrdDao rrdDao) {
         m_rrdDao = rrdDao;

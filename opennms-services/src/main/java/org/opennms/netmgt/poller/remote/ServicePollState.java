@@ -34,7 +34,7 @@ import java.util.Date;
 import org.apache.commons.lang.builder.CompareToBuilder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.opennms.netmgt.model.PollStatus;
+import org.opennms.netmgt.poller.PollStatus;
 
 /**
  * <p>ServicePollState class.</p>
@@ -65,7 +65,7 @@ public class ServicePollState implements Comparable<ServicePollState>, Serializa
     /**
      * <p>getLastPoll</p>
      *
-     * @return a {@link org.opennms.netmgt.model.PollStatus} object.
+     * @return a {@link org.opennms.netmgt.poller.PollStatus} object.
      */
     public PollStatus getLastPoll() {
         return m_lastPoll;
@@ -74,7 +74,7 @@ public class ServicePollState implements Comparable<ServicePollState>, Serializa
     /**
      * <p>setLastPoll</p>
      *
-     * @param lastPoll a {@link org.opennms.netmgt.model.PollStatus} object.
+     * @param lastPoll a {@link org.opennms.netmgt.poller.PollStatus} object.
      */
     public void setLastPoll(final PollStatus lastPoll) {
         m_lastPoll = lastPoll;
@@ -158,6 +158,7 @@ public class ServicePollState implements Comparable<ServicePollState>, Serializa
      * @param that a {@link org.opennms.netmgt.poller.remote.ServicePollState} object.
      * @return a int.
      */
+    @Override
     public int compareTo(final ServicePollState that) {
         if (that == null) return -1;
         final PolledService thisService = this.getPolledService();

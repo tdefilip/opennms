@@ -3,12 +3,12 @@
   <parent>
     <groupId>org.opennms</groupId>
     <artifactId>org.opennms.features</artifactId>
-    <version>1.12.8-SNAPSHOT</version>
+    <version>1.13.3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opennms.features</groupId>
   <artifactId>org.opennms.features.jdbc-collector</artifactId>
-  <name>OpenNMS JDBC Collector</name>
+  <name>OpenNMS Features JDBC Collector</name>
   <build>
     <plugins>
       <plugin>
@@ -22,6 +22,7 @@
           </execution>
         </executions>
       </plugin>
+<!-- // don't generate, just include a pre-generated version of the XSD
       <plugin>
         <groupId>com.sun.tools.jxc.maven2</groupId>
         <artifactId>maven-jaxb-schemagen-plugin</artifactId>
@@ -49,6 +50,7 @@
           </execution>
         </executions>
       </plugin>
+-->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <extensions>true</extensions>

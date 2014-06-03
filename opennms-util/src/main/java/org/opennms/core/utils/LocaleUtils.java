@@ -28,14 +28,19 @@
 
 package org.opennms.core.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Locale;
 
 /**
  * @author Seth
  */
 public abstract class LocaleUtils {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(LocaleUtils.class);
 
-    public static final Locale DEFAULT_LOCALE = new Locale(Locale.ENGLISH.getLanguage(), Locale.US.getCountry());
+    private static final Locale DEFAULT_LOCALE = new Locale(Locale.ENGLISH.getLanguage(), Locale.US.getCountry());
 
     public static Locale parseLocale(String string) {
         String[] segments = string.split("[-_]");
@@ -89,11 +94,11 @@ public abstract class LocaleUtils {
                             return avail;
                         }
                     } else {
-                        LogUtils.tracef(LocaleUtils.class, "Null locale in available list");
+                    	LOG.trace("Null locale in available list");
                     }
                 }
             } else {
-                LogUtils.tracef(LocaleUtils.class, "Null locale in preferred list");
+            	LOG.trace("Null locale in preferred list");
             }
         }
         // Only perform this match if one of the locales had a variant,
@@ -105,20 +110,17 @@ public abstract class LocaleUtils {
                     for (Locale avail : availableLocales) {
                         if (avail != null) {
                             if (
-                                prefer.getLanguage().equalsIgnoreCase(avail.getLanguage()) &&
-                                (prefer.getCountry() == null ?
-                                    true : 
-                                    prefer.getCountry().equalsIgnoreCase(avail.getCountry())
-                                )
+                                prefer.getLanguage().equalsIgnoreCase(avail.getLanguage())
+                                    && (prefer.getCountry() == null || prefer.getCountry().equalsIgnoreCase(avail.getCountry()))
                             ) {
                                 return avail;
                             }
                         } else {
-                            LogUtils.tracef(LocaleUtils.class, "Null locale in available list");
+                        	LOG.trace("Null locale in available list");
                         }
                     }
                 } else {
-                    LogUtils.tracef(LocaleUtils.class, "Null locale in preferred list");
+                	LOG.trace("Null locale in preferred list");
                 }
             }
         }
@@ -134,11 +136,11 @@ public abstract class LocaleUtils {
                                 return avail;
                             }
                         } else {
-                            LogUtils.tracef(LocaleUtils.class, "Null locale in available list");
+                        	LOG.trace("Null locale in available list");
                         }
                     }
                 } else {
-                    LogUtils.tracef(LocaleUtils.class, "Null locale in preferred list");
+                	LOG.trace("Null locale in preferred list");
                 }
             }
         }

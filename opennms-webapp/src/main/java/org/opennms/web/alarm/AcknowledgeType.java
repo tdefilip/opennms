@@ -31,6 +31,7 @@ package org.opennms.web.alarm;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.opennms.web.filter.NormalizedAcknowledgeType;
 import org.springframework.util.Assert;
 
 /**
@@ -65,6 +66,7 @@ public enum AcknowledgeType {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String toString() {
         return "AcknowledgeType." + getName();
     }
@@ -107,6 +109,10 @@ public enum AcknowledgeType {
         default:
             throw new IllegalArgumentException("Cannot get clause for AcknowledgeType " + this);
         }
+    }
+
+    public NormalizedAcknowledgeType toNormalizedAcknowledgeType() {
+        return NormalizedAcknowledgeType.createFrom(this);
     }
 
     /**

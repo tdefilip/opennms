@@ -70,9 +70,9 @@ import com.sun.jersey.spi.container.servlet.ServletContainer;
 import com.sun.jersey.spi.spring.container.servlet.SpringServlet;
 
 /**
- * @deprecated This class is mostly copied from {@link org.opennms.web.rest.AbstractSpringJerseyRestTestCase}
+ * @deprecated This class is mostly copied from {@link org.opennms.core.test.rest.AbstractSpringJerseyRestTestCase}
  * 
- * TODO: Deduplicate the class AbstractSpringJerseyRestTestCase classes
+ * TODO: Replace usage of this class with {@link org.opennms.core.test.rest.AbstractSpringJerseyRestTestCase}
  * 
  * @author <a href="mailto:brozow@opennms.org">Mathew Brozowski</a>
  *
@@ -165,6 +165,7 @@ public abstract class AbstractSpringJerseyRestTestCase {
 
     protected void dispatch(final MockHttpServletRequest request, final MockHttpServletResponse response) throws Exception {
         final FilterChain filterChain = new FilterChain() {
+            @Override
             public void doFilter(final ServletRequest filterRequest, final ServletResponse filterResponse) throws IOException, ServletException {
                 getDispatcher().service(filterRequest, filterResponse);
             }
@@ -186,7 +187,6 @@ public abstract class AbstractSpringJerseyRestTestCase {
             @Override
             public void setContentType(final String contentType) {
                 super.setContentType(contentType);
-                super.addHeader("Content-Type", contentType);
             }
             
         };

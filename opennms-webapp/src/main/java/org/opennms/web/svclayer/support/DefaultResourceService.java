@@ -35,20 +35,21 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.EventConstants;
-import org.opennms.netmgt.dao.GraphDao;
-import org.opennms.netmgt.dao.ResourceDao;
-import org.opennms.netmgt.dao.support.ResourceTypeUtils;
+import org.opennms.netmgt.dao.api.GraphDao;
+import org.opennms.netmgt.dao.api.ResourceDao;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsResource;
 import org.opennms.netmgt.model.PrefabGraph;
+import org.opennms.netmgt.model.ResourceTypeUtils;
 import org.opennms.netmgt.model.RrdGraphAttribute;
 import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.model.events.EventProxy;
 import org.opennms.netmgt.model.events.EventProxyException;
 import org.opennms.web.api.Util;
 import org.opennms.web.svclayer.ResourceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 
@@ -59,6 +60,9 @@ import org.springframework.util.Assert;
  * @author <a href="mailto:brozow@opennms.org">Mathew Brozowski</a>
  */
 public class DefaultResourceService implements ResourceService, InitializingBean {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(DefaultResourceService.class);
+
     private ResourceDao m_resourceDao;
     private GraphDao m_graphDao;
     private EventProxy m_eventProxy;
@@ -66,7 +70,7 @@ public class DefaultResourceService implements ResourceService, InitializingBean
     /**
      * <p>getResourceDao</p>
      *
-     * @return a {@link org.opennms.netmgt.dao.ResourceDao} object.
+     * @return a {@link org.opennms.netmgt.dao.api.ResourceDao} object.
      */
     public ResourceDao getResourceDao() {
         return m_resourceDao;
@@ -75,7 +79,7 @@ public class DefaultResourceService implements ResourceService, InitializingBean
     /**
      * <p>setResourceDao</p>
      *
-     * @param resourceDao a {@link org.opennms.netmgt.dao.ResourceDao} object.
+     * @param resourceDao a {@link org.opennms.netmgt.dao.api.ResourceDao} object.
      */
     public void setResourceDao(ResourceDao resourceDao) {
         m_resourceDao = resourceDao;
@@ -84,7 +88,7 @@ public class DefaultResourceService implements ResourceService, InitializingBean
     /**
      * <p>getGraphDao</p>
      *
-     * @return a {@link org.opennms.netmgt.dao.GraphDao} object.
+     * @return a {@link org.opennms.netmgt.dao.api.GraphDao} object.
      */
     public GraphDao getGraphDao() {
         return m_graphDao;
@@ -93,7 +97,7 @@ public class DefaultResourceService implements ResourceService, InitializingBean
     /**
      * <p>setGraphDao</p>
      *
-     * @param graphDao a {@link org.opennms.netmgt.dao.GraphDao} object.
+     * @param graphDao a {@link org.opennms.netmgt.dao.api.GraphDao} object.
      */
     public void setGraphDao(GraphDao graphDao) {
         m_graphDao = graphDao;
@@ -125,6 +129,7 @@ public class DefaultResourceService implements ResourceService, InitializingBean
      *
      * @return a {@link java.io.File} object.
      */
+    @Override
     public File getRrdDirectory() {
         return m_resourceDao.getRrdDirectory();
     }
@@ -134,11 +139,13 @@ public class DefaultResourceService implements ResourceService, InitializingBean
      *
      * @return a {@link java.util.List} object.
      */
+    @Override
     public List<OnmsResource> findTopLevelResources() {
         return m_resourceDao.findTopLevelResources();
     }
 
     /** {@inheritDoc} */
+    @Override
     public List<OnmsResource> findNodeChildResources(OnmsNode node) {
         List<OnmsResource> resources = new ArrayList<OnmsResource>();
         if (node != null) {
@@ -164,6 +171,7 @@ public class DefaultResourceService implements ResourceService, InitializingBean
     }
 
     /** {@inheritDoc} */
+    @Override
     public List<OnmsResource> findDomainChildResources(String domain) {
         List<OnmsResource> resources = new ArrayList<OnmsResource>();
         OnmsResource resource = m_resourceDao.getResourceById(OnmsResource.createResourceId("domain", domain));
@@ -175,6 +183,7 @@ public class DefaultResourceService implements ResourceService, InitializingBean
     }
     
     /** {@inheritDoc} */
+    @Override
     public List<OnmsResource> findNodeSourceChildResources(String nodeSource) {
         List<OnmsResource> resources = new ArrayList<OnmsResource>();
         OnmsResource resource = m_resourceDao.getResourceById(OnmsResource.createResourceId("nodeSource", nodeSource));
@@ -192,6 +201,7 @@ public class DefaultResourceService implements ResourceService, InitializingBean
      * @param resourceTypeMatches a {@link java.lang.String} object.
      * @return a {@link java.util.List} object.
      */
+    @Override
     public List<OnmsResource> findChildResources(OnmsResource resource, String... resourceTypeMatches) {
         List<OnmsResource> matchingChildResources = new LinkedList<OnmsResource>();
         
@@ -230,21 +240,25 @@ public class DefaultResourceService implements ResourceService, InitializingBean
     }
 
     /** {@inheritDoc} */
+    @Override
     public OnmsResource getResourceById(String id) {
         return m_resourceDao.getResourceById(id);
     }
 
     /** {@inheritDoc} */
+    @Override
     public List<OnmsResource> getResourceListById(String resourceId) {
         return m_resourceDao.getResourceListById(resourceId);
     }
     
     /** {@inheritDoc} */
+    @Override
     public PrefabGraph[] findPrefabGraphsForResource(OnmsResource resource) {
         return m_graphDao.getPrefabGraphsForResource(resource);
     }
     
     /** {@inheritDoc} */
+    @Override
     public void promoteGraphAttributesForResource(OnmsResource resource) {
         String baseDir = getRrdDirectory().getAbsolutePath();
         List<String> rrdFiles = new LinkedList<String>();
@@ -257,7 +271,7 @@ public class DefaultResourceService implements ResourceService, InitializingBean
         try {
             m_eventProxy.send(bldr.getEvent());
         } catch (EventProxyException e) {
-            log().warn("Unable to send file promotion event to opennms: " + e, e);
+            LOG.warn("Unable to send file promotion event to opennms: {}", e, e);
         }
     }
     
@@ -266,13 +280,12 @@ public class DefaultResourceService implements ResourceService, InitializingBean
      *
      * @param resourceId a {@link java.lang.String} object.
      */
+    @Override
     public void promoteGraphAttributesForResource(String resourceId) {
         promoteGraphAttributesForResource(getResourceById(resourceId));
     }
     
-    private static ThreadCategory log() {
-        return ThreadCategory.getInstance(DefaultResourceService.class);
-    }
+    
 
     /**
      * <p>findPrefabGraphsForChildResources</p>
@@ -281,6 +294,7 @@ public class DefaultResourceService implements ResourceService, InitializingBean
      * @param resourceTypeMatches a {@link java.lang.String} object.
      * @return an array of {@link org.opennms.netmgt.model.PrefabGraph} objects.
      */
+    @Override
     public PrefabGraph[] findPrefabGraphsForChildResources(OnmsResource resource, String... resourceTypeMatches) {
         Map<String, PrefabGraph> childGraphs = new LinkedHashMap<String, PrefabGraph>();
         for (OnmsResource r : findChildResources(resource, resourceTypeMatches)) {
@@ -292,6 +306,7 @@ public class DefaultResourceService implements ResourceService, InitializingBean
     }
 
     /** {@inheritDoc} */
+    @Override
     public PrefabGraph getPrefabGraph(String name) {
         return m_graphDao.getPrefabGraph(name);
     }

@@ -30,8 +30,9 @@ package org.opennms.netmgt.collectd;
 
 import java.util.Collection;
 
-import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.snmp.SnmpInstId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>Abstract ResourceType class.</p>
@@ -41,17 +42,19 @@ import org.opennms.netmgt.snmp.SnmpInstId;
  */
 public abstract class ResourceType {
     
-    private CollectionAgent m_agent;
+    public static final Logger LOG = LoggerFactory.getLogger(ResourceType.class);
+    
+    private SnmpCollectionAgent m_agent;
     private OnmsSnmpCollection m_snmpCollection;
     private Collection<SnmpAttributeType> m_attributeTypes;
 
     /**
      * <p>Constructor for ResourceType.</p>
      *
-     * @param agent a {@link org.opennms.netmgt.collectd.CollectionAgent} object.
+     * @param agent a {@link org.opennms.netmgt.collection.api.CollectionAgent} object.
      * @param snmpCollection a {@link org.opennms.netmgt.collectd.OnmsSnmpCollection} object.
      */
-    public ResourceType(CollectionAgent agent, OnmsSnmpCollection snmpCollection) {
+    public ResourceType(SnmpCollectionAgent agent, OnmsSnmpCollection snmpCollection) {
         m_agent = agent;
         m_snmpCollection = snmpCollection;
     }
@@ -59,9 +62,9 @@ public abstract class ResourceType {
     /**
      * <p>getAgent</p>
      *
-     * @return a {@link org.opennms.netmgt.collectd.CollectionAgent} object.
+     * @return a {@link org.opennms.netmgt.collection.api.CollectionAgent} object.
      */
-    public CollectionAgent getAgent() {
+    public SnmpCollectionAgent getAgent() {
         return m_agent;
     }
     
@@ -145,11 +148,4 @@ public abstract class ResourceType {
      * @return a {@link java.util.Collection} object.
      */
     public abstract Collection<? extends SnmpCollectionResource> getResources();
-    
-    /**
-     * <p>log</p>
-     *
-     * @return a {@link org.opennms.core.utils.ThreadCategory} object.
-     */
-    public ThreadCategory log() { return ThreadCategory.getInstance(getClass()); }
 }

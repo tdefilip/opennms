@@ -2,8 +2,8 @@ package org.opennms.netmgt.accesspointmonitor;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -13,31 +13,35 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.hibernate.criterion.Restrictions;
-import org.opennms.core.utils.ThreadCategory;
+import org.opennms.core.criteria.Alias;
+import org.opennms.core.criteria.Alias.JoinType;
+import org.opennms.core.criteria.Criteria;
+import org.opennms.core.criteria.restrictions.EqRestriction;
 import org.opennms.netmgt.EventConstants;
 import org.opennms.netmgt.accesspointmonitor.poller.AccessPointPoller;
 import org.opennms.netmgt.config.accesspointmonitor.AccessPointMonitorConfig;
 import org.opennms.netmgt.config.accesspointmonitor.Package;
 import org.opennms.netmgt.dao.AccessPointDao;
-import org.opennms.netmgt.dao.NodeDao;
-import org.opennms.netmgt.dao.IpInterfaceDao;
-import org.opennms.netmgt.model.events.EventIpcManager;
+import org.opennms.netmgt.dao.api.IpInterfaceDao;
+import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.filter.FilterDaoFactory;
 import org.opennms.netmgt.model.AccessPointStatus;
 import org.opennms.netmgt.model.OnmsAccessPoint;
 import org.opennms.netmgt.model.OnmsAccessPointCollection;
-import org.opennms.netmgt.model.OnmsCriteria;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsIpInterfaceList;
 import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.model.PrimaryType;
 import org.opennms.netmgt.model.events.EventBuilder;
+import org.opennms.netmgt.model.events.EventIpcManager;
 import org.opennms.netmgt.model.events.EventProxyException;
 import org.opennms.netmgt.scheduler.ReadyRunnable;
 import org.opennms.netmgt.scheduler.Scheduler;
 import org.opennms.netmgt.xml.event.Event;
 import org.opennms.netmgt.xml.event.Parm;
 import org.opennms.netmgt.xml.event.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Default polling context that is instantiated on a per package basis.
@@ -46,10 +50,10 @@ import org.opennms.netmgt.xml.event.Value;
  * @version $Id: $
  */
 public class DefaultPollingContext implements PollingContext {
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultPollingContext.class);
 
     private static final String PASSIVE_STATUS_UEI = "uei.opennms.org/services/passiveServiceStatus";
 
-    private ThreadCategory m_log;
     private EventIpcManager m_eventMgr;
     private IpInterfaceDao m_ipInterfaceDao;
     private NodeDao m_nodeDao;
@@ -61,78 +65,93 @@ public class DefaultPollingContext implements PollingContext {
     private AccessPointMonitorConfig m_pollerConfig;
     private ExecutorService m_pool = null;
 
-    public DefaultPollingContext() {
-        m_log = ThreadCategory.getInstance(getClass());
-    }
 
+    @Override
     public void setPackage(Package pkg) {
         m_package = pkg;
     }
 
+    @Override
     public Package getPackage() {
         return m_package;
     }
 
+    @Override
     public void setIpInterfaceDao(IpInterfaceDao ipInterfaceDao) {
         m_ipInterfaceDao = ipInterfaceDao;
     }
 
+    @Override
     public IpInterfaceDao getIpInterfaceDao() {
         return m_ipInterfaceDao;
     }
 
+    @Override
     public NodeDao getNodeDao() {
         return m_nodeDao;
     }
 
+    @Override
     public void setNodeDao(NodeDao nodeDao) {
         m_nodeDao = nodeDao;
     }
 
+    @Override
     public void setAccessPointDao(AccessPointDao accessPointDao) {
         m_accessPointDao = accessPointDao;
     }
 
+    @Override
     public AccessPointDao getAccessPointDao() {
         return m_accessPointDao;
     }
 
+    @Override
     public void setEventManager(EventIpcManager eventMgr) {
         m_eventMgr = eventMgr;
     }
 
+    @Override
     public EventIpcManager getEventManager() {
         return m_eventMgr;
     }
 
+    @Override
     public void setScheduler(Scheduler scheduler) {
         m_scheduler = scheduler;
     }
 
+    @Override
     public Scheduler getScheduler() {
         return m_scheduler;
     }
 
+    @Override
     public void setInterval(long interval) {
         m_interval = interval;
     }
 
+    @Override
     public long getInterval() {
         return m_interval;
     }
 
+    @Override
     public void setPropertyMap(Map<String, String> parameters) {
         m_parameters = parameters;
     }
 
+    @Override
     public Map<String, String> getPropertyMap() {
         return m_parameters;
     }
 
+    @Override
     public void setPollerConfig(AccessPointMonitorConfig accesspointmonitorConfig) {
         m_pollerConfig = accesspointmonitorConfig;
     }
 
+    @Override
     public AccessPointMonitorConfig getPollerConfig() {
         return m_pollerConfig;
     }
@@ -141,11 +160,13 @@ public class DefaultPollingContext implements PollingContext {
         return this;
     }
 
+    @Override
     public void init() {
         // Fire up a thread pool
         m_pool = Executors.newFixedThreadPool(getPackage().getEffectiveService().getThreads());
     }
 
+    @Override
     public void release() {
         // Shutdown the thread pool
         m_pool.shutdown();
@@ -153,20 +174,19 @@ public class DefaultPollingContext implements PollingContext {
         m_pool = null;
     }
 
+    @Override
     public void run() {
         // Determine the list of interfaces to poll at runtime
         OnmsIpInterfaceList ifaces = getInterfaceList();
 
         // If the list of interfaces is empty, print a warning message
-        if (ifaces.isEmpty()) {
-            log().warn("Package '" + getPackage().getName() + "' was scheduled, but no interfaces were matched.");
+        if (ifaces.getIpInterfaces().isEmpty()) {
+            LOG.warn("Package '{}' was scheduled, but no interfaces were matched.", getPackage().getName());
         }
 
         // Get the complete list of APs that we are responsible for polling
         OnmsAccessPointCollection apsDown = m_accessPointDao.findByPackage(getPackage().getName());
-        if (log().isDebugEnabled()) {
-            log().debug("Found " + apsDown.size() + " APs in package '" + getPackage().getName() + "'");
-        }
+        LOG.debug("Found {} APs in package '{}'", apsDown.size(), getPackage().getName());
 
         // Keep track of all APs that we've confirmed to be ONLINE
         OnmsAccessPointCollection apsUp = new OnmsAccessPointCollection();
@@ -174,11 +194,9 @@ public class DefaultPollingContext implements PollingContext {
         Set<Callable<OnmsAccessPointCollection>> callables = new HashSet<Callable<OnmsAccessPointCollection>>();
 
         // Iterate over all of the matched interfaces
-        for (Iterator<OnmsIpInterface> it = ifaces.iterator(); it.hasNext();) {
-            OnmsIpInterface iface = it.next();
-
+        for (final OnmsIpInterface iface : ifaces.getIpInterfaces()) {
             // Create a new instance of the poller
-            AccessPointPoller p = m_package.getPoller(m_pollerConfig.getMonitors());
+            final AccessPointPoller p = m_package.getPoller(m_pollerConfig.getMonitors());
             p.setInterfaceToPoll(iface);
             p.setAccessPointDao(m_accessPointDao);
             p.setPackage(m_package);
@@ -192,7 +210,7 @@ public class DefaultPollingContext implements PollingContext {
 
         try {
             if (m_pool == null) {
-                log().warn("run() called, but no thread pool has been initialized.  Calling init()");
+                LOG.warn("run() called, but no thread pool has been initialized.  Calling init()");
                 init();
             }
 
@@ -202,31 +220,29 @@ public class DefaultPollingContext implements PollingContext {
             // Gather the list of APs that are ONLINE
             for (Future<OnmsAccessPointCollection> future : futures) {
                 try {
-                    apsUp.addAll(future.get());
+                    apsUp.addAll(future.get().getObjects());
                     succesfullyPolledAController = true;
                 } catch (ExecutionException e) {
-                    log().error("An error occurred while polling :" + e);
+                    LOG.error("An error occurred while polling", e);
                 }
             }
         } catch (InterruptedException e) {
-            log().error("I was interrupted :" + e);
+            LOG.error("I was interrupted", e);
         }
 
         // Remove the APs from the list that are ONLINE
-        apsDown.removeAll(apsUp);
+        apsDown.removeAll(apsUp.getObjects());
 
-        if (log().isDebugEnabled()) {
-            log().debug("(" + apsUp.size() + ") APs Online, (" + apsDown.size() + ") APs offline in package '" + getPackage().getName() + "'");
-        }
+        LOG.debug("({}) APs Online, ({}) APs offline in package '{}'", apsUp.size(), apsDown.size(), getPackage().getName());
 
         if (!succesfullyPolledAController) {
-            log().warn("Failed to poll at least one controller in the package '" + getPackage().getName() + "'");
+            LOG.warn("Failed to poll at least one controller in the package '{}'", getPackage().getName());
         }
 
         updateApStatus(apsUp, apsDown);
 
         // Reschedule the service
-        log().debug("Re-scheduling the package '" + getPackage().getName() + "' in " + m_interval);
+        LOG.debug("Re-scheduling the package '{}' in {}", getPackage().getName(), m_interval);
         m_scheduler.schedule(m_interval, getReadyRunnable());
     }
 
@@ -243,7 +259,7 @@ public class DefaultPollingContext implements PollingContext {
                 Event e = createApStatusEvent(ap.getPhysAddr(), ap.getNodeId(), "UP");
                 m_eventMgr.send(e);
             } catch (EventProxyException e) {
-                log().fatal("Error occured sending events ", e);
+                LOG.error("Error occured sending events ", e);
             }
         }
 
@@ -259,7 +275,7 @@ public class DefaultPollingContext implements PollingContext {
                 Event e = createApStatusEvent(ap.getPhysAddr(), ap.getNodeId(), "DOWN");
                 m_eventMgr.send(e);
             } catch (EventProxyException e) {
-                log().fatal("Error occured sending events ", e);
+                LOG.error("Error occured sending events ", e);
             }
         }
 
@@ -272,8 +288,8 @@ public class DefaultPollingContext implements PollingContext {
 
         OnmsIpInterfaceList ifaces = new OnmsIpInterfaceList();
         // Only poll the primary interface
-        final OnmsCriteria criteria = new OnmsCriteria(OnmsIpInterface.class);
-        criteria.add(Restrictions.sqlRestriction("issnmpprimary = 'P'"));
+        final Criteria criteria = new Criteria(OnmsIpInterface.class);
+        criteria.addRestriction(new EqRestriction("isSnmpPrimary", PrimaryType.PRIMARY));
 
         List<OnmsIpInterface> allValidIfaces = getIpInterfaceDao().findMatching(criteria);
         for (OnmsIpInterface iface : allValidIfaces) {
@@ -289,8 +305,11 @@ public class DefaultPollingContext implements PollingContext {
      * Return the IP address of the first interface on the node
      */
     protected InetAddress getNodeIpAddress(OnmsNode node) {
-        final OnmsCriteria criteria = new OnmsCriteria(OnmsIpInterface.class);
-        criteria.add(Restrictions.sqlRestriction("nodeid = " + node.getId()));
+        final Criteria criteria = new Criteria(OnmsIpInterface.class)
+            .setAliases(Arrays.asList(new Alias[] {
+                new Alias("node", "node", JoinType.LEFT_JOIN)
+            }))
+            .addRestriction(new EqRestriction("node.id", node.getId()));
         List<OnmsIpInterface> matchingIfaces = getIpInterfaceDao().findMatching(criteria);
         return matchingIfaces.get(0).getIpAddress();
     }
@@ -319,11 +338,8 @@ public class DefaultPollingContext implements PollingContext {
         return p;
     }
 
+    @Override
     public boolean isReady() {
         return m_pool != null;
-    }
-
-    private ThreadCategory log() {
-        return m_log;
     }
 }

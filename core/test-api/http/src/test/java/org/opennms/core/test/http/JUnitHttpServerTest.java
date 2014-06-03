@@ -43,13 +43,13 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.opennms.core.test.http.JUnitHttpServerExecutionListener;
 import org.opennms.core.test.http.annotations.JUnitHttpServer;
 import org.opennms.core.test.http.annotations.Webapp;
-import org.opennms.core.utils.LogUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -58,13 +58,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
     JUnitHttpServerExecutionListener.class
 })
 public class JUnitHttpServerTest {
-
-	@BeforeClass
-	public static void beforeClass() {
-		LogUtils.logToConsole();
-		LogUtils.enableDebugging();
-	}
 	
+	private static final Logger LOG = LoggerFactory.getLogger(JUnitHttpServerTest.class);
+
     @Test
     @JUnitHttpServer(port=9162)
     public void testServer() throws HttpException, IOException {
@@ -72,7 +68,7 @@ public class JUnitHttpServerTest {
         HttpUriRequest method = new HttpGet("http://localhost:9162/test.html");
         HttpResponse response = client.execute(method);
         String responseString = EntityUtils.toString(response.getEntity());
-        LogUtils.debugf(this, "got response:\n%s", responseString);
+        LOG.debug("got response:\n{}", responseString);
         assertEquals(200, response.getStatusLine().getStatusCode());
         assertTrue(responseString.contains("Purple monkey dishwasher."));
     }
@@ -86,7 +82,7 @@ public class JUnitHttpServerTest {
         HttpUriRequest method = new HttpGet("http://localhost:9162/testContext/index.html");
         HttpResponse response = client.execute(method);
         String responseString = EntityUtils.toString(response.getEntity());
-        LogUtils.debugf(this, "got response:\n%s", responseString);
+        LOG.debug("got response:\n{}", responseString);
         assertEquals(200, response.getStatusLine().getStatusCode());
         assertTrue(responseString.contains("This is a webapp."));
     }
@@ -100,7 +96,7 @@ public class JUnitHttpServerTest {
         HttpUriRequest method = new HttpGet("http://localhost:9162/testContext/monkey");
         HttpResponse response = client.execute(method);
         String responseString = EntityUtils.toString(response.getEntity());
-        LogUtils.debugf(this, "got response:\n%s", responseString);
+        LOG.debug("got response:\n{}", responseString);
         assertEquals(200, response.getStatusLine().getStatusCode());
         assertTrue(responseString.contains("You are reading this from a servlet!"));
     }
@@ -119,7 +115,7 @@ public class JUnitHttpServerTest {
         
         final HttpResponse response = client.execute(method);
         final String responseString = EntityUtils.toString(response.getEntity());
-        LogUtils.debugf(this, "got response:\n%s", responseString);
+        LOG.debug("got response:\n{}", responseString);
         assertEquals(200, response.getStatusLine().getStatusCode());
         assertTrue(responseString.contains("You are reading this from a servlet!"));
     }

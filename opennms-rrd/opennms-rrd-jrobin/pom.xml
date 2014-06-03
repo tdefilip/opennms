@@ -3,11 +3,11 @@
   <parent>
     <artifactId>opennms-rrd</artifactId>
     <groupId>org.opennms</groupId>
-    <version>1.12.8-SNAPSHOT</version>
+    <version>1.13.3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>opennms-rrd-jrobin</artifactId>
-  <name>OpenNMS JRobin RRD Implementation</name>
+  <name>OpenNMS RRD JRobin Implementation</name>
   <packaging>bundle</packaging>
   <build>
     <plugins>
@@ -47,4 +47,14 @@
       <type>pom</type>
     </dependency>
   </dependencies>
+
+  <repositories>
+    <repository>
+      <snapshots><enabled>true</enabled></snapshots>
+      <releases><enabled>false</enabled></releases>
+      <id>opennms-snapshots</id>
+      <name>OpenNMS Snapshot Repository</name>
+      <url>http://maven.opennms.org/content/groups/opennms.org-snapshot</url>
+    </repository>
+  </repositories>
 </project>

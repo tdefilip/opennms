@@ -40,9 +40,9 @@ import java.util.Map;
 
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
-import org.opennms.core.utils.BeanUtils;
-import org.opennms.netmgt.dao.NodeDao;
-import org.opennms.netmgt.dao.OutageDao;
+import org.opennms.core.spring.BeanUtils;
+import org.opennms.netmgt.dao.api.NodeDao;
+import org.opennms.netmgt.dao.api.OutageDao;
 import org.opennms.netmgt.model.OnmsCriteria;
 import org.opennms.netmgt.model.OnmsOutage;
 import org.opennms.netmgt.model.outage.OutageSummary;
@@ -92,6 +92,7 @@ public class DaoWebOutageRepository implements WebOutageRepository, Initializing
         
         outageCriteria.visit(new OutageCriteriaVisitor<RuntimeException>(){
 
+            @Override
             public void visitOutageType(OutageType ackType) throws RuntimeException {
                 if (ackType == OutageType.CURRENT) {
                     criteria.add(Restrictions.isNull("ifRegainedService"));
@@ -100,21 +101,28 @@ public class DaoWebOutageRepository implements WebOutageRepository, Initializing
                 }
             }
 
+            @Override
             public void visitFilter(Filter filter) throws RuntimeException {
                 criteria.add(filter.getCriterion());
             }
 
+            @Override
             public void visitGroupBy() throws RuntimeException {
                 
             }
             
+            @Override
             public void visitLimit(int limit, int offset) throws RuntimeException {
                 criteria.setMaxResults(limit);
                 criteria.setFirstResult(offset);
             }
 
+            @Override
             public void visitSortStyle(SortStyle sortStyle) throws RuntimeException {
                 switch (sortStyle) {
+                case FOREIGNSOURCE:
+                    criteria.addOrder(Order.desc("node.foreignSource"));
+                    break;
                 case NODE:
                     criteria.addOrder(Order.desc("node.label"));
                     break;
@@ -132,6 +140,9 @@ public class DaoWebOutageRepository implements WebOutageRepository, Initializing
                     break;
                 case ID:
                     criteria.addOrder(Order.desc("id"));
+                    break;
+                case REVERSE_FOREIGNSOURCE:
+                    criteria.addOrder(Order.asc("node.foreignSource"));
                     break;
                 case REVERSE_NODE:
                     criteria.addOrder(Order.asc("node.label"));
@@ -202,6 +213,7 @@ public class DaoWebOutageRepository implements WebOutageRepository, Initializing
      */
     /** {@inheritDoc} */
     @Transactional
+    @Override
     public int countMatchingOutageSummaries(final OutageCriteria criteria) {
         return getMatchingOutageSummaries(criteria).length;
     }
@@ -211,6 +223,7 @@ public class DaoWebOutageRepository implements WebOutageRepository, Initializing
      */
     /** {@inheritDoc} */
     @Transactional
+    @Override
     public int countMatchingOutages(OutageCriteria criteria) {
         return m_outageDao.countMatching(getOnmsCriteria(criteria));
     }
@@ -220,6 +233,7 @@ public class DaoWebOutageRepository implements WebOutageRepository, Initializing
      */
     /** {@inheritDoc} */
     @Transactional
+    @Override
     public OutageSummary[] getMatchingOutageSummaries(final OutageCriteria criteria) {
         
         
@@ -265,6 +279,7 @@ public class DaoWebOutageRepository implements WebOutageRepository, Initializing
      */
     /** {@inheritDoc} */
     @Transactional
+    @Override
     public Outage[] getMatchingOutages(final OutageCriteria criteria) {
         final List<Outage> outages = new ArrayList<Outage>();
         final List<OnmsOutage> onmsOutages = m_outageDao.findMatching(getOnmsCriteria(criteria));
@@ -283,16 +298,19 @@ public class DaoWebOutageRepository implements WebOutageRepository, Initializing
      */
     /** {@inheritDoc} */
     @Transactional
+    @Override
     public Outage getOutage(final int OutageId) {
         return mapOnmsOutageToOutage(m_outageDao.get(OutageId));
     }
 
     @Transactional
+    @Override
     public int countCurrentOutages() {
         return m_outageDao.countOutagesByNode();
     }
 
     @Transactional
+    @Override
     public OutageSummary[] getCurrentOutages(final int rows) {
         return m_outageDao.getNodeOutageSummaries(rows).toArray(new OutageSummary[0]);
     }

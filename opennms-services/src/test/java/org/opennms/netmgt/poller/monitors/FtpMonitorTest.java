@@ -40,7 +40,7 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 import org.opennms.core.utils.InetAddressUtils;
-import org.opennms.netmgt.model.PollStatus;
+import org.opennms.netmgt.poller.PollStatus;
 import org.opennms.netmgt.poller.mock.MockMonitoredService;
 
 public class FtpMonitorTest extends TestCase {
@@ -84,6 +84,7 @@ public class FtpMonitorTest extends TestCase {
 
     public void testMonitorSuccess() throws Exception {
         Thread m_serverThread = new Thread(new Runnable() {
+            @Override
             public void run() {
                 try {
                     m_serverSocket.setSoTimeout(1000);
@@ -108,6 +109,7 @@ public class FtpMonitorTest extends TestCase {
     
     public void testMonitorFailureWithBogusResponse() throws Exception {
         Thread m_serverThread = new Thread(new Runnable() {
+            @Override
             public void run() {
                 try {
                     m_serverSocket.setSoTimeout(1000);
@@ -127,6 +129,7 @@ public class FtpMonitorTest extends TestCase {
     
     public void testMonitorFailureWithNoResponse() throws Exception {
         Thread m_serverThread = new Thread(new Runnable() {
+            @Override
             public void run() {
                 try {
                     m_serverSocket.setSoTimeout(1000);

@@ -97,6 +97,7 @@ public class FilterPanel extends Composite {
             super.add(appName);
             Anchor removeLink = new Anchor("remove");
             removeLink.addClickHandler(new ClickHandler() {
+                @Override
                 public void onClick(ClickEvent event) {
                     m_eventBus.fireEvent(new ApplicationDeselectedEvent(app));
                 }
@@ -114,7 +115,7 @@ public class FilterPanel extends Composite {
 
     public static class FiltersChangedEvent extends GwtEvent<FiltersChangedEventHandler>
     {
-        public static Type<FiltersChangedEventHandler> TYPE = new Type<FiltersChangedEventHandler>();
+        public static final Type<FiltersChangedEventHandler> TYPE = new Type<FiltersChangedEventHandler>();
 
         private final Filters m_filters;
 
@@ -122,10 +123,12 @@ public class FilterPanel extends Composite {
             m_filters = filters;
         }
 
+        @Override
         protected void dispatch(FiltersChangedEventHandler handler) {
             handler.onFiltersChanged(m_filters);
         }
 
+        @Override
         public GwtEvent.Type<FiltersChangedEventHandler> getAssociatedType() {
             return TYPE;
         }
@@ -137,7 +140,7 @@ public class FilterPanel extends Composite {
 
     public static class StatusSelectionChangedEvent extends GwtEvent<StatusSelectionChangedEventHandler>
     {
-        public static Type<StatusSelectionChangedEventHandler> TYPE = new Type<StatusSelectionChangedEventHandler>();
+        public static final Type<StatusSelectionChangedEventHandler> TYPE = new Type<StatusSelectionChangedEventHandler>();
 
         private final Status m_status;
         private final boolean m_selected;
@@ -147,10 +150,12 @@ public class FilterPanel extends Composite {
             m_selected = selected;
         }
 
+        @Override
         protected void dispatch(StatusSelectionChangedEventHandler handler) {
             handler.onStatusSelectionChanged(m_status, m_selected);
         }
 
+        @Override
         public GwtEvent.Type<StatusSelectionChangedEventHandler> getAssociatedType() {
             return TYPE;
         }
@@ -183,7 +188,6 @@ public class FilterPanel extends Composite {
      */
     public void updateApplicationNames(Collection<String> names) {
         // Update the SuggestBox's Oracle
-        if (names == applicationNames) return;
         applicationNames.clear();
         applicationNames.addAll(names);
     }

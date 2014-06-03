@@ -35,9 +35,11 @@ import junit.framework.TestCase;
 
 import org.opennms.api.integration.ticketing.PluginException;
 import org.opennms.api.integration.ticketing.Ticket;
-import org.opennms.core.utils.LogUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RtTicketerPluginTest extends TestCase {
+    private static final Logger LOG = LoggerFactory.getLogger(RtTicketerPluginTest.class);
 
     /**
      * Test Cases for RtTicketerPlugin
@@ -80,7 +82,7 @@ public class RtTicketerPluginTest extends TestCase {
         final String testHome = System.getProperty("user.home") + File.separatorChar + ".opennms" + File.separatorChar + "test-home";
         final File testProp = new File(testHome + File.separatorChar + "etc" + File.separatorChar + "rt.properties");
         if (testProp.exists()) {
-            LogUtils.debugf(this, "%s exists, using it instead of src/test/opennms-home", testHome);
+            LOG.debug("{} exists, using it instead of src/test/opennms-home", testHome);
             System.setProperty("opennms.home", testHome);
         } else {
             System.setProperty("opennms.home", "src" + File.separatorChar + "test" + File.separatorChar + "opennms-home");
@@ -126,6 +128,18 @@ public class RtTicketerPluginTest extends TestCase {
             e.printStackTrace();
         }
 
+    }
+
+    public void testStateConversions() {
+        assertEquals(Ticket.State.OPEN, m_ticketer.rtToOpenNMSState("open"));
+        assertEquals(Ticket.State.OPEN, m_ticketer.rtToOpenNMSState("new"));
+        assertEquals(Ticket.State.CLOSED, m_ticketer.rtToOpenNMSState("resolved"));
+        assertEquals(Ticket.State.CANCELLED, m_ticketer.rtToOpenNMSState("cancelled"));
+        assertEquals(Ticket.State.OPEN, m_ticketer.rtToOpenNMSState("INVALID_STRING"));
+
+        assertEquals("new", m_ticketer.openNMSToRTState(Ticket.State.OPEN));
+        assertEquals("resolved", m_ticketer.openNMSToRTState(Ticket.State.CLOSED));
+        assertEquals("cancelled", m_ticketer.openNMSToRTState(Ticket.State.CANCELLED));
     }
 
     private void assertTicketEquals(final Ticket existing, final Ticket retrieved) {

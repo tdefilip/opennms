@@ -31,19 +31,23 @@ package org.opennms.netmgt.provision.service.operations;
 import java.net.InetAddress;
 
 import org.opennms.core.utils.InetAddressUtils;
-import org.opennms.core.utils.LogUtils;
 import org.opennms.netmgt.model.OnmsCategory;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsServiceType;
 import org.opennms.netmgt.model.PrimaryType;
+import org.opennms.netmgt.model.OnmsNode.NodeLabelSource;
+import org.opennms.netmgt.model.OnmsNode.NodeType;
 import org.opennms.netmgt.provision.service.ProvisionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyAccessorFactory;
 
 public abstract class SaveOrUpdateOperation extends ImportOperation {
+    private static final Logger LOG = LoggerFactory.getLogger(SaveOrUpdateOperation.class);
 
     private final OnmsNode m_node;
     private OnmsIpInterface m_currentInterface;
@@ -81,8 +85,8 @@ public abstract class SaveOrUpdateOperation extends ImportOperation {
         m_node = new OnmsNode();
         m_node.setId(nodeId);
 		m_node.setLabel(nodeLabel);
-		m_node.setLabelSource("U");
-		m_node.setType("A");
+		m_node.setLabelSource(NodeLabelSource.USER);
+		m_node.setType(NodeType.ACTIVE);
         m_node.setForeignSource(foreignSource);
         m_node.setForeignId(foreignId);
         m_node.getAssetRecord().setBuilding(building);
@@ -110,7 +114,7 @@ public abstract class SaveOrUpdateOperation extends ImportOperation {
 	public void foundInterface(String ipAddr, Object descr, final PrimaryType primaryType, boolean managed, int status) {
 		
 		if (ipAddr == null || "".equals(ipAddr.trim())) {
-		    log().error(String.format("Found interface on node %s with an empty ipaddr! Ignoring!", m_node.getLabel()));
+		    LOG.error("Found interface on node {} with an empty ipaddr! Ignoring!", m_node.getLabel());
 			return;
 		}
 
@@ -121,7 +125,7 @@ public abstract class SaveOrUpdateOperation extends ImportOperation {
         if (PrimaryType.PRIMARY.equals(primaryType)) {
         	final InetAddress addr = InetAddressUtils.addr(ipAddr);
         	if (addr == null) {
-        		LogUtils.errorf(this, "Unable to resolve address of snmpPrimary interface for node %s with address '%s'", m_node.getLabel(), ipAddr);
+        		LOG.error("Unable to resolve address of snmpPrimary interface for node {} with address '{}'", m_node.getLabel(), ipAddr);
         	} else {
         		m_scanManager = new ScanManager(addr);
         	}
@@ -135,6 +139,7 @@ public abstract class SaveOrUpdateOperation extends ImportOperation {
     /**
      * <p>scan</p>
      */
+    @Override
     public void scan() {
     	updateSnmpData();
 	}
@@ -194,7 +199,7 @@ public abstract class SaveOrUpdateOperation extends ImportOperation {
         try {
             w.setPropertyValue(name, value);
         } catch (final BeansException e) {
-            log().warn("Could not set property on object of type " + m_node.getClass().getName() + ": " + name, e);
+            LOG.warn("Could not set property on object of type {}: {}", m_node.getClass().getName(), name, e);
         }
     }
 }

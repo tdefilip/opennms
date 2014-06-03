@@ -44,12 +44,8 @@ import java.util.Vector;
  *
  * @author <A HREF="mailto:jason@opennms.org">Jason Johns </A>
  * @author <A HREF="http://www.opennms.org/">OpenNMS </A>
- * @author <A HREF="mailto:jason@opennms.org">Jason Johns </A>
- * @author <A HREF="http://www.opennms.org/">OpenNMS </A>
- * @version 1.1.1.1
- * @since 1.8.1
  */
-public class DutySchedule {
+public class DutySchedule implements Cloneable {
     /**
      * Each boolean in the bit set represents a day of the week. Monday = 0,
      * Tuesday = 1 ... Sunday = 6
@@ -249,7 +245,7 @@ public class DutySchedule {
         Vector<Object> vector = new Vector<Object>();
 
         for (int i = 0; i < 7; i++) {
-            vector.add(new Boolean(m_days.get(i)));
+            vector.add(Boolean.valueOf(m_days.get(i)));
         }
 
         vector.add(String.valueOf(m_startTime));
@@ -354,6 +350,7 @@ public class DutySchedule {
      *
      * @return a string representation of this DutySchedule
      */
+    @Override
     public String toString() {
         StringBuffer buffer = new StringBuffer();
 
@@ -385,6 +382,7 @@ public class DutySchedule {
      *
      * @return a {@link org.opennms.web.admin.users.parsers.DutySchedule} object.
      */
+    @Override
     public DutySchedule clone() {
         return new DutySchedule(toString());
     }

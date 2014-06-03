@@ -34,7 +34,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.opennms.core.utils.ThreadCategory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <pre>
@@ -61,6 +62,7 @@ import org.opennms.core.utils.ThreadCategory;
  * @version $Id: $
  */
 public class EventConfData extends Object {
+    private static final Logger LOG = LoggerFactory.getLogger(EventConfData.class);
     /**
      * The map keyed with 'EventKey's
      */
@@ -82,15 +84,14 @@ public class EventConfData extends Object {
         // go through the key elements and see if this event will match
         boolean maskMatch = true;
 
-        Iterator<String> keysetIter = eventKey.keySet().iterator();
-        while (keysetIter.hasNext() && maskMatch) {
-            String key = keysetIter.next();
+        for (final Entry<String, Object> entry : eventKey.entrySet()) {
+            final String key = entry.getKey();
 
             @SuppressWarnings("unchecked")
-            List<String> maskValues = (List<String>) eventKey.get(key);
+            final List<String> maskValues = (List<String>) entry.getValue();
 
             // get the event value for this key
-            String eventvalue = EventKey.getMaskElementValue(event, key);
+            final String eventvalue = EventKey.getMaskElementValue(event, key);
             maskMatch = eventValuePassesMaskValue(eventvalue, maskValues);
             if (!maskMatch) {
                 return maskMatch;
@@ -241,9 +242,7 @@ public class EventConfData extends Object {
         EventKey key = new EventKey(event);
         matchedEvent = m_eventMap.get(key);
         if (matchedEvent != null) {
-            if (log().isDebugEnabled()) {
-                log().debug("Match found using key: " + key.toString());
-            }
+            LOG.debug("Match found using key: {}", key);
 
             return matchedEvent;
         }
@@ -281,9 +280,7 @@ public class EventConfData extends Object {
 
                 // if a match was found, return the config
                 if (keyMatchFound) {
-                    if (log().isDebugEnabled()) {
-                        log().debug("Match found using key: " + iterKey.toString());
-                    }
+                    LOG.debug("Match found using key: {}", iterKey);
 
                     matchedEvent = entry.getValue();
                 }
@@ -313,9 +310,5 @@ public class EventConfData extends Object {
     public synchronized void clear() {
         m_eventMap.clear();
         m_ueiToKeyListMap.clear();
-    }
-
-    private ThreadCategory log() {
-        return ThreadCategory.getInstance(getClass());
     }
 }

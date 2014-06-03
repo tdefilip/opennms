@@ -32,6 +32,8 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.opennms.netmgt.snmp.SnmpInstId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>NodeResourceType class.</p>
@@ -41,15 +43,17 @@ import org.opennms.netmgt.snmp.SnmpInstId;
  */
 public class NodeResourceType extends ResourceType {
     
+    private static final Logger LOG = LoggerFactory.getLogger(NodeResourceType.class);
+    
     private NodeInfo m_nodeInfo;
 
     /**
      * <p>Constructor for NodeResourceType.</p>
      *
-     * @param agent a {@link org.opennms.netmgt.collectd.CollectionAgent} object.
+     * @param agent a {@link org.opennms.netmgt.collection.api.CollectionAgent} object.
      * @param snmpCollection a {@link org.opennms.netmgt.collectd.OnmsSnmpCollection} object.
      */
-    public NodeResourceType(CollectionAgent agent, OnmsSnmpCollection snmpCollection) {
+    public NodeResourceType(SnmpCollectionAgent agent, OnmsSnmpCollection snmpCollection) {
         super(agent, snmpCollection);
         m_nodeInfo = new NodeInfo(this, agent);
     }
@@ -64,15 +68,17 @@ public class NodeResourceType extends ResourceType {
     }
 
     /** {@inheritDoc} */
+    @Override
     public SnmpCollectionResource findResource(SnmpInstId inst) {
         return m_nodeInfo;
     }
 
     /** {@inheritDoc} */
+    @Override
     public SnmpCollectionResource findAliasedResource(SnmpInstId inst, String ifAlias) {
     // This is here for completeness but it should not get called from here.
     // findResource should be called instead
-        log().debug("findAliasedResource: Should not get called from NodeResourceType");
+        LOG.debug("findAliasedResource: Should not get called from NodeResourceType");
         return null;
     }
 
@@ -81,6 +87,7 @@ public class NodeResourceType extends ResourceType {
      *
      * @return a {@link java.util.Collection} object.
      */
+    @Override
     public Collection<NodeInfo> getResources() {
         return Collections.singleton(m_nodeInfo);
     }

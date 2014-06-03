@@ -64,16 +64,21 @@ import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.Unmarshaller;
 import org.exolab.castor.xml.ValidationException;
 import org.opennms.core.utils.ConfigFileConstants;
-import org.opennms.core.utils.ThreadCategory;
+
 import org.opennms.netmgt.config.xmpDataCollection.XmpCollection;
 import org.opennms.netmgt.config.xmpDataCollection.XmpDatacollectionConfig;
-import org.opennms.netmgt.model.RrdRepository;
+import org.opennms.netmgt.rrd.RrdRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 public class XmpCollectionFactory {
 
     /* class variables and methods *********************** */
     private static XmpCollectionFactory instance;
 
     private static XmpDatacollectionConfig config;
+    
+	private static final Logger LOG = LoggerFactory.getLogger(XmpCollectionFactory.class);
+
 
     // initialize our class for the creation of instances
     /**
@@ -125,14 +130,11 @@ public class XmpCollectionFactory {
         rrdPath = null;
 
         // list out the collections I've found
-        XmpCollection[] collections = config.getXmpCollection();
-        for (XmpCollection coll: collections) {
-
-            log().debug("XmpCollectionFactory: found collection "+
-                        coll.getName());
-
-            //System.out.println("XmpCollectionFactory: found collection "+
-            //                    coll.getName());
+        if (LOG.isDebugEnabled()) {
+            XmpCollection[] collections = config.getXmpCollection();
+            for (XmpCollection coll: collections) {
+                LOG.debug("XmpCollectionFactory: found collection {}", coll.getName());
+            }
         }
 
         return; 
@@ -157,9 +159,7 @@ public class XmpCollectionFactory {
     }
 
     /* private methods *********************************** */
-    private ThreadCategory log() {
-        return ThreadCategory.getInstance(getClass());
-    }
+   
 
     /* public methods ************************************ */
 
@@ -186,7 +186,7 @@ public class XmpCollectionFactory {
      *       the XmpDatacollectionConfig class and return an new repository *
      *
      * @param collectionName a {@link java.lang.String} object.
-     * @return a {@link org.opennms.netmgt.model.RrdRepository} object.
+     * @return a {@link org.opennms.netmgt.rrd.RrdRepository} object.
      */
     public RrdRepository getRrdRepository(String collectionName) 
     { 

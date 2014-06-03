@@ -37,8 +37,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.MockLogAppender;
-import org.opennms.core.utils.BeanUtils;
 import org.opennms.core.utils.InetAddressUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
@@ -82,6 +82,7 @@ public class RadiusAuthDetectorTest implements ApplicationContextAware, Initiali
 	public void testRunDetectorInTempThread() throws InterruptedException {
 		for(int i = 0; i < 1000; i++) {
 			Thread t = new Thread() {
+                                @Override
 				public void run() {
 					try {
 						testDetectorFail();

@@ -37,8 +37,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.MockLogAppender;
-import org.opennms.core.utils.BeanUtils;
 import org.opennms.netmgt.provision.DetectFuture;
 import org.opennms.netmgt.provision.detector.simple.NotesHttpDetector;
 import org.opennms.netmgt.provision.server.SimpleServer;
@@ -204,6 +204,7 @@ public class NotesDetectorTest implements InitializingBean {
     private SimpleServer createServer(final String httpResponse) throws Exception {
         SimpleServer server = new SimpleServer() {
             
+            @Override
             public void onInit() {
                 //addResponseHandler(contains("GET"), shutdownServer(httpResponse));
                 addResponseHandler(contains("HEAD"), shutdownServer(httpResponse));

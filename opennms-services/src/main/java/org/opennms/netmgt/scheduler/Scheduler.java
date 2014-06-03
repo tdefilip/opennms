@@ -43,6 +43,7 @@ public interface Scheduler extends ScheduleTimer {
 	 * interval is used as the key for determining which queue to add the
 	 * runnable.
 	 */
+        @Override
 	public abstract void schedule(long interval, final ReadyRunnable runnable);
 
 	/**
@@ -50,6 +51,7 @@ public interface Scheduler extends ScheduleTimer {
 	 *
 	 * @return a long.
 	 */
+        @Override
 	public abstract long getCurrentTime();
 
 	/**
@@ -96,4 +98,11 @@ public interface Scheduler extends ScheduleTimer {
 	 */
 	public abstract int getStatus();
 
+        /**
+         * Returns the total number of scheduled tasks (ReadyRunnables) that have
+         * been executed since the scheduler was initialized.
+         *
+         * @return the number of task executed
+         */
+        public abstract long getNumTasksExecuted();
 }

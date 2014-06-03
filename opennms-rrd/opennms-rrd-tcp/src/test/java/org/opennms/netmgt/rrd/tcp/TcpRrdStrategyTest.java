@@ -45,11 +45,12 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.opennms.core.test.MockLogAppender;
-import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.rrd.RrdDataSource;
 import org.opennms.netmgt.rrd.RrdStrategy;
 import org.opennms.netmgt.rrd.RrdUtils;
 import org.opennms.test.FileAnticipator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
 import org.python.core.PyException;
@@ -65,6 +66,7 @@ import org.python.util.PythonInterpreter;
  * @author <a href="mailto:dj@opennms.org">DJ Gregor</a>
  */
 public class TcpRrdStrategyTest {
+    private static final Logger LOG = LoggerFactory.getLogger(TcpRrdStrategyTest.class);
 
     private RrdStrategy<Object,Object> m_strategy;
     private FileAnticipator m_fileAnticipator;
@@ -74,10 +76,12 @@ public class TcpRrdStrategyTest {
     @BeforeClass
     public static void startListenerThread() throws Exception {
         m_listenerThread = new Thread() {
+            @Override
             public void run() {
                 this.setName("fail");
+                ServerSocket ssocket = null;
                 try {
-                    ServerSocket ssocket = new ServerSocket(8999);
+                    ssocket = new ServerSocket(8999);
                     ssocket.setSoTimeout(500);
                     while (true) {
                         try {
@@ -128,13 +132,19 @@ public class TcpRrdStrategyTest {
                                 return;
                             }
                         } catch (IOException e) {
-                            ThreadCategory.getInstance(this.getClass()).error(e.getMessage(), e);
+                            LOG.error(e.getMessage(), e);
                         }
                     }
                 } catch (IOException e) {
-                    ThreadCategory.getInstance(this.getClass()).error(e.getMessage(), e);
+                    LOG.error(e.getMessage(), e);
                 } catch (Throwable e) {
-                    ThreadCategory.getInstance(this.getClass()).error(e.getMessage(), e);
+                    LOG.error(e.getMessage(), e);
+                } finally {
+                    try {
+                        if (ssocket != null) ssocket.close();
+                    } catch (IOException e) {
+                        LOG.warn(e.getMessage(), e);
+                    }
                 }
             }
         };

@@ -28,7 +28,6 @@
 
 package org.opennms.netmgt.poller.monitors;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.Inet4Address;
@@ -74,25 +73,24 @@ import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
-import org.exolab.castor.xml.MarshalException;
-import org.exolab.castor.xml.ValidationException;
 import org.opennms.core.utils.EmptyKeyRelaxedTrustProvider;
 import org.opennms.core.utils.EmptyKeyRelaxedTrustSSLContext;
 import org.opennms.core.utils.HttpResponseRange;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.core.utils.MatchTable;
-import org.opennms.core.utils.ParameterMap;
 import org.opennms.core.utils.PropertiesUtils;
-import org.opennms.core.utils.ThreadCategory;
 import org.opennms.core.utils.TimeoutTracker;
-import org.opennms.core.xml.CastorUtils;
+import org.opennms.core.xml.JaxbUtils;
 import org.opennms.netmgt.config.pagesequence.Page;
 import org.opennms.netmgt.config.pagesequence.PageSequence;
 import org.opennms.netmgt.config.pagesequence.Parameter;
 import org.opennms.netmgt.config.pagesequence.SessionVariable;
-import org.opennms.netmgt.model.PollStatus;
 import org.opennms.netmgt.poller.Distributable;
 import org.opennms.netmgt.poller.MonitoredService;
+import org.opennms.netmgt.poller.PollStatus;
+import org.opennms.netmgt.utils.DnsUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class is designed to be used by the service poller framework to test the availability
@@ -105,14 +103,18 @@ import org.opennms.netmgt.poller.MonitoredService;
 @Distributable
 public class PageSequenceMonitor extends AbstractServiceMonitor {
     
+    
+    private static final Logger LOG = LoggerFactory.getLogger(PageSequenceMonitor.class);
+    
     protected class SequenceTracker{
         
         TimeoutTracker m_tracker;
         public SequenceTracker(Map<String, Object> parameterMap, int defaultSequenceRetry, int defaultTimeout) {
-            Map<String, Object> parameters = new HashMap<String, Object>();
-            parameters.put("retry", ParameterMap.getKeyedInteger(parameterMap, "sequence-retry", defaultSequenceRetry));
-            parameters.put("timeout", ParameterMap.getKeyedInteger(parameterMap, "timeout", defaultTimeout));
-            parameters.put("strict-timeout", ParameterMap.getKeyedBoolean(parameterMap, "strict-timeout", false));
+            final Map<String, Object> parameters = new HashMap<String, Object>();
+
+            parameters.put("retry", getKeyedInteger(parameterMap, "sequence-retry", defaultSequenceRetry));
+            parameters.put("timeout", getKeyedInteger(parameterMap, "timeout", defaultTimeout));
+            parameters.put("strict-timeout", getKeyedBoolean(parameterMap, "strict-timeout", false));
             m_tracker = new TimeoutTracker(parameters, defaultSequenceRetry, defaultTimeout);
         }
         public void reset() {
@@ -164,24 +166,24 @@ public class PageSequenceMonitor extends AbstractServiceMonitor {
         final PageSequence m_sequence;
         final List<HttpPage> m_pages;
         Properties m_sequenceProperties;
-        Map<String,String> m_parameters = new HashMap<String,String>();
+        Map<String,Object> m_parameters = new HashMap<String,Object>();
 
-        HttpPageSequence(PageSequence sequence) {
+        HttpPageSequence(final PageSequence sequence) {
             m_sequence = sequence;
 
-            m_pages = new ArrayList<HttpPage>(m_sequence.getPageCount());
-            for (Page page : m_sequence.getPage()) {
+            m_pages = new ArrayList<HttpPage>(m_sequence.getPages().size());
+            for (Page page : m_sequence.getPages().toArray(new Page[0])) {
                 m_pages.add(new HttpPage(this, page));
             }
 
             m_sequenceProperties = new Properties();
         }
 
-        public Map<String,String> getParameters() {
+        public Map<String,Object> getParameters() {
             return m_parameters;
         }
 
-        public void setParameters(Map<String,String> parameters) {
+        public void setParameters(final Map<String,Object> parameters) {
             m_parameters = parameters;
         }
 
@@ -201,33 +203,26 @@ public class PageSequenceMonitor extends AbstractServiceMonitor {
             }
 
             for (HttpPage page : getPages()) {
-                if (log().isDebugEnabled()) {
-                    log().debug("Executing HttpPage: " + page.toString());
-                }
+                LOG.debug("Executing HttpPage: {}", page.toString());
                 page.execute(client, svc, m_sequenceProperties);
                 if (page.getDsName() != null) {
-                    if (log().isDebugEnabled()) {
-                        log().debug("Recording response time " + page.getResponseTime() + " for ds " + page.getDsName());
-                    }
+                    LOG.debug("Recording response time {} for ds {}", page.getResponseTime(), page.getDsName());
                     responseTimes.put(page.getDsName(), page.getResponseTime());
                 }
             }
+            
         }
 
         protected Properties getSequenceProperties() {
             return m_sequenceProperties;
         }
 
-        protected void setSequenceProperties(Properties newProps) {
+        protected void setSequenceProperties(final Properties newProps) {
             m_sequenceProperties = newProps;
         }
 
         protected void clearSequenceProperties() {
             m_sequenceProperties.clear();
-        }
-
-        private ThreadCategory log() {
-            return ThreadCategory.getInstance(getClass());
         }
     }
 
@@ -236,16 +231,18 @@ public class PageSequenceMonitor extends AbstractServiceMonitor {
     }
 
     public static class PageSequenceHttpPost extends HttpPost implements PageSequenceHttpUriRequest {
-        public PageSequenceHttpPost(URI uri) {
+        public PageSequenceHttpPost(final URI uri) {
             super(uri);
         }
 
-        public void setQueryParameters(List<NameValuePair> parms) {
+        @Override
+        public void setQueryParameters(final List<NameValuePair> parms) {
             try {
-                UrlEncodedFormEntity entity = new UrlEncodedFormEntity(parms, "UTF-8");
+                final UrlEncodedFormEntity entity = new UrlEncodedFormEntity(parms, "UTF-8");
                 this.setEntity(entity);
-            } catch (UnsupportedEncodingException e) {
+            } catch (final UnsupportedEncodingException e) {
                 // Should never happen
+                LOG.debug("Unsupported encoding", e);
             }
         }
     }
@@ -256,6 +253,7 @@ public class PageSequenceMonitor extends AbstractServiceMonitor {
             super(uri);
         }
 
+        @Override
         public void setQueryParameters(List<NameValuePair> parms) {
             URI uri = this.getURI();
             URI uriWithQueryString = null;
@@ -266,7 +264,7 @@ public class PageSequenceMonitor extends AbstractServiceMonitor {
                 uriWithQueryString = ub.build();
                 this.setURI(uriWithQueryString);
             } catch (URISyntaxException e) {
-                ThreadCategory.getInstance("Cannot add query parameters to URI: " + this.getClass()).warn(e.getMessage(), e);
+                LOG.warn(e.getMessage(), e);
             }
         }
     }
@@ -290,7 +288,7 @@ public class PageSequenceMonitor extends AbstractServiceMonitor {
             m_locationPattern = (page.getLocationMatch() == null ? null : Pattern.compile(page.getLocationMatch()));
             m_parentSequence = parent;
 
-            for (Parameter parm : m_page.getParameter()) {
+            for (Parameter parm : m_page.getParameters().toArray(new Parameter[0])) {
                 m_parms.add(new BasicNameValuePair(parm.getKey(), parm.getValue()));
             }
         }
@@ -361,7 +359,7 @@ public class PageSequenceMonitor extends AbstractServiceMonitor {
                     if (streetCred.length == 2) {
                         client.getCredentialsProvider().setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(streetCred[0], streetCred[1]));
                     } else { 
-                        log().warn("Illegal value found for username/password HTTP credentials: " + userInfo);
+                        LOG.warn("Illegal value found for username/password HTTP credentials: {}", userInfo);
                     }
                 }
 
@@ -380,16 +378,12 @@ public class PageSequenceMonitor extends AbstractServiceMonitor {
                 if (getLocationPattern() != null) {
                     Header locationHeader = response.getFirstHeader("location");
                     if (locationHeader == null) {
-                        if (log().isDebugEnabled()) {
-                            log().debug("locationMatch was set, but no Location: header was returned at " + uri, new Exception());
-                        }
+                        LOG.debug("locationMatch was set, but no Location: header was returned at {}", uri, new Exception());
                         throw new PageSequenceMonitorException("locationMatch was set, but no Location: header was returned at " + uri);
                     }
                     Matcher matcher = getLocationPattern().matcher(locationHeader.getValue());
                     if (!matcher.find()) {
-                        if (log().isDebugEnabled()) {
-                            log().debug("failed to find '" + getLocationPattern() + "' in Location: header at " + uri + ":\n" + locationHeader.getValue(), new Exception());
-                        }
+                        LOG.debug("failed to find '{}' in Location: header at {}:\n{}", getLocationPattern(), uri, locationHeader.getValue(), new Exception());
                         throw new PageSequenceMonitorException("failed to find '" + getLocationPattern() + "' in Location: header at " + uri);
                     }
                 }
@@ -404,9 +398,7 @@ public class PageSequenceMonitor extends AbstractServiceMonitor {
                 if (getSuccessPattern() != null) {
                     Matcher matcher = getSuccessPattern().matcher(responseString);
                     if (!matcher.find()) {
-                        if (log().isDebugEnabled()) {
-                            log().debug("failed to find '" + getSuccessPattern() + "' in page content at " + uri + ":\n" + responseString.trim(), new Exception());
-                        }
+                        LOG.debug("failed to find '{}' in page content at {}:\n{}", getSuccessPattern(), uri, responseString.trim(), new Exception());
                         throw new PageSequenceMonitorException("failed to find '" + getSuccessPattern() + "' in page content at " + uri);
                     }
                     updateSequenceProperties(sequenceProperties, matcher);
@@ -414,47 +406,43 @@ public class PageSequenceMonitor extends AbstractServiceMonitor {
 
             } catch (NoSuchAlgorithmException e) {
                 // Should never happen
-                throw new PageSequenceMonitorException("Could not find appropriate SSL context provider: " + e.getMessage(), e);
+                throw new PageSequenceMonitorException("Could not find appropriate SSL context provider", e);
             } catch (URISyntaxException e) {
-                throw new IllegalArgumentException("unable to construct URL for page: " + e, e);
+                throw new IllegalArgumentException("unable to construct URL for page", e);
             } catch (IOException e) {
-                if (log().isDebugEnabled()) {
-                    log().debug("I/O Error " + e, e);
-                }
-                throw new PageSequenceMonitorException("I/O Error " + e, e);
+                LOG.debug("I/O Error", e);
+                throw new PageSequenceMonitorException("I/O Error", e);
             }
         }
 
         private List<NameValuePair> expandParms(MonitoredService svc) {
             List<NameValuePair> expandedParms = new ArrayList<NameValuePair>();
             Properties svcProps = getServiceProperties(svc);
-            if (svcProps != null && log().isDebugEnabled()) {
-                log().debug("I have " + svcProps.size() + " service properties.");
+            if (svcProps != null) {
+                LOG.debug("I have {} service properties.", svcProps.size());
             }
             Properties seqProps = getSequenceProperties();
-            if (seqProps != null && log().isDebugEnabled()) {
-                log().debug("I have " + seqProps.size() + " sequence properties.");
+            if (seqProps != null) {
+                LOG.debug("I have {} sequence properties.", seqProps.size());
             }
             for (NameValuePair nvp : m_parms) {
                 String value = PropertiesUtils.substitute((String)nvp.getValue(), getServiceProperties(svc), getSequenceProperties());
                 expandedParms.add(new BasicNameValuePair(nvp.getName(), value));
-                if (log().isDebugEnabled() && !nvp.getValue().equals(value) ) {
-                    log().debug("Expanded parm with name '" + nvp.getName() + "' from '" + nvp.getValue() + "' to '" + value + "'");
+                if (!nvp.getValue().equals(value) ) {
+                    LOG.debug("Expanded parm with name '{}' from '{}' to '{}'", nvp.getName(), nvp.getValue(), value);
                 }
             }
             return expandedParms;
         }
 
         private void updateSequenceProperties(Properties props, Matcher matcher) {
-            for (SessionVariable varBinding : m_page.getSessionVariableCollection()) {
+            for (SessionVariable varBinding : m_page.getSessionVariables()) {
                 String vbName = varBinding.getName();
                 String vbValue = matcher.group(varBinding.getMatchGroup());
                 if (vbValue == null)
                     vbValue = "";
                 props.put(vbName, vbValue);
-                if (log().isDebugEnabled()) {
-                    log().debug("Just set session variable '" + vbName + "' to '" + vbValue + "'");
-                }
+                LOG.debug("Just set session variable '{}' to '{}'", vbName, vbValue);
             }
 
             setSequenceProperties(props);
@@ -474,7 +462,7 @@ public class PageSequenceMonitor extends AbstractServiceMonitor {
             String host = getHost(seqProps, svcProps);
             if (m_page.getRequireIPv4()) {
                 try {
-                    InetAddress address = InetAddressUtils.resolveHostname(host, false);
+                    InetAddress address = DnsUtils.resolveHostname(host, false);
                     if (!(address instanceof Inet4Address)) throw new UnknownHostException();
                     host = InetAddressUtils.str(address);
                 } catch (UnknownHostException e) {
@@ -482,7 +470,7 @@ public class PageSequenceMonitor extends AbstractServiceMonitor {
                 }
             } else if (m_page.getRequireIPv6()) {
                 try {
-                    InetAddress address = InetAddressUtils.resolveHostname(host, true);
+                    InetAddress address = DnsUtils.resolveHostname(host, true);
                     host = "[" + InetAddressUtils.str(address) + "]";
                 } catch (UnknownHostException e) {
                     throw new PageSequenceMonitorException("failed to find IPv6 address for hostname: " + host);
@@ -581,17 +569,12 @@ public class PageSequenceMonitor extends AbstractServiceMonitor {
         public String getDsName() {
             return m_page.getDsName();
         }
-
-        private ThreadCategory log() {
-            return ThreadCategory.getInstance(getClass());
-        }
     }
 
     public static class PageSequenceMonitorParameters {
         public static final String KEY = PageSequenceMonitorParameters.class.getName();
 
-        @SuppressWarnings({ "unchecked" })
-        static synchronized PageSequenceMonitorParameters get(Map parameterMap) {
+        static synchronized PageSequenceMonitorParameters get(final Map<String,Object> parameterMap) {
             PageSequenceMonitorParameters parms = (PageSequenceMonitorParameters) parameterMap.get(KEY);
             if (parms == null) {
                 parms = new PageSequenceMonitorParameters(parameterMap);
@@ -600,27 +583,42 @@ public class PageSequenceMonitor extends AbstractServiceMonitor {
             return parms;
         }
 
-        private final Map<String, String> m_parameterMap;
+        private final Map<String, Object> m_parameterMap;
         private final HttpParams m_clientParams;
         private final HttpPageSequence m_pageSequence;
 
         @SuppressWarnings("unchecked")
-        PageSequenceMonitorParameters(Map<String, String> parameterMap) {
+        PageSequenceMonitorParameters(final Map<String, Object> parameterMap) {
             m_parameterMap = parameterMap;
-            String pageSequence = getStringParm("page-sequence", null);
+
+            Object pageSequence = getKeyedObject(parameterMap, "page-sequence", null);
+
             if (pageSequence == null) {
                 throw new IllegalArgumentException("page-sequence must be set in monitor parameters");
             }
+
+            /* if we get an actual PageSequence object, we need
+             * to do substitution on it first, so turn it back into
+             * a string temporarily.
+             */
+            if (pageSequence instanceof PageSequence) {
+                pageSequence = JaxbUtils.marshal(pageSequence);
+            } else if (pageSequence instanceof String) {
+                // don't need to do anything
+            } else {
+                throw new IllegalArgumentException("Unsure how to deal with Page Sequence of type " + pageSequence.getClass());
+            }
+
             // Perform parameter expansion on the page-sequence string
-            pageSequence = PropertiesUtils.substitute(pageSequence, m_parameterMap);
-            PageSequence sequence = parsePageSequence(pageSequence);
+            pageSequence = PropertiesUtils.substitute((String)pageSequence, m_parameterMap);
+            PageSequence sequence = parsePageSequence((String)pageSequence);
             m_pageSequence = new HttpPageSequence(sequence);
             m_pageSequence.setParameters(m_parameterMap);
 
             m_clientParams = createClientParams();
         }
 
-        Map<String, String> getParameterMap() {
+        Map<String, Object> getParameterMap() {
             return m_parameterMap;
         }
 
@@ -629,24 +627,8 @@ public class PageSequenceMonitor extends AbstractServiceMonitor {
         }
 
         PageSequence parsePageSequence(String sequenceString) {
-            try {
-                return CastorUtils.unmarshal(PageSequence.class, new ByteArrayInputStream(sequenceString.getBytes("UTF-8")));
-            } catch (MarshalException e) {
-                throw new IllegalArgumentException("Unable to parse page-sequence for HttpMonitor: " + e + "\nConfig: " + sequenceString, e);
-            } catch (ValidationException e) {
-                throw new IllegalArgumentException("Unable to validate page-sequence for HttpMonitor: " + e + "\nConfig: " + sequenceString, e);
-            } catch (UnsupportedEncodingException e) {
-                throw new IllegalArgumentException("UTF-8 encoding not supported", e);
-            }
+            return JaxbUtils.unmarshal(PageSequence.class, sequenceString);
 
-        }
-
-        private String getStringParm(String key, String deflt) {
-            return ParameterMap.getKeyedString(getParameterMap(), key, deflt);
-        }
-
-        private int getIntParm(String key, int defValue) {
-            return ParameterMap.getKeyedInteger(getParameterMap(), key, defValue);
         }
 
         private HttpParams createClientParams() {
@@ -660,11 +642,11 @@ public class PageSequenceMonitor extends AbstractServiceMonitor {
         }
 
         public int getRetries() {
-            return getIntParm("retry", PageSequenceMonitor.DEFAULT_RETRY);
+            return getKeyedInteger(m_parameterMap, "retry", DEFAULT_RETRY);
         }
 
         public int getTimeout() {
-            return getIntParm("timeout", PageSequenceMonitor.DEFAULT_TIMEOUT);
+            return getKeyedInteger(m_parameterMap, "timeout", DEFAULT_TIMEOUT);
         }
 
         public HttpParams getClientParams() {
@@ -681,6 +663,7 @@ public class PageSequenceMonitor extends AbstractServiceMonitor {
     }
 
     /** {@inheritDoc} */
+    @Override
     public PollStatus poll(final MonitoredService svc, final Map<String, Object> parameterMap) {
         DefaultHttpClient client = null;
         PollStatus serviceStatus = PollStatus.unavailable("Poll not completed yet");
@@ -707,7 +690,7 @@ public class PageSequenceMonitor extends AbstractServiceMonitor {
                 serviceStatus = PollStatus.unavailable(e.getMessage());
                 serviceStatus.setProperties(responseTimes);
             } catch (IllegalArgumentException e) {
-                log().error("Invalid parameters to monitor: " + e.getMessage(), e);
+                LOG.error("Invalid parameters to monitor", e);
                 serviceStatus = PollStatus.unavailable("Invalid parameter to monitor: " + e.getMessage() + ".  See log for details.");
                 serviceStatus.setProperties(responseTimes);
             } finally {

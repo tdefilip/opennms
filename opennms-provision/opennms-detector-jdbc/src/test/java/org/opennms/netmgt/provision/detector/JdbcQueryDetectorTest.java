@@ -38,15 +38,14 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
-import org.apache.log4j.Level;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
-import org.opennms.core.utils.BeanUtils;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.provision.detector.jdbc.JdbcQueryDetector;
 import org.opennms.test.JUnitConfigurationEnvironment;
@@ -104,7 +103,7 @@ public class JdbcQueryDetectorTest implements InitializingBean {
 
     @After
     public void tearDown(){
-        MockLogAppender.assertNotGreaterOrEqual(Level.FATAL);
+        MockLogAppender.assertNoFatalOrGreater();
     }
 
     @Test(timeout=90000)

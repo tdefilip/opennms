@@ -40,7 +40,7 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
 import org.opennms.core.db.install.SimpleDataSource;
-import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * <p>For each unit test method, creates a temporary database before the unit
@@ -57,7 +57,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
  */
 public class TemporaryDatabaseTestCase extends TestCase {
     
-    protected SimpleJdbcTemplate jdbcTemplate;
+    protected JdbcTemplate jdbcTemplate;
 
     private static final String TEST_DB_NAME_PREFIX = "opennms_test_";
     
@@ -203,7 +203,7 @@ public class TemporaryDatabaseTestCase extends TestCase {
     
     public void setDataSource(DataSource dataSource) {
         m_dataSource = dataSource;
-        jdbcTemplate = new SimpleJdbcTemplate(dataSource);
+        jdbcTemplate = new JdbcTemplate(dataSource);
     }
     
     public DataSource getDataSource() {
@@ -315,7 +315,8 @@ public class TemporaryDatabaseTestCase extends TestCase {
          */
         Thread.sleep(100);
 
-        Connection adminConnection = getAdminDataSource().getConnection();
+        final DataSource dataSource = getAdminDataSource();
+        Connection adminConnection = dataSource.getConnection();
 
         try {
             for (int dropAttempt = 0; dropAttempt < MAX_DATABASE_DROP_ATTEMPTS; dropAttempt++) {
@@ -329,7 +330,9 @@ public class TemporaryDatabaseTestCase extends TestCase {
                     if ((dropAttempt + 1) >= MAX_DATABASE_DROP_ATTEMPTS) {
                         final String message = "Failed to drop test database on last attempt " + (dropAttempt + 1) + ": " + e;
                         System.err.println(new Date().toString() + ": " + message);
-                        TemporaryDatabase.dumpThreads();
+                        if (dataSource instanceof TemporaryDatabasePostgreSQL) {
+                            TemporaryDatabasePostgreSQL.dumpThreads();
+                        }
 
                         SQLException newException = new SQLException(message);
                         newException.initCause(e);
@@ -446,6 +449,7 @@ public class TemporaryDatabaseTestCase extends TestCase {
             m_tearDownError = tearDownError;
         }
         
+        @Override
         public String toString() {
             return super.toString()
                 + "\nAlso received error on tearDown: "
@@ -453,7 +457,7 @@ public class TemporaryDatabaseTestCase extends TestCase {
         }
     }
     
-    public SimpleJdbcTemplate getJdbcTemplate() {
+    public JdbcTemplate getJdbcTemplate() {
     	return jdbcTemplate;
     }
     

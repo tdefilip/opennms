@@ -36,9 +36,9 @@ import static org.opennms.core.utils.InetAddressUtils.addr;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
-import org.opennms.core.utils.BeanUtils;
 import org.opennms.netmgt.model.DemandPoll;
 import org.opennms.test.JUnitConfigurationEnvironment;
 import org.opennms.web.services.PollerService;
@@ -56,7 +56,8 @@ import org.springframework.test.context.ContextConfiguration;
         "classpath*:/META-INF/opennms/component-service.xml",
         "classpath:org/opennms/web/svclayer/applicationContext-svclayer.xml",
         "classpath*:/META-INF/opennms/applicationContext-reportingCore.xml",
-        "classpath:/META-INF/opennms/applicationContext-insertData-enabled.xml"
+        "classpath:/META-INF/opennms/applicationContext-insertData-enabled.xml",
+        "classpath:/META-INF/opennms/applicationContext-minimal-conf.xml"
 })
 @JUnitConfigurationEnvironment
 @JUnitTemporaryDatabase

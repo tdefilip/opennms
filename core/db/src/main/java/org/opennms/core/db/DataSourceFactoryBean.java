@@ -28,19 +28,21 @@
 
 package org.opennms.core.db;
 
+
 import javax.sql.DataSource;
 
-import org.opennms.core.utils.ThreadCategory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
-
-import org.opennms.core.resource.Vault;
 
 /**
  * <p>DataSourceFactoryBean class.</p>
  */
 public class DataSourceFactoryBean implements FactoryBean<DataSource>, InitializingBean, DisposableBean {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(DataSourceFactoryBean.class);
 
     /**
      * <p>getObject</p>
@@ -50,7 +52,7 @@ public class DataSourceFactoryBean implements FactoryBean<DataSource>, Initializ
      */
     @Override
     public DataSource getObject() throws Exception {
-        return DataSourceFactory.getDataSource();
+        return DataSourceFactory.getInstance();
     }
 
     /**
@@ -60,7 +62,7 @@ public class DataSourceFactoryBean implements FactoryBean<DataSource>, Initializ
      */
     @Override
     public Class<? extends DataSource> getObjectType() {
-        return (DataSourceFactory.getDataSource() == null ? DataSource.class : DataSourceFactory.getDataSource().getClass());
+        return (DataSourceFactory.getInstance() == null ? DataSource.class : DataSourceFactory.getInstance().getClass());
     }
 
     /**
@@ -80,8 +82,7 @@ public class DataSourceFactoryBean implements FactoryBean<DataSource>, Initializ
      */
     @Override
     public void afterPropertiesSet() throws Exception {
-        DataSourceFactory.init();
-        Vault.setDataSource(DataSourceFactory.getInstance()); // Fix for Bug 4117
+        // Do nothing
     }
 
     /**
@@ -91,12 +92,8 @@ public class DataSourceFactoryBean implements FactoryBean<DataSource>, Initializ
      */
     @Override
     public void destroy() throws Exception {
-        log().info("Closing DataSourceFactory!!!");
+        LOG.info("Closing {}!!!", getClass().getSimpleName());
         DataSourceFactory.close();
-    }
-
-    private ThreadCategory log() {
-        return ThreadCategory.getInstance(getClass());
     }
 
 }

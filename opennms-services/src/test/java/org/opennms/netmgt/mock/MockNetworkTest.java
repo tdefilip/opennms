@@ -42,13 +42,12 @@ import org.opennms.netmgt.config.PollOutagesConfig;
 import org.opennms.netmgt.config.PollerConfig;
 import org.opennms.netmgt.config.poller.Package;
 import org.opennms.netmgt.config.poller.Service;
-import org.opennms.netmgt.eventd.mock.EventAnticipator;
-import org.opennms.netmgt.eventd.mock.MockEventIpcManager;
-import org.opennms.netmgt.model.PollStatus;
+import org.opennms.netmgt.dao.mock.EventAnticipator;
+import org.opennms.netmgt.dao.mock.MockEventIpcManager;
 import org.opennms.netmgt.model.events.EventListener;
-import org.opennms.netmgt.poller.IfKey;
+import org.opennms.netmgt.model.events.EventUtils;
 import org.opennms.netmgt.poller.MonitoredService;
-import org.opennms.netmgt.poller.QueryManager;
+import org.opennms.netmgt.poller.PollStatus;
 import org.opennms.netmgt.poller.ServiceMonitor;
 import org.opennms.netmgt.poller.mock.MockMonitoredService;
 import org.opennms.netmgt.xml.event.Event;
@@ -98,26 +97,32 @@ public class MockNetworkTest extends TestCase {
             return serviceCount;
         }
 
+        @Override
         public void visitContainer(MockContainer<?,?> c) {
             containerCount++;
         }
 
+        @Override
         public void visitElement(MockElement e) {
             elementCount++;
         }
 
+        @Override
         public void visitInterface(MockInterface i) {
             interfaceCount++;
         }
 
+        @Override
         public void visitNetwork(MockNetwork n) {
             networkCount++;
         }
 
+        @Override
         public void visitNode(MockNode n) {
             nodeCount++;
         }
 
+        @Override
         public void visitService(MockService s) {
             serviceCount++;
         }
@@ -165,6 +170,7 @@ public class MockNetworkTest extends TestCase {
 
     private void anticipateServiceEvents(final EventAnticipator anticipator, MockElement element, final String uei) {
         MockVisitor eventSetter = new MockVisitorAdapter() {
+            @Override
             public void visitService(MockService svc) {
                 Event event = MockEventUtil.createServiceEvent("Test", uei, svc, null);
                 anticipator.anticipateEvent(event);
@@ -173,6 +179,7 @@ public class MockNetworkTest extends TestCase {
         element.visit(eventSetter);
     }
 
+    @Override
     protected void setUp() throws Exception {
         m_network = new MockNetwork();
         m_network.setCriticalService("ICMP");
@@ -208,6 +215,7 @@ public class MockNetworkTest extends TestCase {
 
     }
 
+    @Override
     protected void tearDown() throws Exception {
     }
 
@@ -275,6 +283,7 @@ public class MockNetworkTest extends TestCase {
         class MockListener implements EventListener {
             private Event receivedEvent;
 
+            @Override
             public String getName() {
                 return "MockListener";
             }
@@ -283,6 +292,7 @@ public class MockNetworkTest extends TestCase {
                 return receivedEvent;
             }
 
+            @Override
             public void onEvent(Event event) {
                 System.err.println("onEvent: " + event.getUei());
                 receivedEvent = event;
@@ -297,11 +307,11 @@ public class MockNetworkTest extends TestCase {
 
         m_eventMgr.addEventListener(listener, EventConstants.NODE_GAINED_SERVICE_EVENT_UEI);
         m_eventMgr.sendEventToListeners(sentEvent);
-        assertTrue(MockEventUtil.eventsMatch(sentEvent, listener.getReceivedEvent()));
+        assertTrue(EventUtils.eventsMatch(sentEvent, listener.getReceivedEvent()));
 
         listener.reset();
         m_eventMgr.sendEventToListeners(sentEvent2);
-        assertFalse(MockEventUtil.eventsMatch(sentEvent2, listener.getReceivedEvent()));
+        assertFalse(EventUtils.eventsMatch(sentEvent2, listener.getReceivedEvent()));
 
     }
 
@@ -342,6 +352,7 @@ public class MockNetworkTest extends TestCase {
         element.bringDown();
 
         MockVisitor lostSvcSender = new MockVisitorAdapter() {
+            @Override
             public void visitService(MockService svc) {
                 Event event = MockEventUtil.createEvent("Test", EventConstants.NODE_LOST_SERVICE_EVENT_UEI, svc.getNodeId(), svc.getIpAddr(), svc.getSvcName(), String.valueOf(PollStatus.SERVICE_UNAVAILABLE));
                 m_eventMgr.sendNow(event);
@@ -356,6 +367,7 @@ public class MockNetworkTest extends TestCase {
         element.bringUp();
 
         MockVisitor gainedSvcSender = new MockVisitorAdapter() {
+            @Override
             public void visitService(MockService svc) {
                 Event event = MockEventUtil.createEvent("Test", EventConstants.NODE_REGAINED_SERVICE_EVENT_UEI, svc.getNodeId(), svc.getIpAddr(), svc.getSvcName(), null);
                 m_eventMgr.sendNow(event);
@@ -423,16 +435,13 @@ public class MockNetworkTest extends TestCase {
         // ensure a sample interface is in the package
         assertTrue(pollerConfig.isInterfaceInPackage("192.168.1.1", pkg));
 
-        Enumeration<Service> svcs = pkg.enumerateService();
-        assertNotNull(svcs);
-        while (svcs.hasMoreElements()) {
-            Service svc = (Service) svcs.nextElement();
+        for (final Service svc : pkg.getServices()) {
             if ("ICMP".equals(svc.getName()))
-                assertEquals(500L, svc.getInterval());
+                assertEquals(Long.valueOf(500L), svc.getInterval());
             else if ("HTTP".equals(svc.getName()))
-                assertEquals(750L, svc.getInterval());
+                assertEquals(Long.valueOf(750L), svc.getInterval());
             else
-                assertEquals(1000L, svc.getInterval());
+                assertEquals(Long.valueOf(1000L), svc.getInterval());
         }
 
         // ensure that setting the thread worked
@@ -468,7 +477,7 @@ public class MockNetworkTest extends TestCase {
     }
 
     public void testQueryManager() throws Exception {
-        QueryManager queryManager = new MockQueryManager(m_network);
+        MockQueryManager queryManager = new MockQueryManager(m_network);
         assertNotNull(queryManager);
 
         assertTrue(queryManager.activeServiceExists("Test", 1, "192.168.1.1", "ICMP"));
@@ -538,7 +547,7 @@ public class MockNetworkTest extends TestCase {
         Package pkg = m_pollerConfig.getPackage("TestPackage");
         assertNotNull(pkg);
 
-        Collection<String> outages = pkg.getOutageCalendarCollection();
+        Collection<String> outages = pkg.getOutageCalendars();
         assertTrue(outages.contains("outage1"));
         assertTrue(outages.contains("outage2"));
 
@@ -620,6 +629,7 @@ public class MockNetworkTest extends TestCase {
                     throw m_t;
             }
 
+            @Override
             public void run() {
                 try {
                     try {
@@ -707,6 +717,7 @@ public class MockNetworkTest extends TestCase {
                     throw m_t;
             }
 
+            @Override
             public void run() {
                 try {
                     smtpService.visit(m_downChecker);

@@ -28,61 +28,34 @@
 
 package org.opennms.netmgt.collectd.vmware.vijava;
 
-import org.opennms.netmgt.collectd.AbstractCollectionAttribute;
-import org.opennms.netmgt.config.collector.CollectionAttribute;
-import org.opennms.netmgt.config.collector.CollectionAttributeType;
-import org.opennms.netmgt.config.collector.CollectionResource;
-import org.opennms.netmgt.config.collector.ServiceParameters;
+import org.opennms.netmgt.collection.api.CollectionAttributeType;
+import org.opennms.netmgt.collection.support.AbstractCollectionAttribute;
 
-public class VmwareCollectionAttribute extends AbstractCollectionAttribute implements CollectionAttribute {
-    private String m_alias;
-    private String m_value;
-    private VmwareCollectionResource m_resource;
-    private CollectionAttributeType m_attribType;
+public class VmwareCollectionAttribute extends AbstractCollectionAttribute {
+    private final String m_value;
 
-    public VmwareCollectionAttribute(final VmwareCollectionResource resource, final CollectionAttributeType attribType, final String alias, final String value) {
-        m_resource = resource;
-        m_attribType = attribType;
-        m_alias = alias;
+    public VmwareCollectionAttribute(final VmwareCollectionResource resource, final CollectionAttributeType attribType, final String value) {
+        super(attribType, resource);
         m_value = value;
     }
 
-    public CollectionAttributeType getAttributeType() {
-        return m_attribType;
-    }
-
-    public String getName() {
-        return m_alias;
-    }
-
+    @Override
     public String getMetricIdentifier() {
         return "Vmware_" + m_attribType.getName();
     }
 
+    @Override
     public String getNumericValue() {
         return m_value;
     }
 
-    public CollectionResource getResource() {
-        return m_resource;
-    }
-
+    @Override
     public String getStringValue() {
         return m_value; //Should this be null instead?
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public boolean shouldPersist(final ServiceParameters params) {
-        return true;
-    }
-
-    public String getType() {
-        return m_attribType.getType();
-    }
-
+    @Override
     public String toString() {
-        return "VmwareCollectionAttribute " + m_alias + "=" + m_value;
+        return "VmwareCollectionAttribute " + getName() + "=" + m_value;
     }
 }

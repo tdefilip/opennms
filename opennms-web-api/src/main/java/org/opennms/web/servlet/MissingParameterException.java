@@ -28,6 +28,8 @@
 
 package org.opennms.web.servlet;
 
+import java.util.Arrays;
+
 /**
  * <p>MissingParameterException class.</p>
  *
@@ -66,7 +68,7 @@ public class MissingParameterException extends RuntimeException {
         }
 
         this.missingParameter = missingParameter;
-        this.requiredParameters = requiredParameters;
+        this.requiredParameters = Arrays.copyOf(requiredParameters, requiredParameters.length);
     }
 
     /**
@@ -92,6 +94,7 @@ public class MissingParameterException extends RuntimeException {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String getMessage() {
 	StringBuffer b = new StringBuffer();
 

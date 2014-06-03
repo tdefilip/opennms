@@ -39,6 +39,8 @@ import org.opennms.netmgt.model.AbstractEntityVisitor;
 import org.opennms.netmgt.model.OnmsMonitoredService;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.SurveillanceStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Use this class to aggregate status to be presented in a view layer technology.
@@ -50,6 +52,7 @@ import org.opennms.netmgt.model.SurveillanceStatus;
  * @since 1.8.1
  */
 public class AggregateStatus implements SurveillanceStatus {
+    private static final Logger LOG = LoggerFactory.getLogger(AggregateStatus.class);
 
     private String m_label;
 
@@ -84,6 +87,7 @@ public class AggregateStatus implements SurveillanceStatus {
      *
      * @return a {@link java.lang.String} object.
      */
+    @Override
     public String getStatus() {
         return m_status;
     }
@@ -97,6 +101,7 @@ public class AggregateStatus implements SurveillanceStatus {
      *
      * @return a {@link java.lang.Integer} object.
      */
+    @Override
     public Integer getDownEntityCount() {
         return m_downNodes.size();
     }
@@ -139,6 +144,7 @@ public class AggregateStatus implements SurveillanceStatus {
      *
      * @return a {@link java.lang.Integer} object.
      */
+    @Override
     public Integer getTotalEntityCount() {
         return m_totalEntityCount;
     }
@@ -169,13 +175,13 @@ public class AggregateStatus implements SurveillanceStatus {
 
         @Override
         public void visitNode(OnmsNode node) {
-            System.err.println("visitNode(" + node + ")");
+            LOG.debug("visitNode({})", node);
             m_isCurrentNodeDown = true;
         }
 
         @Override
         public void visitNodeComplete(OnmsNode node) {
-            System.err.println("visitNodeComplete(" + node + ") -- m_isCurrentNodeDown = " + m_isCurrentNodeDown);
+            LOG.debug("visitNodeComplete({}) -- m_isCurrentNodeDown = {}", node, m_isCurrentNodeDown);
             if (m_isCurrentNodeDown) {
                 m_downNodes.add(node);
                 m_status = AggregateStatus.NODES_ARE_DOWN;
@@ -185,9 +191,8 @@ public class AggregateStatus implements SurveillanceStatus {
 
         @Override
         public void visitMonitoredService(OnmsMonitoredService svc) {
-            System.err.println("visitMonitoredService(" + svc + ") - currentOutages.isEmpty = " + svc.getCurrentOutages().isEmpty());
-            if ("A".equals(svc.getStatus())
-                    && !svc.getCurrentOutages().isEmpty()) {
+            LOG.debug("visitMonitoredService({}) - currentOutages.isEmpty = {}", svc, svc.getCurrentOutages().isEmpty());
+            if ("A".equals(svc.getStatus()) && !svc.getCurrentOutages().isEmpty()) {
                 if (AggregateStatus.ALL_NODES_UP.equals(m_status)) {
                     m_status = AggregateStatus.ONE_SERVICE_DOWN;
                 }

@@ -40,8 +40,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.MockLogAppender;
-import org.opennms.core.utils.BeanUtils;
 import org.opennms.netmgt.provision.DetectFuture;
 import org.opennms.netmgt.provision.detector.simple.MemcachedDetector;
 import org.opennms.netmgt.provision.server.SimpleServer;
@@ -85,6 +85,7 @@ public class MemcachedDetectorTest implements InitializingBean {
     @Test(timeout=90000)
     public void testServerSuccess() throws Exception{
         m_server  = new SimpleServer() {
+            @Override
             public void onInit() {
                 addResponseHandler(contains("version"), new RequestHandler() {
                     @Override
@@ -112,6 +113,7 @@ public class MemcachedDetectorTest implements InitializingBean {
     @Test(timeout=90000)
     public void testServerFail() throws Exception{
         m_server  = new SimpleServer() {
+            @Override
             public void onInit() {
                 addResponseHandler(contains("version"), new RequestHandler() {
                     @Override

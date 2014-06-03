@@ -34,21 +34,24 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.hibernate.criterion.Restrictions;
-import org.opennms.core.utils.BeanUtils;
-import org.opennms.core.utils.LogUtils;
+import org.opennms.core.criteria.Criteria;
+import org.opennms.core.criteria.restrictions.BetweenRestriction;
+import org.opennms.core.criteria.restrictions.InRestriction;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.features.poller.remote.gwt.client.ApplicationInfo;
 import org.opennms.features.poller.remote.gwt.client.location.LocationInfo;
 import org.opennms.features.poller.remote.gwt.client.remoteevents.ApplicationUpdatedRemoteEvent;
 import org.opennms.features.poller.remote.gwt.client.remoteevents.LocationUpdatedRemoteEvent;
 import org.opennms.netmgt.EventConstants;
-import org.opennms.netmgt.dao.EventDao;
-import org.opennms.netmgt.model.OnmsCriteria;
+import org.opennms.netmgt.dao.api.EventDao;
 import org.opennms.netmgt.model.OnmsEvent;
 import org.opennms.netmgt.model.events.Parameter;
 import org.opennms.netmgt.model.events.annotations.EventHandler;
 import org.opennms.netmgt.model.events.annotations.EventListener;
 import org.opennms.netmgt.xml.event.Event;
 import org.opennms.netmgt.xml.event.Parm;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +65,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 @EventListener(name="LocationStatusService")
 public class LocationBroadcastProcessor implements InitializingBean, DisposableBean {
+    private static final Logger LOG = LoggerFactory.getLogger(LocationBroadcastProcessor.class);
     @Autowired
     private LocationDataService m_locationDataService;
 
@@ -110,9 +114,9 @@ public class LocationBroadcastProcessor implements InitializingBean, DisposableB
             @Override
             public void run() {
                 final Date now = new Date();
-                final OnmsCriteria criteria = new OnmsCriteria(OnmsEvent.class)
-                    .add(Restrictions.between("eventTime", m_lastRun, now))
-                    .add(Restrictions.in("eventUei", m_events));
+                final Criteria criteria = new Criteria(OnmsEvent.class)
+                    .addRestriction(new BetweenRestriction("eventTime", m_lastRun, now))
+                    .addRestriction(new InRestriction("eventUei", m_events));
                 for (final OnmsEvent e : m_eventDao.findMatching(criteria)) {
                     handleLocationEvent(e);
                 }
@@ -125,6 +129,7 @@ public class LocationBroadcastProcessor implements InitializingBean, DisposableB
     /**
      * <p>destroy</p>
      */
+    @Override
     public void destroy() {
         if (m_task != null) {
             m_task.cancel();
@@ -223,14 +228,14 @@ public class LocationBroadcastProcessor implements InitializingBean, DisposableB
 
     private void handleLocationEvent(final OnmsEvent event) {
         if (m_eventHandler == null) {
-            LogUtils.warnf(this, "handleLocationEvent called, but no eventHandler is registered");
+            LOG.warn("handleLocationEvent called, but no eventHandler is registered");
             return;
         }
         handleEventParms(Parameter.decode(event.getEventParms()));
     }
     private void handleLocationEvent(final Event event) {
         if (m_eventHandler == null) {
-            LogUtils.warnf(this, "handleLocationEvent called, but no eventHandler is registered");
+            LOG.warn("handleLocationEvent called, but no eventHandler is registered");
             return;
         }
         handleEventParms(event.getParmCollection());

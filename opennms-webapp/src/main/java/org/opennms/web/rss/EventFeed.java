@@ -42,6 +42,8 @@ import org.opennms.web.event.SortStyle;
 import org.opennms.web.event.filter.NodeFilter;
 import org.opennms.web.event.filter.SeverityFilter;
 import org.opennms.web.filter.Filter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sun.syndication.feed.synd.SyndEntry;
 import com.sun.syndication.feed.synd.SyndEntryImpl;
@@ -57,6 +59,9 @@ import com.sun.syndication.feed.synd.SyndFeedImpl;
  * @since 1.8.1
  */
 public class EventFeed extends AbstractFeed {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(EventFeed.class);
+
 
     /**
      * <p>getFeed</p>
@@ -87,7 +92,7 @@ public class EventFeed extends AbstractFeed {
                     filters.add(new SeverityFilter(severityId));
                 } catch (NumberFormatException e) {
                     for (OnmsSeverity sev : OnmsSeverity.values()) {
-                        if (sev.getLabel().toLowerCase().equals(parameter.toLowerCase())) {
+                        if (sev.getLabel().equalsIgnoreCase(parameter)) {
                             filters.add(new SeverityFilter(sev));
                             break;
                         }
@@ -114,7 +119,7 @@ public class EventFeed extends AbstractFeed {
                 entries.add(entry);
             }
         } catch (SQLException e) {
-            log().warn("unable to get event(s)", e);
+            LOG.warn("unable to get event(s)", e);
         }
         
         feed.setEntries(entries);

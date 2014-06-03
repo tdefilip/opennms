@@ -28,6 +28,7 @@
 
 package org.opennms.netmgt.jasper.jrobin;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -46,10 +47,11 @@ public class JRobinDataSource implements JRDataSource {
 
     public JRobinDataSource(long step, long[] timestamps, List<XPort> xports) {
         m_step = step;
-        m_timestamps = timestamps;
+        m_timestamps = Arrays.copyOf(timestamps, timestamps.length);
         m_xports = xports;
     }
 
+    @Override
     public Object getFieldValue(JRField field) throws JRException {
         Object computeFieldValue = computeFieldValue(field);
         return computeFieldValue;
@@ -80,6 +82,7 @@ public class JRobinDataSource implements JRDataSource {
     }
 
     
+    @Override
     public boolean next() throws JRException {
         m_currentRow++;
         return m_currentRow < m_timestamps.length;

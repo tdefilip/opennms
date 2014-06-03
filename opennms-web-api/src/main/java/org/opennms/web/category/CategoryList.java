@@ -40,6 +40,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import javax.servlet.ServletException;
@@ -47,10 +48,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
-import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.config.ViewsDisplayFactory;
 import org.opennms.netmgt.config.viewsdisplay.Section;
 import org.opennms.netmgt.config.viewsdisplay.View;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>CategoryList class.</p>
@@ -59,6 +61,9 @@ import org.opennms.netmgt.config.viewsdisplay.View;
  * @version $Id: $
  */
 public class CategoryList {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(CategoryList.class);
+
 
     protected CategoryModel m_model;
 
@@ -79,7 +84,7 @@ public class CategoryList {
         try {
             m_model = CategoryModel.getInstance();
         } catch (Throwable e) {
-            log().error("failed to instantiate the category model: " + e, e);
+            LOG.error("failed to instantiate the category model: {}", e, e);
             throw new ServletException("failed to instantiate the category model: " + e, e);
         }
 
@@ -92,18 +97,15 @@ public class CategoryList {
             if (view != null) {
                 m_sections = view.getSection();
                 m_disconnectTimeout  = viewsDisplayFactory.getDisconnectTimeout();
-                log().debug("found display rules from viewsdisplay.xml");
+                LOG.debug("found display rules from viewsdisplay.xml");
             } else {
-                log().debug("did not find display rules from viewsdisplay.xml");
+                LOG.debug("did not find display rules from viewsdisplay.xml");
             }
         } catch (Throwable e) {
-            log().error("Couldn't open viewsdisplay factory on categories box: " + e, e);
+            LOG.error("Couldn't open viewsdisplay factory on categories box: {}", e, e);
         }
     }
 
-    private ThreadCategory log() {
-        return ThreadCategory.getInstance(getClass());
-    }
 
     /**
      * For the given map of category names to Category objects, organize the
@@ -198,13 +200,10 @@ public class CategoryList {
     public long getEarliestUpdate(Map<String,List<Category>> categoryData) {
         long earliestUpdate = 0;
 
-        for (Iterator<String> i = categoryData.keySet().iterator(); i.hasNext();) {
-            String sectionName = i.next();
-            List<Category> categories = categoryData.get(sectionName);
+        for (final Entry<String, List<Category>> entry : categoryData.entrySet()) {
+            final List<Category> categories = entry.getValue();
 
-            for (Iterator<Category> j = categories.iterator(); j.hasNext();) {
-                Category category = j.next();
-
+            for (final Category category : categories) {
                 if (category.getLastUpdated() == null) {
                     return -1;
                 } else if (earliestUpdate == 0 || earliestUpdate > category.getLastUpdated().getTime()) {
@@ -257,8 +256,8 @@ public class CategoryList {
         long earliestUpdate = getEarliestUpdate(categoryData);
         boolean opennmsDisconnect = isDisconnected(earliestUpdate);
 
-        for (Iterator<String> i = categoryData.keySet().iterator(); i.hasNext();) {
-            String sectionName = i.next();
+        for (final Entry<String, List<Category>> entry : categoryData.entrySet()) {
+            final String sectionName = entry.getKey();
 
             out.write("<tr bgcolor=\"#999999\">\n");
             out.write("<td width=\"50%\"><b>" + sectionName + "</b></td>\n");
@@ -266,7 +265,7 @@ public class CategoryList {
             out.write("<td width=\"30%\" align=\"right\">" + "<b>24hr Avail</b></td>\n");
             out.write("</tr>\n");
 
-            List<Category> categories = categoryData.get(sectionName);
+            final List<Category> categories = entry.getValue();
 
             String title;
             String lastUpdated;
@@ -276,9 +275,8 @@ public class CategoryList {
             String availText;
             String availColor;
 
-            for (Iterator<Category> j = categories.iterator(); j.hasNext();) {
-                Category category = j.next();
-                String categoryName = category.getName();
+            for (final Category category : categories) {
+                final String categoryName = category.getName();
 
                 title = category.getTitle();
 

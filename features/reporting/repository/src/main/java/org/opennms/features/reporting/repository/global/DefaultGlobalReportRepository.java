@@ -40,7 +40,6 @@ import org.springframework.util.Assert;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 
 /**
  * <p>DefaultGlobalReportRepository class.</p>
@@ -72,7 +71,7 @@ public class DefaultGlobalReportRepository implements GlobalReportRepository {
     /**
      * Separator for repositoryId and reportId.
      */
-    private final String REPOSITORY_REPORT_SEP = "_";
+    private static final String REPOSITORY_REPORT_SEP = "_";
 
     /**
      * List of repositories managed by this class.

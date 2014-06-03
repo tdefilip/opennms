@@ -33,10 +33,11 @@ import java.beans.PropertyChangeListener;
 import java.util.Collection;
 import java.util.Date;
 
-import org.opennms.core.utils.ThreadCategory;
-import org.opennms.netmgt.model.PollStatus;
+import org.opennms.netmgt.poller.PollStatus;
 import org.quartz.Scheduler;
 import org.quartz.Trigger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 
@@ -47,60 +48,62 @@ import org.springframework.util.Assert;
  * @version $Id: $
  */
 public class Poller implements InitializingBean, PollObserver, ConfigurationChangedListener, PropertyChangeListener {
-	
-	private PollerFrontEnd m_pollerFrontEnd;
-	private Scheduler m_scheduler;
-	private long m_initialSpreadTime = 300000L;
-	
-	/**
-	 * <p>setPollerFrontEnd</p>
-	 *
-	 * @param pollerFrontEnd a {@link org.opennms.netmgt.poller.remote.PollerFrontEnd} object.
-	 */
-	public void setPollerFrontEnd(PollerFrontEnd pollerFrontEnd) {
-		m_pollerFrontEnd = pollerFrontEnd;
-	}
 
-	/**
-	 * <p>setScheduler</p>
-	 *
-	 * @param scheduler a {@link org.quartz.Scheduler} object.
-	 */
-	public void setScheduler(Scheduler scheduler) {
-		m_scheduler = scheduler;
-	}
-	
-	/**
-	 * <p>setInitialSpreadTime</p>
-	 *
-	 * @param initialSpreadTime a long.
-	 */
-	public void setInitialSpreadTime(long initialSpreadTime) {
-		m_initialSpreadTime = initialSpreadTime;
-	}
-	
+    private static final Logger LOG = LoggerFactory.getLogger(Poller.class);
 
-	/**
-	 * <p>afterPropertiesSet</p>
-	 *
-	 * @throws java.lang.Exception if any.
-	 */
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		assertNotNull(m_scheduler, "scheduler");
-		assertNotNull(m_pollerFrontEnd, "pollerFrontEnd");
-        
+    private PollerFrontEnd m_pollerFrontEnd;
+    private Scheduler m_scheduler;
+    private long m_initialSpreadTime = 300000L;
+
+    /**
+     * <p>setPollerFrontEnd</p>
+     *
+     * @param pollerFrontEnd a {@link org.opennms.netmgt.poller.remote.PollerFrontEnd} object.
+     */
+    public void setPollerFrontEnd(PollerFrontEnd pollerFrontEnd) {
+        m_pollerFrontEnd = pollerFrontEnd;
+    }
+
+    /**
+     * <p>setScheduler</p>
+     *
+     * @param scheduler a {@link org.quartz.Scheduler} object.
+     */
+    public void setScheduler(Scheduler scheduler) {
+        m_scheduler = scheduler;
+    }
+
+    /**
+     * <p>setInitialSpreadTime</p>
+     *
+     * @param initialSpreadTime a long.
+     */
+    public void setInitialSpreadTime(long initialSpreadTime) {
+        m_initialSpreadTime = initialSpreadTime;
+    }
+
+
+    /**
+     * <p>afterPropertiesSet</p>
+     *
+     * @throws java.lang.Exception if any.
+     */
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        assertNotNull(m_scheduler, "scheduler");
+        assertNotNull(m_pollerFrontEnd, "pollerFrontEnd");
+
         m_pollerFrontEnd.addConfigurationChangedListener(this);
         m_pollerFrontEnd.addPropertyChangeListener(this);
-		
+
         if (m_pollerFrontEnd.isStarted()) {
             schedulePolls();
         } else {
-            log().debug("Poller not yet registered");
+            LOG.debug("Poller not yet registered");
         }
 
-	}
-    
+    }
+
     private void unschedulePolls() throws Exception {
         if (m_scheduler.isShutdown()) {
             // no need to unschedule in this case
@@ -110,85 +113,85 @@ public class Poller implements InitializingBean, PollObserver, ConfigurationChan
             m_scheduler.deleteJob(jobName, PollJobDetail.GROUP);
         }
     }
-	
-	private void schedulePolls() throws Exception {
-        
-        log().debug("Enter schedulePolls");
-		
-		Collection<PolledService> polledServices = m_pollerFrontEnd.getPolledServices();
 
-		if (polledServices == null || polledServices.size() == 0) {
-			log().warn("No polling scheduled.");
-            log().debug("Exit schedulePolls");
-			return;
-		}
+    private void schedulePolls() throws Exception {
 
-		long startTime = System.currentTimeMillis();
-		long scheduleSpacing = m_initialSpreadTime / polledServices.size();
-		
+        LOG.debug("Enter schedulePolls");
+
+        Collection<PolledService> polledServices = m_pollerFrontEnd.getPolledServices();
+
+        if (polledServices == null || polledServices.size() == 0) {
+            LOG.warn("No polling scheduled.");
+            LOG.debug("Exit schedulePolls");
+            return;
+        }
+
+        long startTime = System.currentTimeMillis();
+        long scheduleSpacing = m_initialSpreadTime / polledServices.size();
+
         for (PolledService polledService : polledServices) {
-            
+
             String jobName = polledService.toString();
 
             // remove any currently scheduled job
             if (m_scheduler.deleteJob(jobName, PollJobDetail.GROUP)) {
-                log().debug(String.format("Job for %s already scheduled.  Rescheduling", polledService));
+                LOG.debug("Job for {} already scheduled.  Rescheduling", polledService);
             } else {
-                log().debug("Scheduling job for "+polledService);
+                LOG.debug("Scheduling job for {}", polledService);
             }
-			
-			Date initialPollTime = new Date(startTime);
-			
-			m_pollerFrontEnd.setInitialPollTime(polledService.getServiceId(), initialPollTime);
-			
-			Trigger pollTrigger = new PolledServiceTrigger(polledService);
-			pollTrigger.setStartTime(initialPollTime);
-			
+
+            Date initialPollTime = new Date(startTime);
+
+            m_pollerFrontEnd.setInitialPollTime(polledService.getServiceId(), initialPollTime);
+
+            Trigger pollTrigger = new PolledServiceTrigger(polledService);
+            pollTrigger.setStartTime(initialPollTime);
+
             PollJobDetail jobDetail = new PollJobDetail(jobName, PollJob.class);
-			jobDetail.setPolledService(polledService);
-			jobDetail.setPollerFrontEnd(m_pollerFrontEnd);
-			
-            
-			m_scheduler.scheduleJob(jobDetail, pollTrigger);
-			
-			startTime += scheduleSpacing;
-		}
-		
-        log().debug("Exit schedulePolls");
-		
-	}
+            jobDetail.setPolledService(polledService);
+            jobDetail.setPollerFrontEnd(m_pollerFrontEnd);
 
-	private ThreadCategory log() {
-		return ThreadCategory.getInstance(getClass());
-	}
 
-	private void assertNotNull(Object propertyValue, String propertyName) {
-		Assert.state(propertyValue != null, propertyName+" must be set for instances of "+Poller.class);
-	}
+            m_scheduler.scheduleJob(jobDetail, pollTrigger);
 
-	/** {@inheritDoc} */
-	public void pollCompleted(String pollId, PollStatus pollStatus) {
-		log().info("Complete Poll for "+pollId+" status = "+pollStatus);
-	}
+            startTime += scheduleSpacing;
+        }
 
-	/** {@inheritDoc} */
-	public void pollStarted(String pollId) {
-		log().info("Begin Poll for "+pollId);
-		
-	}
+        LOG.debug("Exit schedulePolls");
+
+    }
+
+    private void assertNotNull(Object propertyValue, String propertyName) {
+        Assert.state(propertyValue != null, propertyName+" must be set for instances of "+Poller.class);
+    }
 
     /** {@inheritDoc} */
+    @Override
+    public void pollCompleted(String pollId, PollStatus pollStatus) {
+        LOG.info("Complete Poll for {} status = {}", pollId, pollStatus);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void pollStarted(String pollId) {
+        LOG.info("Begin Poll for {}", pollId);
+
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public void configurationChanged(PropertyChangeEvent e) {
         try {
             unschedulePolls();
             schedulePolls();
         } catch (Throwable ex) {
-            log().fatal("Unable to schedule polls!", ex);
+            LOG.error("Unable to schedule polls!", ex);
             throw new RuntimeException("Unable to schedule polls!");
         }
     }
 
     /** {@inheritDoc} */
+    @Override
     public void propertyChange(PropertyChangeEvent evt) {
         try {
             if (Boolean.TRUE.equals(evt.getNewValue())) {
@@ -207,7 +210,7 @@ public class Poller implements InitializingBean, PollObserver, ConfigurationChan
                 }
             }
         } catch (Throwable ex) {
-            log().fatal("Unable to schedule polls!", ex);
+            LOG.error("Unable to schedule polls!", ex);
             throw new RuntimeException("Unable to schedule polls!");
         }
     }

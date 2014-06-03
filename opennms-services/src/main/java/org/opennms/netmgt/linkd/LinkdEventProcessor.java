@@ -29,7 +29,7 @@
 package org.opennms.netmgt.linkd;
 
 import org.opennms.netmgt.EventConstants;
-import org.opennms.netmgt.capsd.InsufficientInformationException;
+
 import org.opennms.netmgt.model.events.annotations.EventHandler;
 import org.opennms.netmgt.model.events.annotations.EventListener;
 import org.opennms.netmgt.xml.event.Event;
@@ -39,7 +39,7 @@ import org.opennms.netmgt.xml.event.Event;
  * @author <a href="mailto:matt@opennms.org">Matt Brozowski </a>
  * @author <a href="http://www.opennms.org/">OpenNMS </a>
  */
-@EventListener(name="OpenNMS.Linkd")
+@EventListener(name="Linkd:LinkdEventProcessor", logPrefix=Linkd.LOG_PREFIX)
 public final class LinkdEventProcessor {
 
     private Linkd m_linkd;
@@ -64,11 +64,7 @@ public final class LinkdEventProcessor {
     public void handleNodeDeleted(Event event) throws InsufficientInformationException {
 
         EventUtils.checkNodeId(event);
-
-        // Remove the deleted node from the scheduler if it's an SNMP node
         m_linkd.deleteNode(event.getNodeid().intValue());
-        // set to status = D in all the rows in table
-        // atinterface, iprouteinterface, datalinkinterface, stpnode, stpinterface
     }
 
     /**
@@ -85,10 +81,7 @@ public final class LinkdEventProcessor {
         if(event.hasIfIndex()) {
             ifIndex = event.getIfIndex();
         }
-
         m_linkd.deleteInterface(event.getNodeid().intValue(), event.getInterface(), ifIndex);
-        // set to status = D in all the rows in table
-        // atinterface, iprouteinterface, datalinkinterface, stpinterface
     }
 
     /**
@@ -100,7 +93,6 @@ public final class LinkdEventProcessor {
     public void handleNodeGainedService(Event event) throws InsufficientInformationException {
 
         EventUtils.checkNodeId(event);
-
         m_linkd.scheduleNodeCollection(event.getNodeid().intValue());
     }
 
@@ -113,11 +105,7 @@ public final class LinkdEventProcessor {
     public void handleNodeLostService(Event event) throws InsufficientInformationException {
 
         EventUtils.checkNodeId(event);
-
-        // Remove the deleted node from the scheduler
         m_linkd.suspendNodeCollection(event.getNodeid().intValue());
-        // set to status = N in all the rows in table
-        // atinterface, iprouteinterface, datalinkinterface,
     }
 
     /**

@@ -28,6 +28,7 @@
 
 package org.opennms.core.soa.support;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import org.opennms.core.soa.Registration;
@@ -60,6 +61,7 @@ public class ServiceFactoryBean implements FactoryBean<Registration>, BeanFactor
 
     
     /** {@inheritDoc} */
+    @Override
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
         m_beanFactory = beanFactory;
     }
@@ -88,7 +90,7 @@ public class ServiceFactoryBean implements FactoryBean<Registration>, BeanFactor
      * @param serviceInterfaces an array of {@link java.lang.Class} objects.
      */
     public void setInterfaces(Class<?>[] serviceInterfaces) {
-        m_serviceInterfaces = serviceInterfaces;
+        m_serviceInterfaces = Arrays.copyOf(serviceInterfaces, serviceInterfaces.length);
     }
     
     /**
@@ -138,6 +140,7 @@ public class ServiceFactoryBean implements FactoryBean<Registration>, BeanFactor
      *
      * @throws java.lang.Exception if any.
      */
+    @Override
     public void destroy() throws Exception {
         if ( m_registration != null ) {
             m_registration.unregister();
@@ -150,6 +153,7 @@ public class ServiceFactoryBean implements FactoryBean<Registration>, BeanFactor
      * @return a {@link org.opennms.core.soa.Registration} object.
      * @throws java.lang.Exception if any.
      */
+    @Override
     public Registration getObject() throws Exception {
         return m_registration;
     }
@@ -159,6 +163,7 @@ public class ServiceFactoryBean implements FactoryBean<Registration>, BeanFactor
      *
      * @return a {@link java.lang.Class} object.
      */
+    @Override
     public Class<? extends Registration> getObjectType() {
         return (m_registration == null ? Registration.class : m_registration.getClass());
     }
@@ -168,6 +173,7 @@ public class ServiceFactoryBean implements FactoryBean<Registration>, BeanFactor
      *
      * @return a boolean.
      */
+    @Override
     public boolean isSingleton() {
         return true;
     }

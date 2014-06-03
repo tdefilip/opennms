@@ -30,8 +30,8 @@ package org.opennms.netmgt.provision.detector;
 
 import java.net.InetAddress;
 
-import org.opennms.netmgt.config.SnmpAgentConfigFactory;
 import org.opennms.netmgt.config.SnmpEventInfo;
+import org.opennms.netmgt.config.api.SnmpAgentConfigFactory;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
 
 /**
@@ -40,6 +40,7 @@ import org.opennms.netmgt.snmp.SnmpAgentConfig;
  */
 public class AnAgentConfigFactory implements SnmpAgentConfigFactory {
 
+    @Override
     public SnmpAgentConfig getAgentConfig(final InetAddress address) {
     	final SnmpAgentConfig agentConfig = new SnmpAgentConfig(address);
         agentConfig.setVersion(SnmpAgentConfig.DEFAULT_VERSION);

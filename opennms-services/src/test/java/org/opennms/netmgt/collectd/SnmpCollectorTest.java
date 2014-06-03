@@ -43,21 +43,20 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
-import org.opennms.core.test.db.TemporaryDatabase;
-import org.opennms.core.test.db.TemporaryDatabaseAware;
+import org.opennms.core.test.TestContextAware;
+import org.opennms.core.test.TestContextAwareExecutionListener;
 import org.opennms.core.test.db.annotations.JUnitTemporaryDatabase;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgent;
-import org.opennms.core.utils.BeanUtils;
 import org.opennms.core.utils.InetAddressUtils;
-import org.opennms.netmgt.config.DatabaseSchemaConfigFactory;
+import org.opennms.netmgt.collection.api.CollectionAgent;
+import org.opennms.netmgt.collection.api.CollectionSet;
+import org.opennms.netmgt.collection.api.ServiceCollector;
 import org.opennms.netmgt.config.SnmpPeerFactory;
-import org.opennms.netmgt.config.collector.CollectionSet;
-import org.opennms.netmgt.dao.IpInterfaceDao;
-import org.opennms.netmgt.dao.NodeDao;
-import org.opennms.netmgt.filter.FilterDaoFactory;
-import org.opennms.netmgt.filter.JdbcFilterDao;
+import org.opennms.netmgt.dao.api.IpInterfaceDao;
+import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.model.NetworkBuilder;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
@@ -80,6 +79,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @RunWith(OpenNMSJUnit4ClassRunner.class)
 @TestExecutionListeners({
+    TestContextAwareExecutionListener.class,
     JUnitCollectorExecutionListener.class
 })
 @ContextConfiguration(locations={
@@ -88,11 +88,12 @@ import org.springframework.transaction.annotation.Transactional;
         "classpath*:/META-INF/opennms/component-dao.xml",
         "classpath:/META-INF/opennms/applicationContext-daemon.xml",
         "classpath:/META-INF/opennms/mockEventIpcManager.xml",
-        "classpath:/META-INF/opennms/applicationContext-proxy-snmp.xml"
+        "classpath:/META-INF/opennms/applicationContext-proxy-snmp.xml",
+        "classpath:/META-INF/opennms/applicationContext-minimal-conf.xml"
 })
 @JUnitConfigurationEnvironment(systemProperties="org.opennms.rrd.storeByGroup=false")
 @JUnitTemporaryDatabase(reuseDatabase=false) // Relies on records created in @Before so we need a fresh database for each test
-public class SnmpCollectorTest implements InitializingBean, TemporaryDatabaseAware<TemporaryDatabase>, TestContextAware {
+public class SnmpCollectorTest implements InitializingBean, TestContextAware {
 
     @Autowired
     private PlatformTransactionManager m_transactionManager;
@@ -116,13 +117,7 @@ public class SnmpCollectorTest implements InitializingBean, TemporaryDatabaseAwa
 
     private CollectionAgent m_collectionAgent;
 
-    private TemporaryDatabase m_database;
-
     private SnmpAgentConfig m_agentConfig;
-
-    public void setTemporaryDatabase(TemporaryDatabase database) {
-        m_database = database;
-    }
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -132,14 +127,6 @@ public class SnmpCollectorTest implements InitializingBean, TemporaryDatabaseAwa
     @Before
     public void setUp() throws Exception {
         MockLogAppender.setupLogging();
-
-        // Initialize the JdbcFilterDao so that it will connect to the correct database
-        DatabaseSchemaConfigFactory.init();
-        JdbcFilterDao jdbcFilterDao = new JdbcFilterDao();
-        jdbcFilterDao.setDataSource(m_database);
-        jdbcFilterDao.setDatabaseSchemaConfigFactory(DatabaseSchemaConfigFactory.getInstance());
-        jdbcFilterDao.afterPropertiesSet();
-        FilterDaoFactory.setInstance(jdbcFilterDao);
 
         RrdUtils.setStrategy(RrdUtils.getSpecificStrategy(StrategyName.basicRrdStrategy));
 
@@ -490,6 +477,7 @@ public class SnmpCollectorTest implements InitializingBean, TemporaryDatabaseAwa
         return file + RrdUtils.getExtension();
     }
 
+    @Override
     public void setTestContext(TestContext context) {
         m_context = context;
     }

@@ -31,6 +31,7 @@
 package org.opennms.core.utils;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -39,7 +40,8 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 
-import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <P>
@@ -55,6 +57,8 @@ import org.apache.commons.io.IOUtils;
  * @author <a href="mailto:smccrory@users.sourceforge.net">Scott McCrory </a>.
  */
 public class StreamGobbler extends Thread {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(StreamGobbler.class);
 
     /** The {@link InputStream} we're gobbling */
     private InputStream in = null;
@@ -125,6 +129,7 @@ public class StreamGobbler extends Thread {
      * @return Nothing ever really returned since we throw a
      *         CloneNotSupportedException
      */
+    @Override
     public final Object clone() throws CloneNotSupportedException {
         throw new CloneNotSupportedException();
     }
@@ -155,6 +160,7 @@ public class StreamGobbler extends Thread {
      * Gobbles up all the stuff coming from the InputStream and sends it to the
      * OutputStream specified during object construction.
      */
+    @Override
     public void run() {
 
         InputStreamReader isr = null;
@@ -178,10 +184,10 @@ public class StreamGobbler extends Thread {
             }
 
         } catch (final Throwable e) {
-            LogUtils.debugf(this, e, "Unable to read lines.");
+        	LOG.debug("Unable to read lines.", e);
         } finally {
-            IOUtils.closeQuietly(br);
-            IOUtils.closeQuietly(isr);
+            closeQuietly(br);
+            closeQuietly(isr);
         }
 
     }
@@ -197,6 +203,16 @@ public class StreamGobbler extends Thread {
      */
     private final void writeObject(final ObjectOutputStream out) throws IOException {
         throw new IOException("Object cannot be serialized");
+    }
+
+    private void closeQuietly(final Closeable c) {
+        if (c != null) {
+            try {
+                c.close();
+            } catch (final IOException closeE) {
+                LOG.debug("failed to close", closeE);
+            }
+        }
     }
 
 }

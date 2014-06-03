@@ -35,10 +35,10 @@ import java.net.InetAddress;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.opennms.core.spring.BeanUtils;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.test.snmp.annotations.JUnitSnmpAgent;
-import org.opennms.core.utils.BeanUtils;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.config.SnmpPeerFactory;
 import org.opennms.netmgt.provision.ScanContext;
@@ -73,10 +73,12 @@ public class SnmpNodeScannerTest implements InitializingBean {
             m_agentAddress = agentAddress;
         }
 
+        @Override
         public InetAddress getAgentAddress(String agentType) {
             return m_agentAddress;
         }
 
+        @Override
         public void updateSysObjectId(String sysObjectId) {
             m_sysObjectId = sysObjectId;
         }
@@ -89,6 +91,7 @@ public class SnmpNodeScannerTest implements InitializingBean {
             return m_sysContact;
         }
 
+        @Override
         public void updateSysContact(String sysContact) {
             m_sysContact = sysContact;
         }
@@ -97,6 +100,7 @@ public class SnmpNodeScannerTest implements InitializingBean {
             return m_sysDescription;
         }
 
+        @Override
         public void updateSysDescription(String sysDescription) {
             m_sysDescription = sysDescription;
         }
@@ -105,6 +109,7 @@ public class SnmpNodeScannerTest implements InitializingBean {
             return m_sysLocation;
         }
 
+        @Override
         public void updateSysLocation(String sysLocation) {
             m_sysLocation = sysLocation;
         }
@@ -113,6 +118,7 @@ public class SnmpNodeScannerTest implements InitializingBean {
             return m_sysName;
         }
 
+        @Override
         public void updateSysName(String sysName) {
             m_sysName = sysName;
         }

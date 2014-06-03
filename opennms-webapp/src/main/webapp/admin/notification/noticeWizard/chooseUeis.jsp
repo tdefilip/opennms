@@ -125,7 +125,7 @@ $(document).ready(function() {
 <form method="post" name="events"
       action="admin/notification/noticeWizard/notificationWizard" >
       <input type="hidden" name="sourcePage" value="<%=NotificationWizardServlet.SOURCE_PAGE_UEIS%>"/>
-      <table width="50%" cellspacing="2" cellpadding="2" border="0">
+      <table width="50%">
         <tr>
           <td valign="top" align="left">
             <h4>Events</h4>
@@ -155,8 +155,11 @@ $(document).ready(function() {
     public String buildEventSelect(Notification notice)
       throws IOException, FileNotFoundException
     {
-        List events = m_eventConfDao.getEventsByLabel();
+        List<Event> events = m_eventConfDao.getEventsByLabel();
         StringBuffer buffer = new StringBuffer();
+        
+        List<String> excludeList = getExcludeList();
+        TreeMap<String, String> sortedMap = new TreeMap<String, String>();
 
         if (notice.getUei() != null && notice.getUei().startsWith("~")) {
             buffer.append("<option selected value=\""+notice.getUei()+"\">REGEX_FIELD</option>\n");
@@ -164,14 +167,7 @@ $(document).ready(function() {
             buffer.append("<option value=\"~^$\">REGEX_FIELD</option>\n");
         }
 
-        List excludeList = getExcludeList();
-	TreeMap<String, String> sortedMap = new TreeMap<String, String>();
-
-        Iterator i = events.iterator();
-
-        while(i.hasNext()) //for (int i = 0; i < events.size(); i++)
-        {
-            Event e = (Event)i.next();
+        for (Event e : events) {
             String uei = e.getUei();
             //System.out.println(uei);
 
@@ -182,12 +178,11 @@ $(document).ready(function() {
             //System.out.println(trimmedUei);
             
             if (!excludeList.contains(trimmedUei)) {
-		sortedMap.put(label,uei);
+                sortedMap.put(label,uei);
             }
-	}
-	i=sortedMap.keySet().iterator();
-	while(i.hasNext()) {
-		String label=(String)i.next();
+        }
+
+    for (String label : sortedMap.keySet()) {
 		String uei=(String)sortedMap.get(label);
 		if (uei.equals(notice.getUei())) {
 			buffer.append("<option selected VALUE=" + uei + ">" + label + "</option>");
@@ -211,7 +206,7 @@ $(document).ready(function() {
         return leftover;
      }
      
-     public List getExcludeList()
+     public List<String> getExcludeList()
       throws IOException, FileNotFoundException
      {
         List<String> excludes = new ArrayList<String>();

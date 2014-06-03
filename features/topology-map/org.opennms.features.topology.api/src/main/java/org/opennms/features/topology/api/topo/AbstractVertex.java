@@ -31,7 +31,7 @@ package org.opennms.features.topology.api.topo;
 import com.vaadin.data.Item;
 import com.vaadin.data.util.BeanItem;
 
-public class AbstractVertex extends AbstractVertexRef implements Vertex {
+public class AbstractVertex extends DefaultVertexRef implements Vertex {
 
 	private String m_tooltipText;
 	private String m_iconKey;
@@ -49,6 +49,9 @@ public class AbstractVertex extends AbstractVertexRef implements Vertex {
 		super(namespace, id);
 	}
 
+    public AbstractVertex(String namespace, String id, String label){
+        super(namespace, id, label);
+    }
 	/**
 	 * @deprecated Use namespace/id tuple
 	 */
@@ -107,6 +110,7 @@ public class AbstractVertex extends AbstractVertexRef implements Vertex {
 		m_y = y;
 	}
 
+        @Override
 	public final VertexRef getParent() {
 		return m_parent;
 	}

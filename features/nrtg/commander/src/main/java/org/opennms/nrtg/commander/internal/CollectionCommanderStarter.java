@@ -47,7 +47,7 @@ public class CollectionCommanderStarter {
 
     private static AbstractApplicationContext context;
 
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         context = new AnnotationConfigApplicationContext(AppConfig.class);
         context.registerShutdownHook();
         new CollectionCommanderStarter().start();
@@ -80,7 +80,7 @@ public class CollectionCommanderStarter {
                 done = true;
             } else {
                 try {
-                    Thread.sleep(1000l);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     logger.error("'{}'", e.getMessage());
                 }

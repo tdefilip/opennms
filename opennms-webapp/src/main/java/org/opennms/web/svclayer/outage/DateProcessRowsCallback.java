@@ -43,10 +43,11 @@ import java.util.Collection;
  * @author <a href="mailto:joed@opennms.org">Johan Edstrom</a>
  * @since 1.8.1
  */
-@SuppressWarnings("unchecked")
+@SuppressWarnings("rawtypes")
 public class DateProcessRowsCallback extends ProcessRowsCallback
 {
     /** {@inheritDoc} */
+    @Override
     public Collection filterRows(TableModel model, Collection rows)
         throws Exception
     {
