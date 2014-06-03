@@ -43,14 +43,13 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
 import org.opennms.core.criteria.CriteriaBuilder;
-import org.opennms.netmgt.dao.AlarmDao;
+import org.opennms.netmgt.dao.api.AcknowledgmentDao;
+import org.opennms.netmgt.dao.api.AlarmDao;
 import org.opennms.netmgt.model.AckAction;
 import org.opennms.netmgt.model.OnmsAcknowledgment;
 import org.opennms.netmgt.model.OnmsAlarm;
 import org.opennms.netmgt.model.OnmsAlarmCollection;
-import org.opennms.netmgt.model.acknowledgments.AckService;
-import org.opennms.netmgt.model.alarm.AlarmSummaryCollection;
-import org.opennms.web.springframework.security.Authentication;
+import org.opennms.web.api.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -68,7 +67,7 @@ public class AlarmRestService extends AlarmRestServiceBase {
     private AlarmDao m_alarmDao;
 
     @Autowired
-    private AckService m_ackService;
+    private AcknowledgmentDao m_ackDao;
 
     @Context
     UriInfo m_uriInfo;
@@ -89,14 +88,11 @@ public class AlarmRestService extends AlarmRestServiceBase {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_ATOM_XML})
     @Path("{alarmId}")
     @Transactional
-    public Response getAlarm(@PathParam("alarmId") final String alarmId) {
+    public OnmsAlarm getAlarm(@PathParam("alarmId")
+    final String alarmId) {
         readLock();
         try {
-            if ("summaries".equals(alarmId)) {
-                return Response.ok(new AlarmSummaryCollection(m_alarmDao.getNodeAlarmSummaries())).build();
-            } else {
-                return Response.ok(m_alarmDao.get(new Integer(alarmId))).build();
-            }
+            return m_alarmDao.get(new Integer(alarmId));
         } finally {
             readUnlock();
         }
@@ -207,7 +203,7 @@ public class AlarmRestService extends AlarmRestServiceBase {
             } else {
                 throw new IllegalArgumentException("Must supply one of the 'ack', 'escalate', or 'clear' parameters, set to either 'true' or 'false'.");
             }
-            m_ackService.processAck(acknowledgement);
+            m_ackDao.processAck(acknowledgement);
             return Response.seeOther(getRedirectUri(m_uriInfo)).build();
         } finally {
             writeUnlock();
@@ -266,7 +262,7 @@ public class AlarmRestService extends AlarmRestServiceBase {
                 } else {
                     throw new IllegalArgumentException("Must supply one of the 'ack', 'escalate', or 'clear' parameters, set to either 'true' or 'false'.");
                 }
-                m_ackService.processAck(acknowledgement);
+                m_ackDao.processAck(acknowledgement);
             }
             
             if (alarms.size() == 1) {
