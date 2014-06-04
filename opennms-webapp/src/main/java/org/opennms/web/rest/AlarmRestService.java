@@ -49,6 +49,7 @@ import org.opennms.netmgt.model.AckAction;
 import org.opennms.netmgt.model.OnmsAcknowledgment;
 import org.opennms.netmgt.model.OnmsAlarm;
 import org.opennms.netmgt.model.OnmsAlarmCollection;
+import org.opennms.netmgt.model.alarm.AlarmSummaryCollection;
 import org.opennms.web.api.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -88,11 +89,14 @@ public class AlarmRestService extends AlarmRestServiceBase {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_ATOM_XML})
     @Path("{alarmId}")
     @Transactional
-    public OnmsAlarm getAlarm(@PathParam("alarmId")
-    final String alarmId) {
+    public Response getAlarm(@PathParam("alarmId") final String alarmId) {
         readLock();
         try {
-            return m_alarmDao.get(new Integer(alarmId));
+            if ("summaries".equals(alarmId)) {
+                return Response.ok(new AlarmSummaryCollection(m_alarmDao.getNodeAlarmSummaries())).build();
+            } else {
+                return Response.ok(m_alarmDao.get(Integer.valueOf(alarmId))).build();
+            }
         } finally {
             readUnlock();
         }
@@ -264,7 +268,7 @@ public class AlarmRestService extends AlarmRestServiceBase {
                 }
                 m_ackDao.processAck(acknowledgement);
             }
-            
+
             if (alarms.size() == 1) {
                 return Response.seeOther(getRedirectUri(m_uriInfo, alarms.get(0).getId())).build();
             } else {
