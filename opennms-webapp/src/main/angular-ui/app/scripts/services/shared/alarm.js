@@ -56,7 +56,9 @@
       alarmService.internal.processAlarmListResults = function(results) {
         var alarms = [];
         if (results && results.alarms && results.alarms.alarm) {
-          alarms = results.alarms.alarm;
+          results.alarms.alarm.map(function (alarm) {
+            alarms.push(new Alarm(alarm));
+          });
         }
 
         return alarms;
