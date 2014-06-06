@@ -88,7 +88,7 @@ import com.sun.jersey.spi.resource.PerRequest;
 @Transactional
 public class NodeRestService extends OnmsRestService {
 	
-	private static final Logger LOG = LoggerFactory.getLogger(NodeRestService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NodeRestService.class);
 
     
     @Autowired
@@ -283,6 +283,15 @@ public class NodeRestService extends OnmsRestService {
         return m_context.getResource(AssetRecordResource.class);
     }
 
+    /**
+     * <p>getMetricsResource</p>
+     *
+     * @return a {@link org.opennms.web.rest.MetricsResource} object.
+     */
+    @Path("{nodeCriteria}/metrics")
+    public MetricsResourceResource getMetricsResource() {
+        return m_context.getResource(MetricsResourceResource.class);
+    }
 
     @GET
     @Path("/{nodeCriteria}/categories")
