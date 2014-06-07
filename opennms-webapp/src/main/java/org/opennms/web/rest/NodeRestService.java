@@ -1,8 +1,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2008-2012 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2012 The OpenNMS Group, Inc.
+ * Copyright (C) 2008-2014 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2014 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -87,9 +87,7 @@ import com.sun.jersey.spi.resource.PerRequest;
 @Path("nodes")
 @Transactional
 public class NodeRestService extends OnmsRestService {
-	
     private static final Logger LOG = LoggerFactory.getLogger(NodeRestService.class);
-
     
     @Autowired
     private NodeDao m_nodeDao;
@@ -290,6 +288,7 @@ public class NodeRestService extends OnmsRestService {
      */
     @Path("{nodeCriteria}/metrics")
     public MetricsResourceResource getMetricsResource() {
+        LOG.debug("getMetricsResource()");
         return m_context.getResource(MetricsResourceResource.class);
     }
 
