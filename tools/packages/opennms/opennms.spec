@@ -19,12 +19,17 @@
 %{!?logdir:%define logdir /var/log/opennms}
 # Where the OpenNMS Jetty webapp lives
 %{!?jettydir:%define jettydir %instprefix/jetty-webapps}
+# Where the OpenNMS lib directory lives
+%{!?libdir:%define libdir %instprefix/lib}
+# Where the OpenNMS system directory lives
+%{!?systemdir:%define systemdir %instprefix/system}
 # The directory for the OpenNMS webapp
 %{!?servletdir:%define servletdir opennms}
 # Where OpenNMS binaries live
 %{!?bindir:%define bindir %instprefix/bin}
 
 %{!?jdk:%define jdk jdk >= 2000:1.6}
+%{!?jre:%define jre jre >= 1.6}
 
 %{!?extrainfo:%define extrainfo }
 %{!?extrainfo2:%define extrainfo2 }
@@ -91,8 +96,8 @@ Requires(pre):	jicmp
 Requires:	jicmp
 Requires(pre):	jicmp6
 Requires:	jicmp6
-Requires(pre):	%{jdk}
-Requires:	%{jdk}
+Requires(pre):	%{jre}
+Requires:	%{jre}
 Obsoletes:	opennms < 1.3.11
 
 %description core
@@ -554,6 +559,31 @@ rm -rf $RPM_BUILD_ROOT%{instprefix}/lib/*.tar.gz
 install -d -m 755 $RPM_BUILD_ROOT%{_libdir}/systemd/system
 install -m 655 $RPM_BUILD_ROOT%{instprefix}/etc/opennms.service $RPM_BUILD_ROOT%{_libdir}/systemd/system/
 
+# Delete remote poller files from webapp-jetty
+rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms-remoting
+rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/WEB-INF/deploy/RemotePollerMap
+rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/WEB-INF/deploy/*/symbolMaps/
+rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/RemotePollerMap
+rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/asset
+rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/map
+rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/js
+
+# Delete unnecessary files from system directory
+rm -rf $RPM_BUILD_ROOT%{systemdir}/org/opennms/container/karaf
+rm -rf $RPM_BUILD_ROOT%{systemdir}/org/opennms/container/org.opennms.container.standalone
+rm -rf $RPM_BUILD_ROOT%{systemdir}/org/opennms/features
+rm -rf $RPM_BUILD_ROOT%{systemdir}/org/springframework
+rm -rf $RPM_BUILD_ROOT%{systemdir}/org/vaadin
+rm -rf $RPM_BUILD_ROOT%{systemdir}/org/apache/activemq
+rm -rf $RPM_BUILD_ROOT%{systemdir}/com
+
+# Delete unnecessary files from lib directory
+rm -Rf $RPM_BUILD_ROOT%{libdir}/fop-1.0.jar
+rm -Rf $RPM_BUILD_ROOT%{libdir}/batik-*
+rm -Rf $RPM_BUILD_ROOT%{libdir}/jfreechart-1.0.13.jar
+rm -Rf $RPM_BUILD_ROOT%{libdir}/drools-*
+rm -Rf $RPM_BUILD_ROOT%{libdir}/selenium-*
+
 cd $RPM_BUILD_ROOT
 
 # core package files
@@ -724,9 +754,9 @@ rm -rf $RPM_BUILD_ROOT
 
 %files webapp-jetty -f %{_tmppath}/files.jetty
 %defattr(644 root root 755)
-%config %{jettydir}/opennms-remoting/WEB-INF/*.xml
+#%config %{jettydir}/opennms-remoting/WEB-INF/*.xml
 %config %{jettydir}/%{servletdir}/WEB-INF/*.properties
-%config %{jettydir}/opennms-remoting/WEB-INF/*.properties
+#%config %{jettydir}/opennms-remoting/WEB-INF/*.properties
 
 %files plugins
 
