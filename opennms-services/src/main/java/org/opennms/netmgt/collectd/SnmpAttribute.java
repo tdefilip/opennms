@@ -217,7 +217,16 @@ public class SnmpAttribute extends AbstractCollectionAttribute {
                     } catch(NumberFormatException ex) {
                         log().trace("Unable to process data received for attribute " + this + " maybe this is not a number? See bug 1473 for more information. Skipping.");
                     }
+		    // If we could not find a numeric value for the octetstring,
+		    // return a string
+		    return getValue().toHexString();
                 }
+		else if (getValue().getType()
+			== SnmpValue.SNMP_OBJECT_IDENTIFIER) {
+		    // We cannot find a numeric value for the OID, so return a
+		    // string
+		    return getValue().toString();
+		}
             }
             return null;
         }

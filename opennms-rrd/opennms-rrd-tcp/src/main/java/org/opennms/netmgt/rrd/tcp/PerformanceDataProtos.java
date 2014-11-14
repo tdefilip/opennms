@@ -103,6 +103,18 @@ public final class PerformanceDataProtos {
       return value_.get(index);
     }
     
+    // repeated string valuestr = 5;
+    public static final int VALUESTR_FIELD_NUMBER = 5;
+    private java.util.List<java.lang.String> valuestr_ =
+      java.util.Collections.emptyList();
+    public java.util.List<java.lang.String> getValueStrList() {
+      return valuestr_;
+    }
+    public int getValueStrCount() { return valuestr_.size(); }
+    public String getValueStr(int index) {
+      return valuestr_.get(index);
+    }
+    
     public final boolean isInitialized() {
       if (!hasPath) return false;
       if (!hasOwner) return false;
@@ -123,6 +135,9 @@ public final class PerformanceDataProtos {
       }
       for (double element : getValueList()) {
         output.writeDouble(4, element);
+      }
+      for (String element : getValueStrList()) {
+        output.writeString(5, element);
       }
       getUnknownFields().writeTo(output);
     }
@@ -150,6 +165,12 @@ public final class PerformanceDataProtos {
         dataSize = 8 * getValueList().size();
         size += dataSize;
         size += 1 * getValueList().size();
+      }
+      {
+      	for (String element : getValueStrList()) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeStringSize(5, element);
+	}
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -319,6 +340,12 @@ public final class PerformanceDataProtos {
           }
           result.value_.addAll(other.value_);
         }
+        if (!other.valuestr_.isEmpty()) {
+          if (result.valuestr_.isEmpty()) {
+            result.valuestr_ = new java.util.ArrayList<java.lang.String>();
+          }
+          result.valuestr_.addAll(other.valuestr_);
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -456,6 +483,40 @@ public final class PerformanceDataProtos {
       }
       public Builder clearValue() {
         result.value_ = java.util.Collections.emptyList();
+        return this;
+      }
+    
+      // repeated string valuestr = 5;
+      public java.util.List<java.lang.String> getValueStrList() {
+        return java.util.Collections.unmodifiableList(result.valuestr_);
+      }
+      public int getValueStrCount() {
+        return result.getValueStrCount();
+      }
+      public String getValueStr(int index) {
+        return result.getValueStr(index);
+      }
+      public Builder setValueStr(int index, String value) {
+        result.valuestr_.set(index, value);
+        return this;
+      }
+      public Builder addValueStr(String value) {
+        if (result.valuestr_.isEmpty()) {
+          result.valuestr_ = new java.util.ArrayList<java.lang.String>();
+        }
+        result.valuestr_.add(value);
+        return this;
+      }
+      public Builder addAllValueStr(
+          java.lang.Iterable<? extends java.lang.String> valuestrs) {
+        if (result.valuestr_.isEmpty()) {
+          result.valuestr_ = new java.util.ArrayList<java.lang.String>();
+        }
+        super.addAll(valuestrs, result.valuestr_);
+        return this;
+      }
+      public Builder clearValueStr() {
+        result.valuestr_ = java.util.Collections.emptyList();
         return this;
       }
     }

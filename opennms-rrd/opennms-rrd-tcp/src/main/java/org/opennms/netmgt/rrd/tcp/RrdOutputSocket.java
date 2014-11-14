@@ -72,12 +72,15 @@ public class RrdOutputSocket {
      */
     public void addData(String filename, String owner, String data) {
         Long timestamp = parseRrdTimestamp(data);
-        List<Double> values = parseRrdValues(data);
+        List<Double> values = new ArrayList<Double>();
+	List<String> valueStrs = new ArrayList<String>();
+	parseRrdValues(data, values, valueStrs);
         m_messages.addMessage(PerformanceDataReading.newBuilder()
                 .setPath(filename)
                 .setOwner(owner)
-                .setTimestamp(timestamp).
-                addAllValue(values)
+                .setTimestamp(timestamp)
+                .addAllValue(values)
+                .addAllValueStr(valueStrs)
         );
         m_messageCount++;
     }
@@ -117,21 +120,24 @@ public class RrdOutputSocket {
         }
     }
 
-    private List<Double> parseRrdValues(String data) {
-        List<Double> retval = new ArrayList<Double>();
+    private void parseRrdValues(String data, List<Double> valueDbls, List<String> valueStrs) {
         String[] values = data.split(":");
         // Skip index zero, that's the timestamp
         for (int i = 1; i < values.length; i++) {
             if (values[i] == null || "null".equals(values[i])) {
                 // Handle null values
-                retval.add(Double.NaN);
+                valueDbls.add(Double.NaN);
             } else if ("U".equals(values[i])) {
                 // Parse the RRD value for "unknown"
-                retval.add(Double.NaN);
+                valueDbls.add(Double.NaN);
             } else {
-                retval.add(new Double(values[i]));
+		try {
+                    valueDbls.add(new Double(values[i]));
+		}
+		catch (Exception e) {
+		    valueStrs.add(new String(values[i]));
+		}
             }
         }
-        return retval;
     }
 }
