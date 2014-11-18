@@ -58,6 +58,7 @@ public class BasePersister extends AbstractCollectionSetVisitor implements Persi
     private boolean m_ignorePersist = false;
     private ServiceParameters m_params;
     private RrdRepository m_repository;
+    private long m_time;
     private LinkedList<Boolean> m_stack = new LinkedList<Boolean>();
     private PersistOperationBuilder m_builder;
 
@@ -137,6 +138,7 @@ public class BasePersister extends AbstractCollectionSetVisitor implements Persi
      */
     protected void createBuilder(CollectionResource resource, String name, Set<AttributeDefinition> attributeTypes) {
         m_builder = new PersistOperationBuilder(getRepository(), resource, name);
+        m_builder.setTime(m_time);
         if (resource.getTimeKeeper() != null)
             m_builder.setTimeKeeper(resource.getTimeKeeper());
         for (Iterator<AttributeDefinition> iter = attributeTypes.iterator(); iter.hasNext();) {
@@ -163,6 +165,15 @@ public class BasePersister extends AbstractCollectionSetVisitor implements Persi
      */
     public void setRepository(RrdRepository repository) {
         m_repository = repository;
+    }
+
+    /**
+     * <p>setTime</p>
+     *
+     * @param time Long representing the event time for this persister.
+     */
+    public void setTime(long time) {
+	m_time = time;
     }
 
     /**

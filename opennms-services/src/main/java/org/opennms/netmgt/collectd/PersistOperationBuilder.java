@@ -61,6 +61,7 @@ public class PersistOperationBuilder {
     private RrdRepository m_repository;
     private String m_rrdName;
     private ResourceIdentifier m_resource;
+    private long m_time;
     private Map<AttributeDefinition, String> m_declarations = new TreeMap<AttributeDefinition, String>(new ByNameComparator());
     private Map<String, String> m_metaData = new LinkedHashMap<String, String>();
     private TimeKeeper m_timeKeeper = new DefaultTimeKeeper();
@@ -94,6 +95,15 @@ public class PersistOperationBuilder {
      */
     public RrdRepository getRepository() {
         return m_repository;
+    }
+
+    /**
+     * <p>setTime</p>
+     *
+     * @param time Long representing the event time for this persister.
+     */
+    public void setTime(long time) {
+	m_time = time;
     }
 
     private File getResourceDir(ResourceIdentifier resource) throws FileNotFoundException {
@@ -157,7 +167,7 @@ public class PersistOperationBuilder {
             final String ownerName = m_resource.getOwnerName();
             final String absolutePath = getResourceDir(m_resource).getAbsolutePath();
             RrdUtils.createRRD(ownerName, absolutePath, m_rrdName, getRepository().getStep(), getDataSources(), getRepository().getRraList(), getAttributeMappings());
-            RrdUtils.updateRRD(ownerName, absolutePath, m_rrdName, m_timeKeeper.getCurrentTime(), getValues());
+            RrdUtils.updateRRD(ownerName, absolutePath, m_rrdName, m_time, getValues());
             RrdUtils.createMetaDataFile(absolutePath, m_rrdName, m_metaData);
         } catch (FileNotFoundException e) {
             LoggerFactory.getLogger(getClass()).warn("Could not get resource directory: " + e.getMessage(), e);

@@ -288,7 +288,10 @@ final class CollectableService implements ReadyRunnable {
         }
 
         // Update last scheduled poll time
-        m_lastScheduledCollectionTime = System.currentTimeMillis();
+	if (m_lastScheduledCollectionTime == 0)
+            m_lastScheduledCollectionTime = System.currentTimeMillis();
+	else
+	    m_lastScheduledCollectionTime += m_spec.getInterval();
 
         /*
          * Check scheduled outages to see if any apply indicating
@@ -296,7 +299,7 @@ final class CollectableService implements ReadyRunnable {
          */
         if (!m_spec.scheduledOutage(m_agent)) {
             try {
-                doCollection();
+                doCollection(m_lastScheduledCollectionTime);
                 updateStatus(ServiceCollector.COLLECTION_SUCCEEDED, null);
             } catch (CollectionException e) {
                 if (e instanceof CollectionWarning) {
@@ -311,8 +314,11 @@ final class CollectableService implements ReadyRunnable {
             }
         }
         
+	// Determine how long the collection has taken, so we can cut that off
+	// of the service interval
+	long diff = System.currentTimeMillis() - m_lastScheduledCollectionTime;
     	// Reschedule the service
-        m_scheduler.schedule(m_spec.getInterval(), getReadyRunnable());
+        m_scheduler.schedule(m_spec.getInterval() - diff, getReadyRunnable());
     }
 
     private void updateStatus(int status, CollectionException e) {
@@ -347,18 +353,21 @@ final class CollectableService implements ReadyRunnable {
         m_status = status;
     }
 
-        private BasePersister createPersister(ServiceParameters params, RrdRepository repository) {
+        private BasePersister createPersister(ServiceParameters params, RrdRepository repository, long time) {
+	    BasePersister persister = null;
             if (ResourceTypeUtils.isStoreByGroup()) {
-                return new GroupPersister(params, repository);
+                persister = new GroupPersister(params, repository);
             } else {
-                return new OneToOnePersister(params, repository);
+                persister = new OneToOnePersister(params, repository);
             }
+	    persister.setTime(time);
+	    return persister;
         }
 
         /**
          * Perform data collection.
          */
-	private void doCollection() throws CollectionException {
+	private void doCollection(long time) throws CollectionException {
 		log().info("run: starting new collection for " + getHostAddress() + "/" + m_spec.getServiceName() + "/" + m_spec.getPackageName());
 		CollectionSet result = null;
 		try {
@@ -366,7 +375,7 @@ final class CollectableService implements ReadyRunnable {
 		    if (result != null) {
                         Collectd.instrumentation().beginPersistingServiceData(m_nodeId, getHostAddress(), m_spec.getServiceName());
                         try {
-                            BasePersister persister = createPersister(m_params, m_repository);
+                            BasePersister persister = createPersister(m_params, m_repository, time);
                             persister.setIgnorePersist(result.ignorePersist());
                             result.visit(persister);
                         } finally {
