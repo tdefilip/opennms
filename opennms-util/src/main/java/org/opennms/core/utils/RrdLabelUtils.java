@@ -32,10 +32,10 @@ public abstract class RrdLabelUtils {
     
     public static String computeNameForRRD(String ifname, String ifdescr) {
         String label = null;
-        if (ifname != null && !"".equals(ifname)) {
-            label = AlphaNumeric.parseAndReplace(ifname, '_');
-        } else if (ifdescr != null && !"".equals(ifdescr)) {
-            label = AlphaNumeric.parseAndReplace(ifdescr, '_');
+        if (ifdescr != null && !"".equals(ifdescr)) {
+            label = ifdescr;
+        } else if (ifname != null && !"".equals(ifname)) {
+            label = ifname;
         }
         return label;
         

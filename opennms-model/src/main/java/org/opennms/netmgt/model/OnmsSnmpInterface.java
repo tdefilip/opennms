@@ -650,10 +650,10 @@ public class OnmsSnmpInterface extends OnmsEntity implements Serializable {
          * file name and that RRD won't have any problems using it
          */
         String label = null;
-        if (getIfName() != null) {
-            label = AlphaNumeric.parseAndReplace(getIfName(), '_');
-        } else if (getIfDescr() != null) {
-            label = AlphaNumeric.parseAndReplace(getIfDescr(), '_');
+        if (getIfDescr() != null) {
+            label = getIfDescr();
+        } else if (getIfName() != null) {
+            label = getIfName();
         } else {
             log().info(
                        "Interface ("
