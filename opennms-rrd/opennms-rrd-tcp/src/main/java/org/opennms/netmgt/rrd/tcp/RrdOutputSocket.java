@@ -135,7 +135,15 @@ public class RrdOutputSocket {
                     valueDbls.add(new Double(values[i]));
 		}
 		catch (Exception e) {
-		    valueStrs.add(new String(values[i]));
+		    // If it is a hex-string, we appended 0x to make sure it
+		    //  did not parse to a double, so remove it here
+		    if (values[i].startsWith("0x")) {
+			valueStrs.add(new String(values[i].substring(2)));
+		    }
+		    // Otherwise, it is an OID, so do not alter the string
+		    else {
+		    	valueStrs.add(new String(values[i]));
+		    }
 		}
             }
         }

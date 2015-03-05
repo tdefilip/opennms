@@ -201,33 +201,14 @@ public class SnmpAttribute extends AbstractCollectionAttribute {
         } else if (getValue().isNumeric()) {
             return Long.toString(getValue().toLong());
         } else {
-            // Check to see if this is a 63-bit counter packed into an octetstring
-            Long value = SnmpUtils.getProtoCounter63Value(getValue());
-            if (value != null) {
-                return value.toString();
-            }
-
-            try {
-                return Double.valueOf(getValue().toString()).toString();
-            } catch(NumberFormatException e) {
-                log().trace("Unable to process data received for attribute " + this + " maybe this is not a number? See bug 1473 for more information. Skipping.");
-                if (getValue().getType() == SnmpValue.SNMP_OCTET_STRING) {
-                    try {
-                        return Long.valueOf(getValue().toHexString(), 16).toString();
-                    } catch(NumberFormatException ex) {
-                        log().trace("Unable to process data received for attribute " + this + " maybe this is not a number? See bug 1473 for more information. Skipping.");
-                    }
-		    // If we could not find a numeric value for the octetstring,
-		    // return a string
-		    return getValue().toHexString();
-                }
-		else if (getValue().getType()
-			== SnmpValue.SNMP_OBJECT_IDENTIFIER) {
-		    // We cannot find a numeric value for the OID, so return a
-		    // string
-		    return getValue().toString();
-		}
-            }
+	    if (getValue().getType() == SnmpValue.SNMP_OCTET_STRING) {
+		// Return a 0x-prepended string for a hex-string
+		return "0x" + getValue().toHexString();
+	    }
+	    else if (getValue().getType() == SnmpValue.SNMP_OBJECT_IDENTIFIER) {
+		// Return a string for an OID
+		return getValue().toString();
+	    }
             return null;
         }
     }
