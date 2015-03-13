@@ -195,6 +195,11 @@ public class BasePersister extends AbstractCollectionSetVisitor implements Persi
 
     /** {@inheritDoc} */
     public void persistStringAttribute(CollectionAttribute attribute) {
+            // Write the string property only if instructed to
+            if (!Boolean.getBoolean("org.opennms.netmgt.collectd.BasePersister.persistString")) {
+                return;
+            }
+
             log().debug("Persisting "+attribute);
             CollectionResource resource = attribute.getResource();
             String value = attribute.getStringValue();

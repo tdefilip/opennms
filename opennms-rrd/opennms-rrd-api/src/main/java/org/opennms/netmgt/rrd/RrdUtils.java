@@ -89,6 +89,11 @@ public abstract class RrdUtils {
      * the mapping of attributeId to rrd track names
      */
     public static void createMetaDataFile(final String directory, final String rrdName, final Map<String, String> attributeMappings) {
+        // Do not write metadata if instructed not to
+        if (!(Boolean) m_context.getBean("writeMeta")) {
+            return;
+        }
+
         final File metaFile = new File(directory + File.separator + rrdName + ".meta");
 
         try {
@@ -121,6 +126,7 @@ public abstract class RrdUtils {
     }
 
     public static enum StrategyName {
+        tcpRrdStrategy,
         basicRrdStrategy,
         queuingRrdStrategy,
         tcpAndBasicRrdStrategy,
@@ -136,18 +142,23 @@ public abstract class RrdUtils {
     public static <D, F> RrdStrategy<D, F> getStrategy() {
         RrdStrategy<D, F> retval = null;
         if (m_rrdStrategy == null) {
-            if ((Boolean) m_context.getBean("useQueue")) {
-                if ((Boolean) m_context.getBean("useTcp")) {
-                    retval = (RrdStrategy<D, F>) m_context.getBean(StrategyName.tcpAndQueuingRrdStrategy.toString());
+	    if ((Boolean) m_context.getBean("useRrd")) {
+            	if ((Boolean) m_context.getBean("useQueue")) {
+                    if ((Boolean) m_context.getBean("useTcp")) {
+                	retval = (RrdStrategy<D, F>) m_context.getBean(StrategyName.tcpAndQueuingRrdStrategy.toString());
+                    } else {
+                        retval = (RrdStrategy<D, F>) m_context.getBean(StrategyName.queuingRrdStrategy.toString());
+                    }
                 } else {
-                    retval = (RrdStrategy<D, F>) m_context.getBean(StrategyName.queuingRrdStrategy.toString());
-                }
-            } else {
-                if ((Boolean) m_context.getBean("useTcp")) {
-                    retval = (RrdStrategy<D, F>) m_context.getBean(StrategyName.tcpAndBasicRrdStrategy.toString());
-                } else {
+                    if ((Boolean) m_context.getBean("useTcp")) {
+                        retval = (RrdStrategy<D, F>) m_context.getBean(StrategyName.tcpAndBasicRrdStrategy.toString());
+                    } else {
                     retval = (RrdStrategy<D, F>) m_context.getBean(StrategyName.basicRrdStrategy.toString());
+                    }
                 }
+	    }
+            else {
+		retval = (RrdStrategy<D, F>) m_context.getBean(StrategyName.tcpRrdStrategy.toString());
             }
         } else {
             retval = (RrdStrategy<D, F>) m_rrdStrategy;

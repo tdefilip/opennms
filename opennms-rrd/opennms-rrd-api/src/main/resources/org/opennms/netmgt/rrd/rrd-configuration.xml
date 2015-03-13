@@ -5,6 +5,8 @@
 			<props>
 				<!-- General configuration -->
 				<prop key="org.opennms.rrd.strategyClass">org.opennms.netmgt.rrd.jrobin.JRobinRrdStrategy</prop>
+				<prop key="org.opennms.rrd.writemeta">true</prop>
+				<prop key="org.opennms.rrd.userrd">true</prop>
 				<prop key="org.opennms.rrd.usequeue">true</prop>
 				<prop key="org.opennms.rrd.usetcp">false</prop>
 				<prop key="org.opennms.rrd.fileExtension" />
@@ -50,6 +52,14 @@
 
 	<bean id="rrdFileExtension" class="java.lang.String">
 		<constructor-arg type="java.lang.String" value="${org.opennms.rrd.fileExtension}" />
+	</bean>
+
+	<bean id="writeMeta" class="java.lang.Boolean">
+		<constructor-arg type="java.lang.String" value="${org.opennms.rrd.writemeta}" />
+	</bean>
+
+	<bean id="useRrd" class="java.lang.Boolean">
+		<constructor-arg type="java.lang.String" value="${org.opennms.rrd.userrd}" />
 	</bean>
 
 	<bean id="useQueue" class="java.lang.Boolean">
