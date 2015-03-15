@@ -127,6 +127,7 @@ public abstract class RrdUtils {
 
     public static enum StrategyName {
         tcpRrdStrategy,
+        queuingTcpRrdStrategy,
         basicRrdStrategy,
         queuingRrdStrategy,
         tcpAndBasicRrdStrategy,
@@ -158,7 +159,12 @@ public abstract class RrdUtils {
                 }
 	    }
             else {
-		retval = (RrdStrategy<D, F>) m_context.getBean(StrategyName.tcpRrdStrategy.toString());
+                if ((Boolean) m_context.getBean("useQueue")) {
+                    retval = (RrdStrategy<D, F>) m_context.getBean(StrategyName.queuingTcpRrdStrategy.toString());
+                }
+                else {
+                    retval = (RrdStrategy<D, F>) m_context.getBean(StrategyName.tcpRrdStrategy.toString());
+                }
             }
         } else {
             retval = (RrdStrategy<D, F>) m_rrdStrategy;

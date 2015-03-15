@@ -75,6 +75,12 @@
 		<property name="port" value="${org.opennms.rrd.tcp.port}" />
 	</bean>
 
+	<bean id="queuingTcpRrdStrategy" class="org.opennms.netmgt.rrd.tcp.QueuingTcpRrdStrategy" lazy-init="true">
+		<constructor-arg>
+			<ref local="tcpRrdStrategy" />
+		</constructor-arg>
+	</bean>
+
 	<bean id="basicRrdStrategy" class="${org.opennms.rrd.strategyClass}" lazy-init="true">
 		<!-- Pass the rrdConfigurationProperties to the delegate strategy -->
 		<property name="configurationProperties" ref="rrdConfigurationProperties" />
