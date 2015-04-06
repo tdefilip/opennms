@@ -59,7 +59,8 @@ import org.opennms.netmgt.rrd.tcp.TcpRrdStrategy.RrdDefinition;
  */
 public class QueuingTcpRrdStrategy implements RrdStrategy<TcpRrdStrategy.RrdDefinition,String> {
 
-    private final BlockingQueue<PerformanceDataReading> m_queue = new LinkedBlockingQueue<PerformanceDataReading>(50000);
+    private final int queueSize = Integer.getInteger("org.opennms.netmgt.rrd.tcp.QueuingTcpRrdStrategy.queueSize").intValue();
+    private final BlockingQueue<PerformanceDataReading> m_queue = new LinkedBlockingQueue<PerformanceDataReading>(queueSize);
     private final ConsumerThread m_consumerThread;
     private final TcpRrdStrategy m_delegate;
     private int m_skippedReadings = 0;
@@ -104,7 +105,8 @@ public class QueuingTcpRrdStrategy implements RrdStrategy<TcpRrdStrategy.RrdDefi
                         }
                         socket.writeData();
                     } else {
-                        Thread.sleep(1000);
+                        long sleepTime = Integer.getInteger("org.opennms.netmgt.rrd.tcp.QueuingTcpRrdStrategy.sleepTime").longValue();
+                        Thread.sleep(sleepTime);
                     }
                 }
             } catch (InterruptedException e) {
@@ -163,7 +165,8 @@ public class QueuingTcpRrdStrategy implements RrdStrategy<TcpRrdStrategy.RrdDefi
 
     /** {@inheritDoc} */
     public void updateFile(String fileName, String owner, String data) throws Exception {
-        if (m_queue.offer(new PerformanceDataReading(fileName, owner, data), 500, TimeUnit.MILLISECONDS)) {
+        long offerWait = Integer.getInteger("org.opennms.netmgt.rrd.tcp.QueuingTcpRrdStrategy.offerWait").longValue();
+        if (m_queue.offer(new PerformanceDataReading(fileName, owner, data), offerWait, TimeUnit.MILLISECONDS)) {
             if (m_skippedReadings > 0) {
                 ThreadCategory.getInstance().warn("Skipped " + m_skippedReadings + " performance data message(s) because of queue overflow");
                 m_skippedReadings = 0;
