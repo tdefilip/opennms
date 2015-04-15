@@ -414,6 +414,7 @@
       <type>tar.gz</type>
       <classifier>contrib</classifier>
     </dependency>
+    <!--
     <dependency>
       <groupId>com.ximpleware</groupId>
       <artifactId>vtd-xml</artifactId>
@@ -423,6 +424,7 @@
       <artifactId>opennms-vtdxml-collector-handler</artifactId>
       <version>${project.version}</version>
     </dependency>
+    -->
     <dependency>
       <groupId>org.opennms.protocols</groupId>
       <artifactId>org.opennms.protocols.xmp</artifactId>
