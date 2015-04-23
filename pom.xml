@@ -1043,7 +1043,7 @@
     <!-- install.prefix: a prefix used for installation in or chroot -->
     <install.prefix/>
     <install.package.name>opennms</install.package.name>
-    <install.package.description>OpenNMS</install.package.description>
+    <install.package.description>Powered By OpenNMS</install.package.description>
     <install.dir>${opennms.home}</install.dir>
     <install.init.dir>${install.dir}/bin</install.init.dir>
     <install.webapps.dir>${install.dir}/webapps</install.webapps.dir>
