@@ -9,7 +9,7 @@
         <span class="icon-bar"></span>
       </button>
       <a class="navbar-brand" href="${baseHref}index.jsp">
-        <img id="logo" src="${baseHref}images/horizon_logo.svg" alt="OpenNMS" onerror="this.src='${baseHref}images/horizon_logo_small.png'" />
+        <img id="logo" src="${baseHref}images/poweredby.svg" alt="OpenNMS" onerror="this.src='${baseHref}images/poweredby.png'" />
       </a>
     </div>
 
