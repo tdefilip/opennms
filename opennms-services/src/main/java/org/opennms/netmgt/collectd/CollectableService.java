@@ -29,6 +29,9 @@
 package org.opennms.netmgt.collectd;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.Socket;
 
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.core.utils.ThreadCategory;
@@ -106,6 +109,10 @@ final class CollectableService implements ReadyRunnable {
     private final ServiceParameters m_params;
     
     private final RrdRepository m_repository;
+
+    private final String m_errorHost = System.getProperty("org.opennms.netmgt.collectd.CollectableService.errorHost");
+
+    private final Integer m_errorPort = Integer.getInteger("org.opennms.netmgt.collectd.CollectableService.errorPort");
 
     /**
      * Constructs a new instance of a CollectableService object.
@@ -307,10 +314,12 @@ final class CollectableService implements ReadyRunnable {
                 } else {
                     log().error(e.getMessage(), e);
                 }
+                sendError(e.getMessage(), e);
                 updateStatus(ServiceCollector.COLLECTION_FAILED, e);
             } catch (Throwable e) {
                 log().error(e.getMessage(), e);
                 updateStatus(ServiceCollector.COLLECTION_FAILED, new CollectionException("Collection failed unexpectedly: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e));
+                sendError(e.getMessage(), e);
             }
         }
         
@@ -319,6 +328,32 @@ final class CollectableService implements ReadyRunnable {
 	long diff = System.currentTimeMillis() - m_lastScheduledCollectionTime;
     	// Reschedule the service
         m_scheduler.schedule(m_spec.getInterval() - diff, getReadyRunnable());
+    }
+
+    public void sendError(String err, Throwable t) {
+        String msg = getHostAddress() + "/" + m_spec.getServiceName() + "/"
+            + m_spec.getPackageName() + ": " + t.toString();
+        // Send error message out of socket
+        Socket socket = null;
+        try {
+            socket = new Socket(InetAddressUtils.addr(m_errorHost),
+                m_errorPort.intValue());
+            OutputStream out = socket.getOutputStream();
+            out.write(msg.getBytes());
+            out.flush();
+        }
+        catch (Throwable e) {
+            ThreadCategory.getInstance(this.getClass()).warn("Error when trying to open connection to " + m_errorHost + ":" + m_errorPort.intValue() + ", dropping error message");
+        }
+        finally {
+            if (socket != null) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    ThreadCategory.getInstance(this.getClass()).warn("IOException when closing TCP performance data socket: " + e.getMessage());
+                }
+            }
+        }
     }
 
     private void updateStatus(int status, CollectionException e) {
