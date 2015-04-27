@@ -62,8 +62,12 @@ public class QueuingTcpRrdStrategy implements RrdStrategy<TcpRrdStrategy.RrdDefi
     private final int queueSize = Integer.getInteger("org.opennms.netmgt.rrd.tcp.QueuingTcpRrdStrategy.queueSize").intValue();
     private final BlockingQueue<PerformanceDataReading> m_queue = new LinkedBlockingQueue<PerformanceDataReading>(queueSize);
     private final ConsumerThread m_consumerThread;
+    private final LogThread m_logThread;
     private final TcpRrdStrategy m_delegate;
     private int m_skippedReadings = 0;
+    private long m_offers = 0;
+    private long m_failedOffers = 0;
+    private long m_goodOffers = 0;
 
     private static class PerformanceDataReading {
         private String m_filename;
@@ -85,9 +89,43 @@ public class QueuingTcpRrdStrategy implements RrdStrategy<TcpRrdStrategy.RrdDefi
         }
     }
 
+    private static class LogThread extends Thread {
+        private final BlockingQueue<PerformanceDataReading> m_myQueue;
+        private final QueuingTcpRrdStrategy m_strategy;
+        public LogThread(final QueuingTcpRrdStrategy strategy, final BlockingQueue<PerformanceDataReading> queue) {
+            m_strategy = strategy;
+            m_myQueue = queue;
+            this.setName(this.getClass().getSimpleName());
+        }
+        public void run() {
+            // Write a summary of strategy statistics, clear them, and sleep
+            // for 300 seconds
+            try {
+                while (true) {
+                    long offers = m_strategy.getOffers();
+                    long failedOffers = m_strategy.getFailedOffers();
+                    long goodOffers = m_strategy.getGoodOffers();
+                    long queueChecks = m_strategy.getQueueChecks();
+                    long drains = m_strategy.getDrains();
+                    long data = m_strategy.getSentData();
+                    long queueSize = m_myQueue.size();
+                    long remaining = m_myQueue.remainingCapacity();
+                    ThreadCategory.getInstance(getClass()).warn("TCP Queue: " + offers + " offers, " + failedOffers + " failed offers, " + goodOffers + " good offers; " + queueChecks + " queue checks, " + drains + " drains, " + data + " sent readings, " + queueSize + " elements in queue, " + remaining + " remaining capacity");
+                    m_strategy.clearLogStats();
+                    Thread.sleep(300000);
+                }
+            } catch (Throwable e) {
+                ThreadCategory.getInstance(this.getClass()).fatal("Unexpected exception caught in QueuingTcpRrdStrategy$LogThread, closing thread", e);
+            }
+        }
+    }
+
     private static class ConsumerThread extends Thread {
         private final BlockingQueue<PerformanceDataReading> m_myQueue;
         private final TcpRrdStrategy m_strategy;
+        private long m_queueChecks = 0;
+        private long m_drains = 0;
+        private long m_data = 0;
         public ConsumerThread(final TcpRrdStrategy strategy, final BlockingQueue<PerformanceDataReading> queue) {
             m_strategy = strategy;
             m_myQueue = queue;
@@ -97,9 +135,12 @@ public class QueuingTcpRrdStrategy implements RrdStrategy<TcpRrdStrategy.RrdDefi
         public void run() {
             try {
                 while (true) {
+                    m_queueChecks++;
                     Collection<PerformanceDataReading> sendMe = new ArrayList<PerformanceDataReading>();
                     if (m_myQueue.drainTo(sendMe) > 0) {
+                        m_drains++;
                         RrdOutputSocket socket = new RrdOutputSocket(m_strategy.getHost(), m_strategy.getPort());
+                        m_data += sendMe.size();
                         for (PerformanceDataReading reading : sendMe) {
                             socket.addData(reading.getFilename(), reading.getOwner(), reading.getData());
                         }
@@ -115,6 +156,22 @@ public class QueuingTcpRrdStrategy implements RrdStrategy<TcpRrdStrategy.RrdDefi
                 ThreadCategory.getInstance(this.getClass()).fatal("Unexpected exception caught in QueuingTcpRrdStrategy$ConsumerThread, closing thread", e);
             }
         }
+
+        // Clear/get consumer thread statistics
+        public void clearLogStats() {
+            m_queueChecks = 0;
+            m_drains = 0;
+            m_data = 0;
+        }
+        public long getQueueChecks() {
+            return m_queueChecks;
+        }
+        public long getDrains() {
+            return m_drains;
+        }
+        public long getData() {
+            return m_data;
+        }
     }
 
     /**
@@ -126,6 +183,8 @@ public class QueuingTcpRrdStrategy implements RrdStrategy<TcpRrdStrategy.RrdDefi
         m_delegate = delegate;
         m_consumerThread = new ConsumerThread(delegate, m_queue);
         m_consumerThread.start();
+        m_logThread = new LogThread(this, m_queue);
+        m_logThread.start();
     }
 
     /** {@inheritDoc} */
@@ -166,12 +225,15 @@ public class QueuingTcpRrdStrategy implements RrdStrategy<TcpRrdStrategy.RrdDefi
     /** {@inheritDoc} */
     public void updateFile(String fileName, String owner, String data) throws Exception {
         long offerWait = Integer.getInteger("org.opennms.netmgt.rrd.tcp.QueuingTcpRrdStrategy.offerWait").longValue();
+        m_offers++;
         if (m_queue.offer(new PerformanceDataReading(fileName, owner, data), offerWait, TimeUnit.MILLISECONDS)) {
+            m_goodOffers++;
             if (m_skippedReadings > 0) {
                 ThreadCategory.getInstance().warn("Skipped " + m_skippedReadings + " performance data message(s) because of queue overflow");
                 m_skippedReadings = 0;
             }
         } else {
+            m_failedOffers++;
             m_skippedReadings++;
         }
     }
@@ -252,4 +314,29 @@ public class QueuingTcpRrdStrategy implements RrdStrategy<TcpRrdStrategy.RrdDefi
         m_delegate.promoteEnqueuedFiles(rrdFiles);
     }
     
+    // Clear/get strategy statistics
+    public void clearLogStats() {
+        m_consumerThread.clearLogStats();
+        m_offers = 0;
+        m_goodOffers = 0;
+        m_failedOffers = 0;
+    }
+    public long getOffers() {
+        return m_offers;
+    }
+    public long getGoodOffers() {
+        return m_goodOffers;
+    }
+    public long getFailedOffers() {
+        return m_failedOffers;
+    }
+    public long getQueueChecks() {
+        return m_consumerThread.getQueueChecks();
+    }
+    public long getDrains() {
+        return m_consumerThread.getDrains();
+    }
+    public long getSentData() {
+        return m_consumerThread.getData();
+    }
 }
