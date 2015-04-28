@@ -110,6 +110,8 @@ final class CollectableService implements ReadyRunnable {
     
     private final RrdRepository m_repository;
 
+    private final boolean m_streamErrors = Boolean.getBoolean("org.opennms.netmgt.collectd.CollectableService.streamErrors");
+
     private final String m_errorHost = System.getProperty("org.opennms.netmgt.collectd.CollectableService.errorHost");
 
     private final Integer m_errorPort = Integer.getInteger("org.opennms.netmgt.collectd.CollectableService.errorPort");
@@ -331,6 +333,9 @@ final class CollectableService implements ReadyRunnable {
     }
 
     public void sendError(String err, Throwable t) {
+        if (!m_streamErrors)
+            return;
+
         String msg = getHostAddress() + "/" + m_spec.getServiceName() + "/"
             + m_spec.getPackageName() + ": " + t.toString();
         // Send error message out of socket
