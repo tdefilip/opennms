@@ -60,6 +60,7 @@ import org.opennms.netmgt.rrd.tcp.TcpRrdStrategy.RrdDefinition;
 public class QueuingTcpRrdStrategy implements RrdStrategy<TcpRrdStrategy.RrdDefinition,String> {
 
     private final int queueSize = Integer.getInteger("org.opennms.netmgt.rrd.tcp.QueuingTcpRrdStrategy.queueSize").intValue();
+    private final int drainMax = Integer.getInteger("org.opennms.netmgt.rrd.tcp.QueuingTcpRrdStrategy.drainMax").intValue();
     private final BlockingQueue<PerformanceDataReading> m_queue = new LinkedBlockingQueue<PerformanceDataReading>(queueSize);
     private final ConsumerThread m_consumerThread;
     private final LogThread m_logThread;
@@ -108,9 +109,13 @@ public class QueuingTcpRrdStrategy implements RrdStrategy<TcpRrdStrategy.RrdDefi
                     long queueChecks = m_strategy.getQueueChecks();
                     long drains = m_strategy.getDrains();
                     long data = m_strategy.getSentData();
+                    ArrayList<Long> messages = m_strategy.getMessages();
+                    ArrayList<Long> writeTimes = m_strategy.getWriteTimes();
+                    long sleeps = m_strategy.getSleeps();
                     long queueSize = m_myQueue.size();
                     long remaining = m_myQueue.remainingCapacity();
-                    ThreadCategory.getInstance(getClass()).warn("TCP Queue: " + offers + " offers, " + failedOffers + " failed offers, " + goodOffers + " good offers; " + queueChecks + " queue checks, " + drains + " drains, " + data + " sent readings, " + queueSize + " elements in queue, " + remaining + " remaining capacity");
+                    ThreadCategory.getInstance(getClass()).warn("TCP Queue: " + offers + " offers, " + failedOffers + " failed offers, " + goodOffers + " good offers; " + queueChecks + " queue checks, " + drains + " drains, " + sleeps + " sleeps, " + data + " sent readings, " + queueSize + " elements in queue, " + remaining + " remaining capacity");
+                    ThreadCategory.getInstance(getClass()).warn("TCP Queue messages: " + messages.toString() + ", write times: " + writeTimes.toString());
                     m_strategy.clearLogStats();
                     Thread.sleep(300000);
                 }
@@ -122,13 +127,18 @@ public class QueuingTcpRrdStrategy implements RrdStrategy<TcpRrdStrategy.RrdDefi
 
     private static class ConsumerThread extends Thread {
         private final BlockingQueue<PerformanceDataReading> m_myQueue;
+        private int m_drainMax = 0;
         private final TcpRrdStrategy m_strategy;
         private long m_queueChecks = 0;
         private long m_drains = 0;
         private long m_data = 0;
-        public ConsumerThread(final TcpRrdStrategy strategy, final BlockingQueue<PerformanceDataReading> queue) {
+        private ArrayList<Long> m_messages = new ArrayList<Long>();
+        private ArrayList<Long> m_writeTimes = new ArrayList<Long>();
+        private long m_sleeps = 0;
+        public ConsumerThread(final TcpRrdStrategy strategy, final BlockingQueue<PerformanceDataReading> queue, int drainMax) {
             m_strategy = strategy;
             m_myQueue = queue;
+            m_drainMax = drainMax;
             this.setName(this.getClass().getSimpleName());
         }
 
@@ -137,15 +147,20 @@ public class QueuingTcpRrdStrategy implements RrdStrategy<TcpRrdStrategy.RrdDefi
                 while (true) {
                     m_queueChecks++;
                     Collection<PerformanceDataReading> sendMe = new ArrayList<PerformanceDataReading>();
-                    if (m_myQueue.drainTo(sendMe) > 0) {
+                    if (m_myQueue.drainTo(sendMe, m_drainMax) > 0) {
                         m_drains++;
                         RrdOutputSocket socket = new RrdOutputSocket(m_strategy.getHost(), m_strategy.getPort());
                         m_data += sendMe.size();
+                        m_messages.add((long)sendMe.size());
                         for (PerformanceDataReading reading : sendMe) {
                             socket.addData(reading.getFilename(), reading.getOwner(), reading.getData());
                         }
+                        long startWrite = System.nanoTime();
                         socket.writeData();
+                        long doneWrite = System.nanoTime();
+                        m_writeTimes.add((doneWrite - startWrite) / 1000000);
                     } else {
+                        m_sleeps++;
                         long sleepTime = Integer.getInteger("org.opennms.netmgt.rrd.tcp.QueuingTcpRrdStrategy.sleepTime").longValue();
                         Thread.sleep(sleepTime);
                     }
@@ -162,6 +177,9 @@ public class QueuingTcpRrdStrategy implements RrdStrategy<TcpRrdStrategy.RrdDefi
             m_queueChecks = 0;
             m_drains = 0;
             m_data = 0;
+            m_messages.clear();
+            m_writeTimes.clear();
+            m_sleeps = 0;
         }
         public long getQueueChecks() {
             return m_queueChecks;
@@ -172,6 +190,15 @@ public class QueuingTcpRrdStrategy implements RrdStrategy<TcpRrdStrategy.RrdDefi
         public long getData() {
             return m_data;
         }
+        public ArrayList<Long> getMessages() {
+            return m_messages;
+        }
+        public ArrayList<Long> getWriteTimes() {
+            return m_writeTimes;
+        }
+        public long getSleeps() {
+            return m_sleeps;
+        }
     }
 
     /**
@@ -181,7 +208,7 @@ public class QueuingTcpRrdStrategy implements RrdStrategy<TcpRrdStrategy.RrdDefi
      */
     public QueuingTcpRrdStrategy(TcpRrdStrategy delegate) {
         m_delegate = delegate;
-        m_consumerThread = new ConsumerThread(delegate, m_queue);
+        m_consumerThread = new ConsumerThread(delegate, m_queue, drainMax);
         m_consumerThread.start();
         m_logThread = new LogThread(this, m_queue);
         m_logThread.start();
@@ -338,5 +365,14 @@ public class QueuingTcpRrdStrategy implements RrdStrategy<TcpRrdStrategy.RrdDefi
     }
     public long getSentData() {
         return m_consumerThread.getData();
+    }
+    public ArrayList<Long> getMessages() {
+        return m_consumerThread.getMessages();
+    }
+    public ArrayList<Long> getWriteTimes() {
+        return m_consumerThread.getWriteTimes();
+    }
+    public long getSleeps() {
+        return m_consumerThread.getSleeps();
     }
 }
