@@ -336,8 +336,9 @@ final class CollectableService implements ReadyRunnable {
         if (!m_streamErrors)
             return;
 
-        String msg = getHostAddress() + "/" + m_spec.getServiceName() + "/"
-            + m_spec.getPackageName() + ": " + t.toString();
+        String msg = "Service error: " + getHostAddress() + "/"
+            + m_spec.getServiceName() + "/" + m_spec.getPackageName() + ": "
+            + t.toString();
         // Send error message out of socket
         Socket socket = null;
         try {
