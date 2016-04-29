@@ -18,3 +18,6 @@
 
 == REST API
 include::text/rest/CORS.adoc[]
+
+== Powered By OpenNMS
+include::text/poweredby.adoc[]
