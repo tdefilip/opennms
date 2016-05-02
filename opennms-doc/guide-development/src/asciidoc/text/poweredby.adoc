@@ -1,0 +1,26 @@
+The "Powered By OpenNMS" program is a program for alternate licensing of the OpenNMS code base through The OpenNMS Group, Inc.
+
+There are currently 2 PoweredBy repositories, with access granted based on your enrollment:
+
+* PoweredBy 2015: https://github.com/OpenNMS/poweredby-2015
+* PoweredBy 2016: https://github.com/OpenNMS/poweredby-2016
+
+=== Powered By OpenNMS 2015
+
+*PoweredBy 2015* is based on the OpenNMS "`foundation`" branch, which is the basis of Meridian 2015.  It includes everything in OpenNMS Horizon 14.0.3 plus the Bootstrap GUI changes that went into Horizon 15, and additional Meridian-targeted bugfixes that have happened since those releases, as well as the PoweredBy modification to not build GPL-licensed components.
+
+Critical bug fixes for Meridian 2015 will be made in the OpenNMS "`foundation`" branch.  That branch will automatically be merged into the "`poweredby-2015`" repository and the OpenNMS "`foundation-2016`" branch.  This branch is currently frozen except for security fixes and direct Meridian-customer-impacting bugs.
+
+=== Powered By OpenNMS 2016
+
+*PoweredBy 2016* is based on the OpenNMS "`foundation-2016`" branch, which will be the basis of Meridian 2016.  Despite the version number in the repository, it includes everything in OpenNMS Horizon 17.1.1 plus additional bugfixes we have done since then, as well as the PoweredBy modification to not build GPL-licensed components.
+
+Bug fixes for Meridian 2016 will be made in the "`foundation-2016`" branch.  That branch will automatically be merged into the current OpenNMS Horizon development branch (currently "`release-18.0.0`" as of the time of this writing, because of an imminent Horizon 18 release) as well as the "`poweredby-2016`" repository.  This branch is still under active development with bug fix and some small feature work targeting Horizon 18 and Meridian 2016 ongoing.  As release approaches, updates to this repository will slow.
+
+=== Automated Branch Merging
+
+Barring conflicts, code between the PoweredBy branches and their respective OpenNMS foundation branches will be automatically merged, to make sure bug fixes end up in the appropriate code bases that need them.  They will go through automatic testing (build, smoke tests, and unit tests) before each merge occurs.
+
+* Changes in "`foundation`" will be automatically merged to "`foundation-2016`" as well as the "`poweredby-2015`" repository.
+* Changes in "`foundation-2016`" will be automatically merged to OpenNMS "`develop`" (or a "`release-X.X.X`" branch if it exists) as well as the "`poweredby-2016`" repository.
+* PoweredBy-specific changes will be automatically merged from the "`poweredby-2015`" repository to the "`poweredby-2016`" repository, if necessary.
