@@ -305,10 +305,19 @@
             <mbean name="org.opennms.newts.repository.samples-selected" objectname="org.opennms.newts:name=repository.samples-selected">
                 <attrib name="Count" alias="NewtsSmplsSelctd" type="counter"/>
             </mbean>
+            <mbean name="org.opennms.newts.search.update" objectname="org.opennms.newts:name=search.update">
+                <attrib name="99thPercentile" alias="NewtsSearchUpd99" type="gauge"/>
+            </mbean>
+            <mbean name="org.opennms.newts.search.delete" objectname="org.opennms.newts:name=search.delete">
+                <attrib name="99thPercentile" alias="NewtsSearchDel99" type="gauge"/>
+            </mbean>
+            <mbean name="org.opennms.newts.search.inserts" objectname="org.opennms.newts:name=search.inserts">
+                <attrib name="Count" alias="NewtsSearchInserts" type="counter"/>
+            </mbean>
         </mbeans>
     </jmx-collection>
 
-    <jmx-collection name="cassandra21x">
+    <jmx-collection name="cassandra30x">
         <rrd step="300">
             <rra>RRA:AVERAGE:0.5:1:2016</rra>
             <rra>RRA:AVERAGE:0.5:12:1488</rra>
@@ -560,7 +569,7 @@
         </mbeans>
     </jmx-collection>
 
-    <jmx-collection name="cassandra21x-newts">
+    <jmx-collection name="cassandra30x-newts">
         <rrd step="300">
             <rra>RRA:AVERAGE:0.5:1:2016</rra>
             <rra>RRA:AVERAGE:0.5:12:1488</rra>
