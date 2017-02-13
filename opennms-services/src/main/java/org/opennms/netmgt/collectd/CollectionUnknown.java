@@ -1,8 +1,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2010-2016 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2016 The OpenNMS Group, Inc.
+ * Copyright (C) 2017-2017 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2017 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -26,37 +26,26 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.netmgt.collection.support.builder;
+package org.opennms.netmgt.collectd;
 
-import java.nio.file.Path;
+import org.opennms.netmgt.collection.api.CollectionException;
 
-import org.opennms.netmgt.collection.api.CollectionResource;
+/**
+ * This exception should be thrown by a {@link ServiceCollector} when
+ * collection fails, but should not trigger a status change (resulting
+ * in an alarm) for target service.
+ *
+ * For example, collection may fail if the OpenNMS system is in the process
+ * of shutting down, and required components are not available.
+ *
+ * @author jesse
+ */
+public class CollectionUnknown extends CollectionException {
 
-public interface Resource {
+    private static final long serialVersionUID = 5630156328994222706L;
 
-    public Resource getParent();
-
-    /**
-     * Returns the type name associated with the resource. Used for thresholding.
-     *
-     * @return type name
-     */
-    public String getTypeName();
-
-    /**
-     * Returns a unique name for the instance of this resource.
-     * Used by the {@link org.opennms.netmgt.collection.support.IndexStorageStrategy}
-     *
-     * @return instance name
-     */
-    public String getInstance();
-
-    /**
-     * Retrieves the path of the resource, relative to the repository root.
-     *
-     * @param resource Used by the {@link GenericTypeResource} in order to determine the instance name.
-     * @return relative path
-     */
-    public Path getPath(CollectionResource resource);
+    public CollectionUnknown(String message, Throwable cause) {
+        super(message, cause);
+    }
 
 }
