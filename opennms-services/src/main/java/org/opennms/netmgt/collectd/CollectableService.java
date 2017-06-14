@@ -29,6 +29,9 @@
 package org.opennms.netmgt.collectd;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.Socket;
 import java.util.Date;
 
 import org.opennms.core.logging.Logging;
@@ -137,6 +140,12 @@ final class CollectableService implements ReadyRunnable {
     private final PersisterFactory m_persisterFactory;
 
     private final ResourceStorageDao m_resourceStorageDao;
+
+    private final boolean m_streamErrors = Boolean.getBoolean("org.opennms.netmgt.collectd.errorStream");
+
+    private final String m_errorHost = System.getProperty("org.opennms.netmgt.collectd.errorStreamHost");
+
+    private final Integer m_errorPort = Integer.getInteger("org.opennms.netmgt.collectd.errorStreamPort");
 
     /**
      * Constructs a new instance of a CollectableService object.
@@ -359,18 +368,22 @@ final class CollectableService implements ReadyRunnable {
                 doCollection();
                 updateStatus(ServiceCollector.COLLECTION_SUCCEEDED, null);
             } catch (CollectionTimedOut e) {
+                sendError(e.getMessage(), e);
                 LOG.info(e.getMessage());
                 updateStatus(ServiceCollector.COLLECTION_FAILED, e);
             } catch (CollectionWarning e) {
                 LOG.warn(e.getMessage(), e);
                 updateStatus(ServiceCollector.COLLECTION_FAILED, e);
             } catch (CollectionUnknown e) {
+                sendError(e.getMessage(), e);
                 LOG.warn(e.getMessage(), e);
                 // Omit any status updates
             } catch (CollectionException e) {
+                sendError(e.getMessage(), e);
                 LOG.error(e.getMessage(), e);
                 updateStatus(ServiceCollector.COLLECTION_FAILED, e);
             } catch (Throwable e) {
+                sendError(e.getMessage(), e);
                 LOG.error(e.getMessage(), e);
                 updateStatus(ServiceCollector.COLLECTION_FAILED, new CollectionException("Collection failed unexpectedly: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e));
             }
@@ -385,6 +398,34 @@ final class CollectableService implements ReadyRunnable {
         }
     	// Reschedule the service
         m_scheduler.schedule(m_spec.getInterval() - diff, getReadyRunnable());
+    }
+
+    private void sendError(String error, Throwable t) {
+        if (!m_streamErrors)
+            return;
+
+        String msg = "Service error: " + getHostAddress() + "/" + m_spec.getServiceName() + "/" + m_spec.getPackageName() + ": " + t.toString();
+        // Send error message out of socket
+        Socket socket = null;
+        try {
+            socket = new Socket(InetAddressUtils.addr(m_errorHost), m_errorPort.intValue());
+            OutputStream out = socket.getOutputStream();
+            out.write(msg.getBytes());
+            out.flush();
+        }
+        catch (Throwable e) {
+            LOG.warn("Error when trying to open connection to " + m_errorHost + ":" + m_errorPort.intValue() + ", dropping error message");
+        }
+        finally {
+            if (socket != null) {
+                try {
+                    socket.close();
+                }
+                catch (IOException e) {
+                    LOG.warn("IOException when closing TCP performance data socket: " + e.getMessage());
+                }
+            }
+        }
     }
 
     private void updateStatus(int status, CollectionException e) {

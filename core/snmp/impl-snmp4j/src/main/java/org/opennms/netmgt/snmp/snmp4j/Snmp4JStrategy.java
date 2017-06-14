@@ -29,14 +29,18 @@
 package org.opennms.netmgt.snmp.snmp4j;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
+import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.snmp.CollectionTracker;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
 import org.opennms.netmgt.snmp.SnmpConfiguration;
@@ -88,6 +92,12 @@ public class Snmp4JStrategy implements SnmpStrategy {
     private static boolean s_initialized = false;
     
     private Snmp4JValueFactory m_valueFactory;
+
+    private static final boolean m_streamErrors = Boolean.getBoolean("org.opennms.netmgt.collectd.errorStream");
+
+    private static final String m_errorHost = System.getProperty("org.opennms.netmgt.collectd.errorStreamHost");
+
+    private static final Integer m_errorPort = Integer.getInteger("org.opennms.netmgt.collectd.errorStreamPort");
 
     /**
      * Initialize for v3 communications
@@ -270,7 +280,7 @@ public class Snmp4JStrategy implements SnmpStrategy {
                 final ResponseEvent responseEvent = session.send(pdu, agentConfig.getTarget());
 
                 if (expectResponse) {
-                    return processResponse(agentConfig, responseEvent);
+                    return processResponse(agentConfig, pdu, responseEvent);
                 } else {
                     return null;
                 }
@@ -320,11 +330,13 @@ public class Snmp4JStrategy implements SnmpStrategy {
     /**
      * TODO: Merge this logic with {@link Snmp4JWalker.Snmp4JResponseListener} #processResponse(PDU response)
      */
-    private static SnmpValue[] processResponse(Snmp4JAgentConfig agentConfig, ResponseEvent responseEvent) throws IOException {
+    private static SnmpValue[] processResponse(Snmp4JAgentConfig agentConfig, PDU pdu, ResponseEvent responseEvent) throws IOException {
         SnmpValue[] retvalues = { null };
 
         if (responseEvent.getResponse() == null) {
             LOG.warn("processResponse: Timeout.  Agent: {}, requestID={}", agentConfig, responseEvent.getRequest().getRequestID());
+            // Send error message for timeout
+            sendError(agentConfig, pdu);
         } else if (responseEvent.getError() != null) {
             LOG.warn("processResponse: Error during get operation.  Error: {}, requestID={}", responseEvent.getError().getLocalizedMessage(), responseEvent.getError(), responseEvent.getRequest().getRequestID());
         } else if (responseEvent.getResponse().getType() == PDU.REPORT) {
@@ -616,5 +628,39 @@ public class Snmp4JStrategy implements SnmpStrategy {
 	public byte[] getLocalEngineID() {
 		return MPv3.createLocalEngineID();
 	}
+
+    public static void sendError(Snmp4JAgentConfig agentConfig, PDU pdu) {
+        if (!m_streamErrors)
+            return;
+
+        Vector<? extends VariableBinding> bindings = pdu.getVariableBindings();
+        Vector<OID> oids = new Vector<OID>();
+        for (int i = 0; i < bindings.size(); ++i) {
+            oids.add(bindings.get(i).getOid());
+        }
+        String msg = "SNMP timeout: " + agentConfig.getInetAddress().getHostAddress() + " " + oids.toString();
+
+        // Send error message out of socket
+        Socket socket = null;
+        try {
+            socket = new Socket(InetAddressUtils.addr(m_errorHost), m_errorPort.intValue());
+            OutputStream out = socket.getOutputStream();
+            out.write(msg.getBytes());
+            out.flush();
+        }
+        catch (Throwable e) {
+            LOG.warn("Error when trying to open connection to " + m_errorHost + ":" + m_errorPort.intValue() + ", dropping error message");
+        }
+        finally {
+            if (socket != null) {
+                try {
+                    socket.close();
+                }
+                catch (IOException e) {
+                    LOG.warn("IOException when closing TCP performance data socket: " + e.getMessage());
+                }
+            }
+        }
+    }
 
 }
