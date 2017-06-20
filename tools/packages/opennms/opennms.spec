@@ -17,6 +17,10 @@
 %{!?logdir:%define logdir /var/log/opennms}
 # Where the OpenNMS Jetty webapp lives
 %{!?jettydir:%define jettydir %instprefix/jetty-webapps}
+# Where the OpenNMS lib directory lives
+%{!?libdir:%define libdir %instprefix/lib}
+# Where the OpenNMS system directory lives
+%{!?systemdir:%define systemdir %instprefix/system}
 # The directory for the OpenNMS webapp
 %{!?servletdir:%define servletdir opennms}
 # Where OpenNMS binaries live
@@ -592,6 +596,33 @@ for FILE in $RPM_BUILD_ROOT%{instprefix}/lib/*.jar; do BASENAME=`basename $FILE`
 # NOTE: We can't do this because the JARs in webstart are signed
 #for FILE in $RPM_BUILD_ROOT%{instprefix}/lib/*.jar; do BASENAME=`basename $FILE`; for SYSFILE in `find $RPM_BUILD_ROOT%{instprefix}/jetty-webapps/opennms-remoting/webstart -name $BASENAME`; do rm -f $SYSFILE; ln -s %{instprefix}/lib/$BASENAME $SYSFILE; done; done
 
+# Delete unnecessary files from jetty-webapps directory
+rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/RemotePollerMap
+rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/WEB-INF/lib/freemarker-2.3.21.jar
+rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/WEB-INF/lib/gwt*
+rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/WEB-INF/lib/jung*
+rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/WEB-INF/lib/org.opennms.features.remote-poller-gwt-17.0.1-SNAPSHOT.jar
+rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/admin/
+rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/css/
+rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/js/
+rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/source/
+rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms-remoting/
+
+# Delete unnecessary files from system directory
+rm -rf $RPM_BUILD_ROOT%{systemdir}/com
+rm -rf $RPM_BUILD_ROOT%{systemdir}/org/apache/activemq
+rm -rf $RPM_BUILD_ROOT%{systemdir}/org/opennms/features
+rm -rf $RPM_BUILD_ROOT%{systemdir}/org/springframework
+
+# Delete unnecessary files from lib directory
+rm -Rf $RPM_BUILD_ROOT%{libdir}/activemq-*
+rm -Rf $RPM_BUILD_ROOT%{libdir}/batik-*
+rm -Rf $RPM_BUILD_ROOT%{libdir}/drools-*
+rm -Rf $RPM_BUILD_ROOT%{libdir}/fop-1.0.jar
+rm -Rf $RPM_BUILD_ROOT%{libdir}/gwt-*
+rm -Rf $RPM_BUILD_ROOT%{libdir}/jfreechart-1.0.13.jar
+rm -Rf $RPM_BUILD_ROOT%{libdir}/selenium-*
+
 cd $RPM_BUILD_ROOT
 
 # core package files
@@ -760,7 +791,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files webapp-jetty -f %{_tmppath}/files.jetty
 %defattr(644 root root 755)
-%config %{jettydir}/opennms-remoting/WEB-INF/*.xml
+#%config %{jettydir}/opennms-remoting/WEB-INF/*.xml
 %config %{jettydir}/%{servletdir}/WEB-INF/*.properties
 
 %files plugins
@@ -797,8 +828,8 @@ rm -rf $RPM_BUILD_ROOT
 
 %files plugin-ticketer-jira
 %defattr(664 root root 775)
-%{instprefix}/system/org/opennms/features/jira-troubleticketer/*/jira-*.jar
-%{instprefix}/system/org/opennms/features/jira-client/*/jira-*.jar
+#%{instprefix}/system/org/opennms/features/jira-troubleticketer/*/jira-*.jar
+#%{instprefix}/system/org/opennms/features/jira-client/*/jira-*.jar
 %config(noreplace) %{instprefix}/etc/jira.properties
 %{sharedir}/etc-pristine/jira.properties
 
