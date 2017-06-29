@@ -601,7 +601,6 @@ rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/RemotePollerMap
 rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/WEB-INF/lib/freemarker-2.3.21.jar
 rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/WEB-INF/lib/gwt*
 rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/WEB-INF/lib/jung*
-rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/WEB-INF/lib/org.opennms.features.remote-poller-gwt-17.0.1-SNAPSHOT.jar
 rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/admin/
 rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/css/
 rm -rf $RPM_BUILD_ROOT%{jettydir}/opennms/js/
@@ -619,7 +618,6 @@ rm -Rf $RPM_BUILD_ROOT%{libdir}/activemq-*
 rm -Rf $RPM_BUILD_ROOT%{libdir}/batik-*
 rm -Rf $RPM_BUILD_ROOT%{libdir}/drools-*
 rm -Rf $RPM_BUILD_ROOT%{libdir}/fop-1.0.jar
-rm -Rf $RPM_BUILD_ROOT%{libdir}/gwt-*
 rm -Rf $RPM_BUILD_ROOT%{libdir}/jfreechart-1.0.13.jar
 rm -Rf $RPM_BUILD_ROOT%{libdir}/selenium-*
 
