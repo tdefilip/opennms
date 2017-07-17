@@ -137,7 +137,8 @@ public class DefaultCollectionAgentService implements CollectionAgentService {
      * @return a int.
      */
     public int getNodeId() {
-        return getIpInterface().getNode().getId() == null ? -1 : getIpInterface().getNode().getId().intValue();
+        final OnmsNode node = getIpInterface().getNode();
+        return node.getId() == null ? -1 : node.getId().intValue();
     }
 
     /* (non-Javadoc)

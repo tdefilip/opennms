@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.InetAddress;
 
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.core.utils.ThreadCategory;
@@ -61,7 +62,8 @@ import org.springframework.transaction.PlatformTransactionManager;
  * @author <A HREF="http://www.opennms.org/">OpenNMS </A>
  * 
  */
-final class CollectableService implements ReadyRunnable {
+class CollectableService implements ReadyRunnable {
+
     /**
      * Interface's parent node identifier
      */
@@ -153,9 +155,9 @@ final class CollectableService implements ReadyRunnable {
     /**
      * <p>getAddress</p>
      *
-     * @return a {@link java.lang.Object} object.
+     * @return a {@link java.net.InetAddress} object.
      */
-    public Object getAddress() {
+    public InetAddress getAddress() {
     	return m_agent.getAddress();
     }
     

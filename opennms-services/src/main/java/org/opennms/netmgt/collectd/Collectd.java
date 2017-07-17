@@ -45,6 +45,7 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.opennms.core.utils.ConfigFileConstants;
+import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.core.utils.LogUtils;
 import org.opennms.core.utils.ThreadCategory;
 import org.opennms.netmgt.EventConstants;
@@ -698,7 +699,7 @@ public class Collectd extends AbstractServiceDaemon implements
         }
     }
 
-    private List<CollectableService> getCollectableServices() {
+    protected List<CollectableService> getCollectableServices() {
         return m_collectableServices;
     }
 
@@ -865,7 +866,7 @@ public class Collectd extends AbstractServiceDaemon implements
                 // Only interested in entries with matching nodeId and IP
                 // address
                 InetAddress addr = (InetAddress) cSvc.getAddress();
-                if (!(cSvc.getNodeId() == nodeId && addr.getHostName().equals(ipAddr)))
+                if (!(cSvc.getNodeId() == nodeId && InetAddressUtils.str(addr).equals(ipAddr)))
                     continue;
 
                 synchronized (cSvc) {
@@ -879,7 +880,7 @@ public class Collectd extends AbstractServiceDaemon implements
                     // be rescheduled.
                     log().debug("Marking CollectableService for deletion because an interface was deleted:  Service nodeid="+cSvc.getNodeId()+
                                 ", deleted node:"+nodeId+
-                                "service address:"+addr.getHostName()+
+                                "service address:"+InetAddressUtils.str(addr)+
                                 "deleted interface:"+ipAddr);
 
                     updates.markForDeletion();
@@ -1018,7 +1019,6 @@ public class Collectd extends AbstractServiceDaemon implements
     private void handleNodeDeleted(Event event)
             throws InsufficientInformationException {
         EventUtils.checkNodeId(event);
-        EventUtils.checkInterface(event);
 
         ThreadCategory log = log();
 
@@ -1436,7 +1436,7 @@ public class Collectd extends AbstractServiceDaemon implements
                 
                 //WATCH the brackets; there used to be an extra close bracket after the ipAddr comparison which borked this whole expression
                 if (!(cSvc.getNodeId() == nodeId && 
-                        addr.getHostName().equals(ipAddr) && 
+                        InetAddressUtils.str(addr).equals(ipAddr) &&
                         cSvc.getServiceName().equals(svcName))) 
                     continue;
 
@@ -1451,11 +1451,12 @@ public class Collectd extends AbstractServiceDaemon implements
                     // be rescheduled.
                     log().debug("Marking CollectableService for deletion because a service was deleted:  Service nodeid="+cSvc.getNodeId()+
                                 ", deleted node:"+nodeId+
-                                ", service address:"+addr.getHostName()+
+                                ", service address:"+InetAddressUtils.str(addr)+
                                 ", deleted interface:"+ipAddr+
                                 ", service servicename:"+cSvc.getServiceName()+
                                 ", deleted service name:"+svcName+
                                 ", event source "+event.getSource());
+
                     updates.markForDeletion();
                 }
 
